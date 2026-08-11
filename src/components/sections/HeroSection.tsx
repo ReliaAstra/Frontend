@@ -1,8 +1,9 @@
 'use client';
+
 import { motion } from 'framer-motion';
 import { ArrowRight, Activity, ShieldCheck } from 'lucide-react';
 import { BrowserMockup } from '@/components/BrowserMockup';
-import { LiveVendorChart } from '@/components/LiveVendorChart';
+import { IncidentCorrelationCard } from '@/components/IncidentCorrelationCard';
 import { cn } from '@/lib/utils';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
@@ -40,29 +41,31 @@ export function HeroSection() {
               </div>
             </motion.div>
 
-            {/* Headline */}
+            {/* Headline — 3-line structure */}
             <motion.h1
-              className="text-4xl sm:text-5xl lg:text-[56px] leading-[1.08] tracking-tight font-[500] text-[#09090B]"
+              className="text-[40px] sm:text-[48px] lg:text-[64px] leading-[1.1] tracking-[-0.03em] text-[#09090B]"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.6, delay: 0.1, ease }}
             >
-              Know it&apos;s your vendor&apos;s fault.{' '}
-              <span className="text-[#0891B2] font-[800]">Prove it.</span>
+              <span className="font-[800]">Your site went down.</span>
+              <br />
+              <span className="font-[600]">Was it you, or</span>{' '}
+              <span className="font-[800] text-[#0891B2]">your vendors?</span>
             </motion.h1>
 
             {/* Subheadline */}
             <motion.p
-              className="text-lg text-[#52525B] leading-relaxed max-w-lg"
+              className="text-lg text-[#52525B] leading-relaxed max-w-lg mt-2"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.6, delay: 0.2, ease }}
             >
-              Reliastra monitors your critical third-party APIs from independent
-              locations. When a vendor causes your outage, it generates the
-              evidence to claim SLA credits and prove fault.
+              Reliastra monitors the external services your infrastructure depends on,
+              correlates their failures with your incidents, and produces independent
+              evidence of what happened.
             </motion.p>
 
             {/* CTAs */}
@@ -109,7 +112,7 @@ export function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right Column - Browser Mockup */}
+          {/* Right Column — Incident Correlation Card in Browser Mockup */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, y: 40 }}
@@ -117,9 +120,9 @@ export function HeroSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.8, delay: 0.2, ease }}
           >
-            <BrowserMockup className="min-h-[400px]" aria-label="Live vendor monitoring dashboard">
-              <div className="p-4 min-h-[400px]">
-                <LiveVendorChart />
+            <BrowserMockup url="reliastra.com/incidents/1842" aria-label="Live incident correlation card showing checkout degradation traced to Stripe EU outage">
+              <div className="flex justify-center py-6 px-4 md:px-8">
+                <IncidentCorrelationCard />
               </div>
             </BrowserMockup>
           </motion.div>

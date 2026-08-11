@@ -77,7 +77,7 @@ export function CommunityContent() {
                     share vendor reliability war stories, and connect with the Reliastra team.
                   </p>
                   <Button className="mt-6 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg" asChild>
-                    <a href="https://discord.gg/relistra" target="_blank" rel="noopener noreferrer">
+                    <a href="https://discord.gg/reliastre" target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="h-4 w-4" />
                       Join Discord
                     </a>
@@ -101,7 +101,7 @@ export function CommunityContent() {
                     tooling. Our roadmap is publicly visible and community-driven.
                   </p>
                   <Button variant="outline" className="mt-6 rounded-lg" asChild>
-                    <a href="https://github.com/relistra" target="_blank" rel="noopener noreferrer">
+                    <a href="https://github.com/ReliaAstra" target="_blank" rel="noopener noreferrer">
                       <Github className="h-4 w-4" />
                       View on GitHub
                     </a>

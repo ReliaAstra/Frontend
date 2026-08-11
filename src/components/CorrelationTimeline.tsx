@@ -15,13 +15,17 @@ export function CorrelationTimeline() {
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const clearAllTimeouts = useCallback(() => {
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const clearAll = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    // Also clear the orphaned timeouts from the interval callback
     timeoutsRef.current.forEach((t) => clearTimeout(t));
     timeoutsRef.current = [];
-  }, []);
+  }, [timeoutsRef]);
 
   const schedulePhases = useCallback(() => {
-    clearAllTimeouts();
+    clearAll();
     timeoutsRef.current.push(
       setTimeout(() => setPhase(1), 50),
       setTimeout(() => setPhase(2), 600),
@@ -29,20 +33,22 @@ export function CorrelationTimeline() {
       setTimeout(() => setPhase(4), 2400),
       setTimeout(() => setPhase(5), 3000),
     );
-  }, [clearAllTimeouts]);
+  }, [clearAll, timeoutsRef]);
+
+  const scheduleCycle = useCallback(() => {
+    setPhase(0);
+    timerRef.current = setTimeout(schedulePhases, 150);
+  }, [schedulePhases]);
+
+  const scheduleNextCycle = useCallback(() => {
+    timerRef.current = setTimeout(scheduleCycle, CYCLE_MS);
+  }, [scheduleCycle]);
 
   useEffect(() => {
     schedulePhases();
-    const interval = setInterval(() => {
-      setPhase(0);
-      // Use a micro-delay to ensure phase 0 renders before scheduling next cycle
-      setTimeout(schedulePhases, 20);
-    }, CYCLE_MS);
-    return () => {
-      clearInterval(interval);
-      clearAllTimeouts();
-    };
-  }, [schedulePhases, clearAllTimeouts]);
+    timerRef.current = setTimeout(scheduleNextCycle, CYCLE_MS);
+    return () => clearAll();
+  }, [schedulePhases, scheduleNextCycle, clearAll]);
 
   return (
     <div className="relative w-full max-w-2xl mx-auto py-8 px-4">

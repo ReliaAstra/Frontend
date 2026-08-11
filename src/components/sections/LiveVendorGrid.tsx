@@ -198,7 +198,7 @@ export function LiveVendorGrid() {
             Last updated: just now · Refreshes automatically
           </span>
           <a
-            href="/tracking"
+            href="/status"
             className="border border-white/20 text-white px-6 py-2.5 rounded-[10px] font-medium text-sm hover:bg-white/5 transition-colors"
           >
             Explore Public Tracking

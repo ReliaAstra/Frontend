@@ -131,7 +131,7 @@ export function PricingSection() {
               </ul>
 
               <a
-                href="/signup"
+                href="/pricing"
                 className={cn(
                   'block w-full py-3 rounded-[10px] font-semibold text-sm text-center transition-colors min-h-[44px] leading-[44px]',
                   plan.ctaStyle,
@@ -188,7 +188,7 @@ export function PricingSection() {
           </p>
           <FoundingSpotCounter />
           <a
-            href="/signup"
+            href="/pricing"
             className="inline-block bg-[#0891B2] text-white px-8 py-4 rounded-[10px] font-semibold text-base hover:bg-[#0E7490] transition-colors mt-8"
           >
             Claim Your Spot

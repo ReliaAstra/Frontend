@@ -5,11 +5,12 @@ interface BrowserMockupProps {
   url?: string;
   children: React.ReactNode;
   className?: string;
+  'aria-label'?: string;
 }
 
-export function BrowserMockup({ url = 'reliastra.com/dashboard', children, className }: BrowserMockupProps) {
+export function BrowserMockup({ url = 'reliastra.com/dashboard', children, className, ...rest }: BrowserMockupProps) {
   return (
-    <div className={cn('rounded-2xl border border-[#E4E4E7] overflow-hidden shadow-elevated bg-white', className)}>
+    <div className={cn('rounded-2xl border border-[#E4E4E7] overflow-hidden shadow-elevated bg-white', className)} {...rest}>
       <div className="flex items-center gap-2 px-4 py-3.5 bg-[#F8F9FA] border-b border-[#E4E4E7]">
         <div className="flex gap-1.5">
           <div className="w-[10px] h-[10px] rounded-full bg-[#EF4444]" />

@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import { Shield, Eye, Zap, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const team = [
-  { name: 'Marcus Chen', role: 'Founder & CEO', initials: 'MC', color: 'bg-[#0891B2]' },
+  { name: 'Emmanuel Osei', role: 'Founder & CEO', initials: 'EO', color: 'bg-[#0891B2]' },
   { name: 'Sarah Park', role: 'Head of Product', initials: 'SP', color: 'bg-violet-600' },
   { name: 'Alex Rivera', role: 'Sr. Reliability Engineer', initials: 'AR', color: 'bg-amber-600' },
   { name: 'Jordan Lee', role: 'Head of Growth', initials: 'JL', color: 'bg-emerald-600' },
@@ -46,7 +47,7 @@ export function AboutContent() {
                   often inaccurate, and inherently conflicted. Incident post-mortems take hours. SLA disputes drag on for weeks.
                 </p>
                 <p>
-                  Our founder, Marcus Chen, experienced this firsthand during his 4 years as an SRE at Stripe. After one particularly
+                  Our founder, Emmanuel Osei, experienced this firsthand during his 4 years as an SRE at Stripe. After one particularly
                   painful multi-vendor outage that required 40+ hours of manual correlation work, he started building internal tooling
                   to automate the process. That tooling became the foundation of Reliastra.
                 </p>
@@ -165,7 +166,7 @@ export function AboutContent() {
               Logo assets, brand guidelines, and company boilerplate for media and partners.
             </p>
             <Button variant="outline" className="rounded-lg gap-2" asChild>
-              <a href="#" onClick={(e) => { e.preventDefault(); }}>
+              <a href="#" onClick={(e) => { e.preventDefault(); toast.info('Press kit coming soon.'); }}>
                 <ExternalLink className="h-4 w-4" />
                 Download Press Kit
               </a>

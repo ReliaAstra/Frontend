@@ -223,9 +223,9 @@ function StatusBar() {
 
 /* ── Main 404 Page ── */
 export default function NotFound() {
-  const prefersReduced =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [prefersReduced] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   const variants = prefersReduced
     ? {

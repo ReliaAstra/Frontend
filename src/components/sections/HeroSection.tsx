@@ -77,7 +77,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.3, ease }}
             >
               <a
-                href="/signup"
+                href="/pricing"
                 className="group inline-flex items-center justify-center gap-2 bg-[#0A0A0F] text-white px-7 py-3.5 rounded-[10px] font-semibold text-sm hover:shadow-xl transition-all duration-200"
                 style={{ transitionProperty: 'transform, box-shadow' }}
                 onMouseEnter={(e) => {

@@ -15,35 +15,35 @@ import { cn } from '@/lib/utils';
 
 const tiers = [
   {
-    name: 'Starter',
+    name: 'Free',
     price: '$0',
-    period: 'forever',
+    period: '/mo',
     description: 'For individual developers monitoring a handful of vendors.',
     icon: Zap,
-    features: ['3 vendors monitored', '5-minute check intervals', 'Basic status dashboard', 'Email alerts', '7-day data retention'],
-    cta: 'Get Started Free',
+    features: ['5 vendors monitored', '1-minute check intervals', 'Basic status dashboard', 'Email alerts', '7-day data retention'],
+    cta: 'Start Free',
     variant: 'outline' as const,
     highlighted: false,
   },
   {
-    name: 'Pro',
+    name: 'Standard',
     price: '$49',
     period: '/month',
     description: 'For growing teams that need real-time reliability intelligence.',
     icon: Star,
-    features: ['25 vendors monitored', '30-second check intervals', 'Full analytics dashboard', 'Slack & email alerts', '90-day data retention', 'Incident correlation', 'SLA evidence reports'],
-    cta: 'Start Pro Trial',
+    features: ['25 vendors monitored', '15-second check intervals', 'Full analytics dashboard', 'Multi-region verification', '90-day data retention', 'Incident correlation', 'SLA evidence reports', 'Email alerts & webhooks'],
+    cta: 'Start Standard',
     variant: 'default' as const,
     highlighted: true,
   },
   {
-    name: 'Business',
-    price: '$199',
+    name: 'Professional',
+    price: '$99',
     period: '/month',
     description: 'For organizations with complex dependency graphs and compliance needs.',
     icon: Building2,
-    features: ['Unlimited vendors', '15-second check intervals', 'Custom dashboards', 'All notification channels', '1-year data retention', 'Incident correlation engine', 'SLA evidence generation', 'Team management', 'API access', 'Priority support'],
-    cta: 'Contact Sales',
+    features: ['Unlimited vendors', '5-second check intervals', 'Custom dashboards', 'All notification channels', '1-year data retention', 'Advanced correlation engine', 'SLA evidence generation', 'Team management', 'SSO & API access', 'Dedicated support'],
+    cta: 'Start Professional',
     variant: 'outline' as const,
     highlighted: false,
   },
@@ -60,8 +60,8 @@ const agencyTier = {
 };
 
 const comparisonFeatures = [
-  { name: 'Vendors monitored', starter: '3', pro: '25', business: 'Unlimited', agency: 'Unlimited' },
-  { name: 'Check interval', starter: '5 min', pro: '30 sec', business: '15 sec', agency: '15 sec' },
+  { name: 'Vendors monitored', starter: '5', pro: '25', business: 'Unlimited', agency: 'Unlimited' },
+  { name: 'Check interval', starter: '1 min', pro: '15 sec', business: '5 sec', agency: '5 sec' },
   { name: 'Status dashboard', starter: true, pro: true, business: true, agency: true },
   { name: 'Email alerts', starter: true, pro: true, business: true, agency: true },
   { name: 'Slack alerts', starter: false, pro: true, business: true, agency: true },
@@ -234,7 +234,7 @@ export function PricingContent() {
                 <div>
                   <h3 className="text-lg font-semibold text-[#09090B]">Founding Customer Program</h3>
                   <p className="text-sm text-[#52525B] mt-1 max-w-lg">
-                    Join the first 100 customers and lock in 50% off any paid plan for life.
+                    Join the first 25 customers and lock in 50% off any paid plan for life.
                     Includes early access to features and direct input on the product roadmap.
                   </p>
                 </div>
@@ -265,9 +265,9 @@ export function PricingContent() {
               <thead>
                 <tr className="border-b border-[#E4E4E7]">
                   <th className="text-left py-4 pr-4 font-semibold text-[#09090B]">Feature</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Starter</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#0891B2] bg-cyan-50 rounded-t-xl">Pro</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Business</th>
+                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Free</th>
+                  <th className="text-center py-4 px-4 font-semibold text-[#0891B2] bg-cyan-50 rounded-t-xl">Standard</th>
+                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Professional</th>
                   <th className="text-center py-4 pl-4 font-semibold text-[#09090B]">Agency</th>
                 </tr>
               </thead>

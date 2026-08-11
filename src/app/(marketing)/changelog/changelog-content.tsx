@@ -83,7 +83,7 @@ export function ChangelogContent() {
                   className="relative pl-14 md:pl-20"
                 >
                   {/* Dot on timeline */}
-                  <div className="absolute left-2.5 md:left-4.5 top-1.5 h-3 w-3 rounded-full border-2 border-[#0891B2] bg-white z-10" style={{ left: '13px' }} />
+                  <div className="absolute left-2.5 md:left-4.5 top-1.5 h-3 w-3 rounded-full border-2 border-[#0891B2] bg-white z-10" />
 
                   <div className="rounded-xl border border-[#E4E4E7] p-6 hover:shadow-md transition-shadow">
                     <div className="flex flex-wrap items-center gap-2 mb-2">

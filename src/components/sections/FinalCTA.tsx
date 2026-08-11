@@ -98,7 +98,7 @@ export function FinalCTA() {
           transition={{ duration: 0.6, delay: 0.4, ease }}
         >
           <a
-            href="/signup"
+            href="/pricing"
             className="inline-block bg-white text-[#0A0A0F] px-8 py-4 rounded-[10px] font-semibold text-base hover:bg-white/90 transition-colors"
           >
             Start Free Today

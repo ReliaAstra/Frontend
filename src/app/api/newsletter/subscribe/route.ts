@@ -3,6 +3,7 @@ import { z } from 'zod/v4';
 
 const subscribeSchema = z.object({
   email: z.email('Invalid email address'),
+  vendor: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {

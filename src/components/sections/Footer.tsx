@@ -8,11 +8,11 @@ const FOOTER_LINKS = [
   {
     title: 'Product',
     links: [
-      { label: 'Features', href: '/features' },
+      { label: 'Features', href: '/#solution' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Status', href: '/status' },
-      { label: 'Public Tracking', href: '/tracking' },
-      { label: 'API Docs', href: '/docs' },
+      { label: 'Public Tracking', href: '/status' },
+      { label: 'API Docs', href: '/blog' },
       { label: 'Changelog', href: '/changelog' },
     ],
   },
@@ -23,7 +23,6 @@ const FOOTER_LINKS = [
       { label: 'Blog', href: '/blog' },
       { label: 'Community', href: '/community' },
       { label: 'Investors', href: '/investors' },
-      { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
     ],
   },
@@ -32,8 +31,7 @@ const FOOTER_LINKS = [
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
-      { label: 'Security', href: '/security' },
-      { label: 'Cookie Policy', href: '/cookies' },
+      { label: 'Guarantee', href: '/guarantee' },
     ],
   },
 ];

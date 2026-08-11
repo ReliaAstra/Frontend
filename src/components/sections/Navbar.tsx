@@ -6,9 +6,9 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/s
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
-  { label: 'Features', href: '/features' },
+  { label: 'Features', href: '/#solution' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Docs', href: '/docs' },
+  { label: 'Docs', href: '/blog' },
   { label: 'Status', href: '/status' },
 ];
 
@@ -62,14 +62,14 @@ export function Navbar() {
           </div>
 
           <a
-            href="/signin"
+            href="/pricing"
             className="text-sm font-medium text-[#52525B] hover:text-[#09090B] transition-colors"
           >
             Sign In
           </a>
 
           <motion.a
-            href="/signup"
+            href="/pricing"
             className="bg-[#0A0A0F] text-white px-5 py-2.5 rounded-[10px] font-semibold text-sm inline-block"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

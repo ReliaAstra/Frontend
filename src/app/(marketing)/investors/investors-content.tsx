@@ -67,10 +67,10 @@ export function InvestorsContent() {
               className="mt-12 flex gap-5"
             >
               <div className="h-20 w-20 rounded-2xl bg-[#0891B2] text-white flex items-center justify-center text-2xl font-bold shrink-0">
-                MC
+                EO
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#09090B]">Marcus Chen</h2>
+                <h2 className="text-xl font-bold text-[#09090B]">Emmanuel Osei</h2>
                 <p className="text-sm text-[#0891B2] font-medium">Founder & CEO</p>
                 <p className="mt-2 text-sm text-[#52525B] leading-relaxed">
                   Former SRE at Stripe. Spent 4 years building internal vendor reliability tooling after

@@ -181,8 +181,8 @@ export function ContactContent() {
                     <div>
                       <p className="text-sm font-medium text-[#09090B]">Discord</p>
                       <p className="text-sm text-[#52525B]">
-                        <a href="https://discord.gg/relistra" target="_blank" rel="noopener noreferrer" className="text-[#0891B2] hover:underline">
-                          discord.gg/relistra
+                        <a href="https://discord.gg/reliastre" target="_blank" rel="noopener noreferrer" className="text-[#0891B2] hover:underline">
+                          discord.gg/reliastre
                         </a>
                       </p>
                     </div>

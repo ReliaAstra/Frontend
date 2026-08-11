@@ -48,7 +48,7 @@ export function FounderSection() {
           </p>
 
           <a
-            href="#"
+            href="https://linkedin.com/in/emmanuel-osei"
             className="inline-flex items-center justify-center gap-2 mt-6 text-[#52525B] hover:text-[#0891B2] transition-colors min-h-[44px]"
             aria-label="Emmanuel Osei's LinkedIn profile"
           >

@@ -1,93 +1,79 @@
 'use client';
-
 import { motion } from 'framer-motion';
 import { Eye, GitCompare, FileCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const PAIN_POINTS = [
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
+const PAIN_CARDS = [
   {
     icon: Eye,
     title: 'Blind to Vendor Failures',
-    description:
-      'Your monitoring only sees your own stack. When a third-party API degrades, you learn from angry customers — not your dashboards.',
+    body: 'Your monitoring only sees your own stack. When a vendor API starts returning 5xx errors, your dashboards show healthy—because from your infrastructure’s perspective, everything is fine. You’re the last to know.',
   },
   {
     icon: GitCompare,
     title: 'No Causal Evidence',
-    description:
-      'Vendors say "everything looks fine on our end." You have nothing to prove the outage originated on their side.',
+    body: 'Vendors say “everything looks fine on our end.” Without independent, timestamped verification from outside your infrastructure, you have nothing to counter their claim. Your word against theirs.',
   },
   {
     icon: FileCheck,
     title: 'Credits Left on the Table',
-    description:
-      'SLA credits exist, but claiming them requires evidence you don\'t have. That\'s free money vendors are happy to keep.',
+    body: 'SLA credits require evidence—downtime duration, affected endpoints, independent verification. Without automated evidence collection, claiming credits is manual, tedious, and usually abandoned.',
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
-  },
-};
-
 export function ProblemSection() {
   return (
-    <section className="py-24 md:py-32" id="product">
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
-        {/* Heading */}
+    <section className="bg-white py-32">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        {/* Header */}
         <motion.div
           className="text-center max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.6, ease }}
         >
-          <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-widest">
-            The Problem
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#09090B] mt-4 tracking-tight">
-            The 2 AM War Room
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-4">
+            THE 2 AM WAR ROOM
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#09090B] mb-6">
+            You know the conversation. &lsquo;Is it us or them?&rsquo;
           </h2>
-          <p className="text-lg text-[#52525B] mt-4 leading-relaxed">
-            Your service is on fire. Customers are screaming. The vendor says
-            &ldquo;all systems operational.&rdquo; You know they&apos;re lying —
-            but you can&apos;t prove it.
+          <p className="text-[#52525B] leading-relaxed">
+            The pager goes off at 2 AM. Error rates spike. Your team scrambles to
+            triage. After 45 minutes of digging, someone says: &ldquo;I think it’s
+            Stripe.&rdquo; But you can’t prove it. The vendor’s status page says
+            &ldquo;all systems operational.&rdquo; Your on-call engineer just lost an hour of
+            sleep for nothing—and your SLA credit claim gets denied for lack of
+            evidence.
           </p>
         </motion.div>
 
-        {/* Pain point cards */}
-        <motion.div
-          className="grid md:grid-cols-3 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-        >
-          {PAIN_POINTS.map((point) => (
-            <motion.article
-              key={point.title}
-              variants={cardVariants}
-              className="rounded-xl border border-[#E4E4E7] bg-white p-6 shadow-card hover:-translate-y-1 hover:shadow-elevated hover:border-[#0891B2]/30 transition-all duration-300"
+        {/* Pain Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {PAIN_CARDS.map((card, i) => (
+            <motion.div
+              key={card.title}
+              className="bg-[#F8F9FA] rounded-2xl p-8 border border-[#F0F0F0] transition-all duration-300 hover:-translate-y-4 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] hover:border-[#0891B2]/20"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, delay: i * 0.15, ease }}
             >
-              <div className="w-10 h-10 rounded-lg bg-[#ECFEFF] flex items-center justify-center mb-4">
-                <point.icon className="w-5 h-5 text-[#0891B2]" />
+              <div className="w-12 h-12 rounded-xl bg-[#0891B2]/10 flex items-center justify-center mb-6">
+                <card.icon className="w-6 h-6 text-[#0891B2]" aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-bold text-[#09090B] mb-2">{point.title}</h3>
-              <p className="text-sm text-[#52525B] leading-relaxed">{point.description}</p>
-            </motion.article>
+              <h3 className="text-lg font-semibold text-[#09090B] mb-3">
+                {card.title}
+              </h3>
+              <p className="text-sm text-[#52525B] leading-relaxed">
+                {card.body}
+              </p>
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

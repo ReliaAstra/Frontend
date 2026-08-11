@@ -1,123 +1,115 @@
 'use client';
-
 import { motion } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, CircleDot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Feature {
-  label: string;
-  statusPages: boolean | string;
-  internal: boolean | string;
-  basicUptime: boolean | string;
-  relias: boolean | string;
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
+type CellValue = 'check' | 'x' | 'partial';
+
+interface Row {
+  feature: string;
+  statusPages: CellValue;
+  internalMonitoring: CellValue;
+  basicUptime: CellValue;
+  reliastra: CellValue;
 }
 
-const FEATURES: Feature[] = [
-  { label: 'Independent Vendor Monitoring', statusPages: false, internal: false, basicUptime: false, relias: true },
-  { label: 'Multi-Region Verification', statusPages: false, internal: 'Partial', basicUptime: false, relias: true },
-  { label: 'Vendor-Causal Correlation', statusPages: false, internal: false, basicUptime: false, relias: true },
-  { label: 'SLA Evidence Report Generation', statusPages: false, internal: false, basicUptime: false, relias: true },
-  { label: 'Timestamp Chain of Custody', statusPages: false, internal: false, basicUptime: false, relias: true },
-  { label: 'Real-Time Vendor Dashboard', statusPages: true, internal: true, basicUptime: true, relias: true },
-  { label: 'Vendor-Agnostic', statusPages: true, internal: false, basicUptime: true, relias: true },
-  { label: 'Credit Recovery Assistance', statusPages: false, internal: false, basicUptime: false, relias: true },
+const ROWS: Row[] = [
+  { feature: 'Independent Vendor Monitoring', statusPages: 'x', internalMonitoring: 'x', basicUptime: 'x', reliastra: 'check' },
+  { feature: 'Multi-Region Verification', statusPages: 'x', internalMonitoring: 'partial', basicUptime: 'x', reliastra: 'check' },
+  { feature: 'Vendor-Causal Correlation', statusPages: 'x', internalMonitoring: 'x', basicUptime: 'x', reliastra: 'check' },
+  { feature: 'SLA Evidence Report Generation', statusPages: 'x', internalMonitoring: 'x', basicUptime: 'x', reliastra: 'check' },
+  { feature: 'Timestamp Chain of Custody', statusPages: 'x', internalMonitoring: 'x', basicUptime: 'x', reliastra: 'check' },
+  { feature: 'Real-Time Vendor Dashboard', statusPages: 'partial', internalMonitoring: 'check', basicUptime: 'check', reliastra: 'check' },
 ];
 
-const COLUMNS = [
-  { key: 'statusPages' as const, label: 'Vendor Status Pages' },
-  { key: 'internal' as const, label: 'Internal Monitoring' },
-  { key: 'basicUptime' as const, label: 'Basic Uptime Tools' },
-  { key: 'relias' as const, label: 'Reliastra', highlight: true },
-];
+const HEADERS = ['Feature', 'Status Pages', 'Internal Monitoring', 'Basic Uptime', 'Reliastra'];
 
-function CellValue({ value }: { value: boolean | string }) {
-  if (typeof value === 'string') {
-    return <span className="text-xs text-[#A1A1AA]">{value}</span>;
+function CellIcon({ value }: { value: CellValue }) {
+  if (value === 'check') {
+    return <Check className="w-[18px] h-[18px] text-[#16A34A]" aria-label="Yes" />;
   }
-  if (value) {
-    return <Check className="w-4 h-4 text-[#16A34A]" />;
+  if (value === 'x') {
+    return <X className="w-[18px] h-[18px] text-[#DC2626]" style={{ opacity: 0.5 }} aria-label="No" />;
   }
-  return <X className="w-4 h-4 text-[#E4E4E7]" />;
+  return <CircleDot className="w-[18px] h-[18px] text-[#D97706]" aria-label="Partial" />;
 }
 
 export function ComparisonTable() {
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
+    <section className="bg-white py-32">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        {/* Header */}
         <motion.div
           className="text-center max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.6, ease }}
         >
-          <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-widest">
-            Why Reliastra
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#09090B] mt-4 tracking-tight">
-            The Evidence Gap
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-4">
+            WHY RELIASTRA
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#09090B] mb-6">
+            The evidence gap.
           </h2>
-          <p className="text-lg text-[#52525B] mt-4 leading-relaxed">
-            Existing tools tell you something is wrong. Reliastra tells you
-            who to blame — and gives you the proof.
+          <p className="text-[#52525B] leading-relaxed">
+            Existing monitoring tools can tell you something is wrong. Only Reliastra
+            can prove it was your vendor—and give you the evidence to claim your SLA
+            credits.
           </p>
         </motion.div>
 
+        {/* Table */}
         <motion.div
-          className="overflow-x-auto"
-          initial={{ opacity: 0, y: 20 }}
+          className="max-w-4xl mx-auto overflow-x-auto"
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8, ease }}
         >
-          <table className="w-full min-w-[640px]" role="table">
+          <table className="w-full text-sm" role="table">
             <thead>
-              <tr>
-                <th className="text-left text-sm font-semibold text-[#52525B] py-3 pr-4 w-56" />
-                {COLUMNS.map((col) => (
+              <tr className="bg-[#F8F9FA]">
+                {HEADERS.map((header, i) => (
                   <th
-                    key={col.key}
+                    key={header}
                     className={cn(
-                      'text-center text-sm font-semibold py-3 px-4 w-36',
-                      col.highlight ? 'text-[#0891B2]' : 'text-[#A1A1AA]'
+                      'font-semibold text-sm text-[#09090B] py-4 px-4 text-left',
+                      i === 0 && 'w-[40%]',
+                      i === HEADERS.length - 1 && 'bg-[#0891B2]/5 border-l-2 border-[#0891B2]'
                     )}
                   >
-                    <span className={col.highlight ? 'block' : ''}>
-                      {col.label}
-                    </span>
+                    {header}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {FEATURES.map((feature, i) => (
-                <tr
-                  key={feature.label}
-                  className={cn(
-                    'border-t border-[#F0F0F0]',
-                    i === FEATURES.length - 1 && 'border-b border-[#E4E4E7]'
-                  )}
+              {ROWS.map((row, i) => (
+                <motion.tr
+                  key={row.feature}
+                  className="border-b border-[#F0F0F0] hover:bg-[#F8F9FA]/50 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.6, delay: i * 0.08, ease }}
                 >
-                  <td className="py-4 pr-4 text-sm text-[#09090B] font-medium">
-                    {feature.label}
+                  <td className="py-4 px-4 text-[#52525B]">{row.feature}</td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex justify-center"><CellIcon value={row.statusPages} /></div>
                   </td>
-                  {COLUMNS.map((col) => {
-                    const isHighlighted = col.highlight;
-                    return (
-                      <td
-                        key={col.key}
-                        className={cn(
-                          'text-center py-4 px-4',
-                          isHighlighted && 'bg-[#ECFEFF]/50'
-                        )}
-                      >
-                        <div className="flex justify-center">
-                          <CellValue value={feature[col.key]} />
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex justify-center"><CellIcon value={row.internalMonitoring} /></div>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="flex justify-center"><CellIcon value={row.basicUptime} /></div>
+                  </td>
+                  <td className="py-4 px-4 text-center bg-[#0891B2]/5 border-l-2 border-[#0891B2]">
+                    <div className="flex justify-center"><CellIcon value={row.reliastra} /></div>
+                  </td>
+                </motion.tr>
               ))}
             </tbody>
           </table>

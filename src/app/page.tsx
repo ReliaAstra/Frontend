@@ -9,6 +9,7 @@ import { ComparisonTable } from '@/components/sections/ComparisonTable';
 import { UseCasesSection } from '@/components/sections/UseCasesSection';
 import { PricingSection } from '@/components/sections/PricingSection';
 import { FAQSection } from '@/components/sections/FAQSection';
+import { FounderSection } from '@/components/sections/FounderSection';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { Footer } from '@/components/sections/Footer';
 
@@ -26,6 +27,7 @@ export default function Home() {
       <UseCasesSection />
       <PricingSection />
       <FAQSection />
+      <FounderSection />
       <FinalCTA />
       <Footer />
     </main>

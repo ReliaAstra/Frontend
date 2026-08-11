@@ -1,99 +1,120 @@
 'use client';
+import { motion } from 'framer-motion';
+import { Github, Twitter, Linkedin, MessageCircle } from 'lucide-react';
 
-import { Github, Twitter, Linkedin } from 'lucide-react';
-import { StatusDot } from '@/components/StatusDot';
+const ease = [0.25, 0.1, 0.25, 1] as const;
 
-const FOOTER_LINKS = {
-  Product: [
-    { label: 'Features', href: '#product' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'Live Status', href: '#live-vendors' },
-    { label: 'Changelog', href: '#blog' },
-    { label: 'Documentation', href: '#blog' },
-  ],
-  Company: [
-    { label: 'About', href: '#community' },
-    { label: 'Blog', href: '#blog' },
-    { label: 'Careers', href: '#community' },
-    { label: 'Contact', href: '#community' },
-  ],
-  Legal: [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-    { label: 'Cookie Policy', href: '#' },
-    { label: 'DPA', href: '#' },
-  ],
-};
+const FOOTER_LINKS = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '/features' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Status', href: '/status' },
+      { label: 'Public Tracking', href: '/tracking' },
+      { label: 'API Docs', href: '/docs' },
+      { label: 'Changelog', href: '/changelog' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Community', href: '/community' },
+      { label: 'Investors', href: '/investors' },
+      { label: 'Careers', href: '/careers' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Security', href: '/security' },
+      { label: 'Cookie Policy', href: '/cookies' },
+    ],
+  },
+];
+
+const SOCIAL_LINKS = [
+  { icon: Github, href: 'https://github.com/reliastre', label: 'GitHub' },
+  { icon: Twitter, href: 'https://twitter.com/reliastre', label: 'Twitter' },
+  { icon: Linkedin, href: 'https://linkedin.com/company/reliastre', label: 'LinkedIn' },
+  { icon: MessageCircle, href: 'https://discord.gg/reliastre', label: 'Discord' },
+];
 
 export function Footer() {
   return (
-    <footer className="bg-[#0A0A0F] border-t border-white/10">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-16">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-12">
-          {/* Brand column */}
-          <div className="lg:col-span-2">
-            <a href="/" className="text-xl font-extrabold text-white tracking-tight">
+    <footer className="bg-[#0A0A0F] border-t border-white/10 pt-20 pb-10">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+          {/* Brand Column */}
+          <motion.div
+            className="col-span-2 md:col-span-1"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6, ease }}
+          >
+            <span className="text-white font-bold text-lg">
               reliastra<span className="text-[#0891B2]">.</span>
-            </a>
-            <p className="text-sm text-[#A1A1AA] mt-3 max-w-xs leading-relaxed">
-              External Dependency Intelligence. Monitor, correlate, and prove vendor
-              SLA breaches.
+            </span>
+            <p className="text-white/40 text-sm mt-4 max-w-xs leading-relaxed">
+              External Dependency Intelligence. Monitor, correlate, and prove vendor SLA breaches.
             </p>
             <div className="flex items-center gap-3 mt-6">
-              <a
-                href="#community"
-                className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="w-4 h-4" />
-              </a>
-              <a
-                href="#community"
-                className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a
-                href="#community"
-                className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="w-4 h-4" />
-              </a>
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white/30 hover:text-white hover:bg-white/5 transition-all duration-200"
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-5 h-5" aria-hidden="true" />
+                </a>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
-          {/* Link columns */}
-          {Object.entries(FOOTER_LINKS).map(([heading, links]) => (
-            <div key={heading}>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-widest mb-4">
-                {heading}
-              </h4>
-              <ul className="space-y-2.5">
-                {links.map((link) => (
+          {/* Link Columns */}
+          {FOOTER_LINKS.map((col, i) => (
+            <motion.div
+              key={col.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, delay: (i + 1) * 0.08, ease }}
+            >
+              <h4 className="text-sm font-semibold text-white mb-4">{col.title}</h4>
+              <ul className="space-y-3">
+                {col.links.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-[#A1A1AA] hover:text-white transition-colors"
+                      className="text-sm text-white/40 hover:text-white transition-colors duration-200"
                     >
                       {link.label}
                     </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-[#A1A1AA]">
-            © {new Date().getFullYear()} Reliastra. All rights reserved.
+        {/* Bottom Row */}
+        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-white/30">
+            © 2025 Reliastra, Inc. All rights reserved.
           </p>
           <div className="flex items-center gap-2">
-            <StatusDot status="up" size="sm" />
-            <span className="text-xs text-[#A1A1AA]">All systems operational</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]" />
+            </span>
+            <span className="text-xs text-[#16A34A]">All systems operational</span>
           </div>
         </div>
       </div>

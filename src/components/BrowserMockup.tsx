@@ -9,8 +9,8 @@ interface BrowserMockupProps {
 
 export function BrowserMockup({ url = 'reliastra.com/dashboard', children, className }: BrowserMockupProps) {
   return (
-    <div className={cn('rounded-xl border border-[#E4E4E7] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.03)] bg-white', className)}>
-      <div className="flex items-center gap-2 px-4 py-3 bg-[#F8F9FA] border-b border-[#E4E4E7]">
+    <div className={cn('rounded-2xl border border-[#E4E4E7] overflow-hidden shadow-elevated bg-white', className)}>
+      <div className="flex items-center gap-2 px-4 py-3.5 bg-[#F8F9FA] border-b border-[#E4E4E7]">
         <div className="flex gap-1.5">
           <div className="w-[10px] h-[10px] rounded-full bg-[#EF4444]" />
           <div className="w-[10px] h-[10px] rounded-full bg-[#F59E0B]" />

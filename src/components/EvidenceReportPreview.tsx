@@ -1,10 +1,32 @@
 'use client';
+import { useRef, useEffect, useState } from 'react';
+import { useInView, useMotionValue, useTransform, animate } from 'framer-motion';
 import { BrowserMockup } from '@/components/BrowserMockup';
 
 export function EvidenceReportPreview() {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(reportRef, { once: true, margin: '-100px' });
+  const motionCount = useMotionValue(0);
+  const displayAmount = useTransform(motionCount, (v) => `$${Math.round(v).toLocaleString()}`);
+  const [displayValue, setDisplayValue] = useState('$0');
+
+  useEffect(() => {
+    const unsubscribe = displayAmount.on('change', (v) => setDisplayValue(v));
+    return () => unsubscribe();
+  }, [displayAmount]);
+
+  useEffect(() => {
+    if (isInView) {
+      animate(motionCount, 2840, {
+        duration: 2,
+        ease: [0.25, 0.1, 0.25, 1],
+      });
+    }
+  }, [isInView, motionCount]);
+
   return (
     <BrowserMockup url="reliastra.com/reports/RPT-2024-0847.pdf" className="max-w-md">
-      <div className="relative p-5 space-y-4 bg-white scan-line">
+      <div ref={reportRef} className="relative p-5 space-y-4 bg-white scan-line">
         {/* Report Header */}
         <div className="border-b border-[#E4E4E7] pb-3">
           <div className="flex items-center justify-between">
@@ -90,7 +112,7 @@ export function EvidenceReportPreview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold text-[#0891B2] uppercase tracking-wider">SLA Credit Eligible</p>
-              <p className="text-lg font-bold text-[#09090B] mt-0.5">~$2,840</p>
+              <p className="text-2xl font-bold text-[#0891B2] mt-0.5">{displayValue}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] text-[#0891B2]">Confidence</p>

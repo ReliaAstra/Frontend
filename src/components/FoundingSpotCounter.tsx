@@ -10,9 +10,10 @@ interface SpotData {
 
 export function FoundingSpotCounter() {
   const [data, setData] = useState<SpotData | null>(null);
-  const count = useMotionValue(0);
+  // Start from 25 (total) and count DOWN to remaining
+  const count = useMotionValue(25);
   const rounded = useTransform(count, (v) => Math.round(v));
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(25);
 
   useEffect(() => {
     const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
@@ -24,12 +25,21 @@ export function FoundingSpotCounter() {
       .then((res) => res.json())
       .then((json: SpotData) => {
         setData(json);
-        animate(count, json.remaining, { duration: 1.5, ease: 'easeOut' });
+        // Count DOWN from 25 (total) to remaining with spring physics
+        animate(count, json.remaining, {
+          type: 'spring',
+          stiffness: 100,
+          damping: 15,
+        });
       })
       .catch(() => {
         const fallback: SpotData = { total: 25, remaining: 17, claimed: 8 };
         setData(fallback);
-        animate(count, fallback.remaining, { duration: 1.5, ease: 'easeOut' });
+        animate(count, fallback.remaining, {
+          type: 'spring',
+          stiffness: 100,
+          damping: 15,
+        });
       });
   }, [count]);
 
@@ -49,20 +59,19 @@ export function FoundingSpotCounter() {
     <div className="space-y-4">
       {/* Counter number */}
       <div className="text-center">
-        <span className="text-4xl font-extrabold text-white" aria-label={`${displayValue} spots remaining`}>
+        <span className="text-7xl font-bold text-white" aria-label={`${displayValue} spots remaining`}>
           {displayValue}
         </span>
         <span className="text-lg text-[#A1A1AA] ml-1">of {data.total} spots remaining</span>
       </div>
 
-      {/* Segmented progress bar */}
-      <div className="flex justify-center gap-1" aria-label={`${data.claimed} of ${data.total} spots claimed`}>
+      {/* Dot progress - 25 dots, 10px each */}
+      <div className="flex justify-center gap-1.5 flex-wrap" aria-label={`${data.claimed} of ${data.total} spots claimed`}>
         {Array.from({ length: segments }, (_, i) => (
           <motion.div
             key={i}
-            className="h-2 rounded-full"
+            className="w-[10px] h-[10px] rounded-full"
             style={{
-              width: '12px',
               backgroundColor: i < filled ? '#0891B2' : 'rgba(255,255,255,0.1)',
             }}
             initial={{ opacity: 0, scale: 0 }}

@@ -1,112 +1,217 @@
 'use client';
+import { useState, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-import { motion } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Building2, Server } from 'lucide-react';
+const ease = [0.25, 0.1, 0.25, 1] as const;
 
-const TABS = [
+const TABS = ['SaaS Teams', 'Agencies', 'DevOps'] as const;
+type TabKey = (typeof TABS)[number];
+
+function AnimatedCounter({ target, key: counterKey }: { target: number; key: string }) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (v) => `$${Math.round(v).toLocaleString()}`);
+  const [display, setDisplay] = useState('$0');
+
+  useEffect(() => {
+    const unsub = rounded.on('change', (v) => setDisplay(v));
+    return () => unsub();
+  }, [rounded]);
+
+  useEffect(() => {
+    animate(count, target, { duration: 1.2, ease: 'easeOut' });
+  }, [counterKey, count, target]);
+
+  return <span>{display}</span>;
+}
+
+const TAB_CONTENT: Record<
+  TabKey,
   {
-    value: 'saas',
-    label: 'SaaS Teams',
-    icon: Users,
+    headline: string;
+    body: string;
+    visual: React.ReactNode;
+  }
+> = {
+  'SaaS Teams': {
     headline: 'Protect Your SLA Commitments',
-    description:
-      'Your customers expect 99.9% uptime. When a vendor API drops, your PagerDuty fires. Reliastra gives you the evidence to redirect blame and recover costs.',
-    mockup: {
-      title: 'Incident #487 — Stripe Payments Degradation',
-      status: 'Vendor Fault Confirmed',
-      metric: '$4,200 SLA credit eligible',
-    },
+    body: 'Your customers pay for 99.9% uptime. When a vendor like PagerDuty or Stripe drops the ball, your SLA is on the line—not theirs. Reliastra gives you the independent evidence to claim vendor SLA credits and protect your margins.',
+    visual: (
+      <div className="bg-[#F8F9FA] rounded-2xl p-6 border border-[#E4E4E7] space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1AA]">
+            SLA Credit Eligible
+          </span>
+          <span className="text-[10px] font-mono text-[#A1A1AA]">RPT-2024-0847</span>
+        </div>
+        <div className="bg-[#0891B2]/10 rounded-xl p-6 text-center">
+          <p className="text-sm text-[#52525B] mb-1">Estimated Credit</p>
+          <p className="text-4xl font-bold text-[#09090B]">
+            <AnimatedCounter target={4200} key="saas" />
+          </p>
+        </div>
+        <div className="space-y-2 text-xs text-[#52525B]">
+          <div className="flex justify-between"><span>Vendor</span><span className="font-semibold text-[#09090B]">PagerDuty</span></div>
+          <div className="flex justify-between"><span>Duration</span><span className="font-semibold text-[#DC2626]">2h 14m</span></div>
+          <div className="flex justify-between"><span>Confidence</span><span className="font-semibold text-[#0891B2]">98.7%</span></div>
+        </div>
+      </div>
+    ),
   },
-  {
-    value: 'agencies',
-    label: 'Agencies',
-    icon: Building2,
-    headline: 'Prove It Wasn\'t Your Code',
-    description:
-      'Clients blame your team for every outage. With Reliastra, show exactly when and how the vendor failed — before your standup even starts.',
-    mockup: {
-      title: 'Client Report — Q3 Vendor Incidents',
-      status: '8 vendor-caused incidents documented',
-      metric: '$12,400 in client credits preserved',
-    },
+  Agencies: {
+    headline: 'Keep Clients. Keep Revenue.',
+    body: 'When a vendor outage affects your client’s site, they don’t care whose fault it is—they care that it’s down. Reliastra gives you the evidence report to show exactly what happened, protecting your relationship and your invoice.',
+    visual: (
+      <div className="bg-[#F8F9FA] rounded-2xl border border-[#E4E4E7] overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E4E4E7]">
+          <div className="flex gap-1.5">
+            <div className="w-[10px] h-[10px] rounded-full bg-[#EF4444]" />
+            <div className="w-[10px] h-[10px] rounded-full bg-[#F59E0B]" />
+            <div className="w-[10px] h-[10px] rounded-full bg-[#22C55E]" />
+          </div>
+          <div className="flex-1 text-center">
+            <span className="text-xs text-[#A1A1AA] font-mono">reliastra.com/reports/agency-share</span>
+          </div>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded bg-[#0891B2]/10 flex items-center justify-center">
+              <span className="text-[10px] font-bold text-[#0891B2]">R</span>
+            </div>
+            <span className="text-sm font-semibold text-[#09090B]">Reliastra Report</span>
+            <span className="ml-auto text-[10px] bg-[#16A34A]/10 text-[#16A34A] px-2 py-0.5 rounded-full font-medium">Shared</span>
+          </div>
+          <p className="text-xs text-[#52525B] leading-relaxed">
+            Prepared for: <span className="font-semibold text-[#09090B]">Acme Corp</span><br />
+            Incident: Third-party API degradation affecting checkout flow.
+          </p>
+          <div className="border-t border-[#E4E4E7] pt-3 text-xs text-[#A1A1AA]">
+            Generated by Reliastra · Independent verification from 3 regions
+          </div>
+        </div>
+      </div>
+    ),
   },
-  {
-    value: 'devops',
-    label: 'DevOps',
-    icon: Server,
-    headline: 'Automate Your War Room',
-    description:
-      'Stop manually checking vendor dashboards during incidents. Reliastra automatically correlates vendor health with your services and generates evidence.',
-    mockup: {
-      title: 'Auto-Correlation Alert — Auth0 + API Gateway',
-      status: 'Correlated: 99.2% confidence',
-      metric: 'Evidence report generated in 3.2s',
-    },
+  DevOps: {
+    headline: 'Validate What You Can’t See.',
+    body: 'You already have Datadog, Grafana, and PagerDuty. But they only see inside your infrastructure. Reliastra adds the external layer—monitoring vendors from the outside in, so you can validate what’s really happening.',
+    visual: (
+      <div className="space-y-3">
+        {/* Internal monitoring card */}
+        <div className="bg-[#F8F9FA] rounded-xl p-4 border border-[#E4E4E7]">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A1A1AA] mb-2">Internal (Datadog)</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-8 bg-[#E4E4E7] rounded overflow-hidden">
+              <div className="h-full w-[85%] bg-[#16A34A]/20 rounded flex items-center px-2">
+                <span className="text-[10px] font-mono text-[#16A34A]">All green</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] text-[#A1A1AA] mt-1">Your infra looks fine</p>
+        </div>
+        {/* Arrow */}
+        <div className="flex justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12l7 7 7-7" stroke="#0891B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        {/* External monitoring card */}
+        <div className="bg-[#F8F9FA] rounded-xl p-4 border border-[#DC2626]/20">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A1A1AA] mb-2">External (Reliastra)</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-8 bg-[#E4E4E7] rounded overflow-hidden">
+              <div className="h-full w-[60%] bg-[#DC2626]/20 rounded flex items-center px-2">
+                <span className="text-[10px] font-mono text-[#DC2626]">Vendor degraded</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] text-[#DC2626] mt-1">Stripe API returning 5xx from 2 regions</p>
+        </div>
+      </div>
+    ),
   },
-];
+};
 
 export function UseCasesSection() {
+  const [activeTab, setActiveTab] = useState<TabKey>('SaaS Teams');
+  const content = TAB_CONTENT[activeTab];
+
   return (
-    <section className="py-24 md:py-32 bg-[#F8F9FA]">
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
+    <section className="bg-[#F8F9FA] py-32">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        {/* Header */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-2xl mx-auto mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.6, ease }}
         >
-          <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-widest">
-            Use Cases
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#09090B] mt-4 tracking-tight">
-            Built for Teams That Depend on Vendors
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-4">
+            USE CASES
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#09090B]">
+            Built for teams that depend on vendors.
           </h2>
         </motion.div>
 
-        <Tabs defaultValue="saas" className="w-full">
-          <TabsList className="w-full max-w-md mx-auto grid grid-cols-3 bg-white border border-[#E4E4E7] rounded-lg p-1 h-auto">
+        {/* Tabs */}
+        <motion.div
+          className="flex justify-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.6, delay: 0.1, ease }}
+        >
+          <div className="bg-white rounded-full p-1 border border-[#E4E4E7] inline-flex">
             {TABS.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="rounded-md py-2.5 text-xs font-semibold data-[state=active]:bg-[#0891B2] data-[state=active]:text-white data-[state=active]:shadow-none"
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'relative px-6 py-2.5 rounded-full font-medium text-sm transition-colors duration-200 min-h-[44px]',
+                  activeTab === tab
+                    ? 'text-white'
+                    : 'text-[#52525B] hover:text-[#09090B]'
+                )}
+                aria-pressed={activeTab === tab}
               >
-                <tab.icon className="w-3.5 h-3.5 mr-1.5" />
-                {tab.label}
-              </TabsTrigger>
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="activeTabBg"
+                    className="absolute inset-0 bg-[#0A0A0F] rounded-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{tab}</span>
+              </button>
             ))}
-          </TabsList>
+          </div>
+        </motion.div>
 
-          {TABS.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value}>
-              <motion.div
-                className="grid lg:grid-cols-2 gap-12 items-center mt-12"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <div>
-                  <h3 className="text-2xl font-bold text-[#09090B]">{tab.headline}</h3>
-                  <p className="text-[#52525B] mt-4 leading-relaxed">{tab.description}</p>
-                </div>
-
-                {/* Mockup card */}
-                <div className="rounded-xl border border-[#E4E4E7] bg-white p-6 shadow-card">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-                    <span className="text-xs font-medium text-[#16A34A]">{tab.mockup.status}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-[#09090B] mb-1">{tab.mockup.title}</p>
-                  <div className="mt-4 bg-[#ECFEFF] rounded-lg p-4">
-                    <p className="text-2xl font-bold text-[#0891B2]">{tab.mockup.metric}</p>
-                  </div>
-                </div>
-              </motion.div>
-            </TabsContent>
-          ))}
-        </Tabs>
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease }}
+          >
+            <div>
+              <h3 className="text-2xl font-semibold text-[#09090B] mb-4">
+                {content.headline}
+              </h3>
+              <p className="text-[#52525B] leading-relaxed">
+                {content.body}
+              </p>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              {content.visual}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

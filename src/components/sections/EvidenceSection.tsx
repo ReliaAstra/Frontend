@@ -1,10 +1,12 @@
 'use client';
-
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { EvidenceReportPreview } from '@/components/EvidenceReportPreview';
+import { cn } from '@/lib/utils';
 
-const BULLETS = [
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
+const FEATURES = [
   'Multi-region independent verification timestamps',
   'Correlated vendor degradation with your service metrics',
   'Court-ready format accepted by major cloud vendors',
@@ -13,52 +15,51 @@ const BULLETS = [
 
 export function EvidenceSection() {
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left: Text */}
+    <section className="bg-white py-32">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left Column */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.6, ease }}
           >
-            <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-widest">
-              SLA Evidence
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#09090B] mt-4 tracking-tight">
-              Reports That Get You Paid
-            </h2>
-            <p className="text-lg text-[#52525B] mt-4 leading-relaxed">
-              When a vendor breaches SLA, you need more than screenshots.
-              Reliastra generates evidence reports that vendors actually accept.
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-4">
+              SLA EVIDENCE
             </p>
-            <ul className="mt-8 space-y-4">
-              {BULLETS.map((bullet, i) => (
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#09090B] mb-6">
+              Reports that get you paid.
+            </h2>
+            <p className="text-[#52525B] leading-relaxed mb-8">
+              Screenshots and Slack messages don&apos;t cut it. Reliastra generates
+              structured, timestamped evidence reports with independent verification
+              from multiple regions—exactly what vendor support teams need to process
+              your SLA credit claim.
+            </p>
+            <ul className="space-y-4">
+              {FEATURES.map((feature, i) => (
                 <motion.li
-                  key={bullet}
+                  key={feature}
                   className="flex items-start gap-3"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.6, delay: 0.1 + i * 0.08, ease }}
                 >
-                  <div className="w-5 h-5 rounded-full bg-[#ECFEFF] flex items-center justify-center mt-0.5 shrink-0">
-                    <Check className="w-3 h-3 text-[#0891B2]" />
-                  </div>
-                  <span className="text-[#52525B] text-sm leading-relaxed">{bullet}</span>
+                  <CheckCircle2 className="w-5 h-5 text-[#16A34A] shrink-0 mt-0.5" aria-hidden="true" />
+                  <span className="text-sm text-[#52525B] leading-relaxed">{feature}</span>
                 </motion.li>
               ))}
             </ul>
           </motion.div>
 
-          {/* Right: Report preview */}
+          {/* Right Column - Report Preview */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="flex justify-center"
+            transition={{ duration: 0.8, delay: 0.2, ease }}
           >
             <EvidenceReportPreview />
           </motion.div>

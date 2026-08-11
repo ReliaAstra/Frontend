@@ -1,76 +1,18 @@
-# Worklog — Reliastra Sub-Pages
-
-**Date:** August 2025  
-**Task:** Build all marketing and legal sub-pages for Reliastra (External Dependency Intelligence)
-
 ---
+Task ID: 1
+Agent: Main Agent
+Task: Reliastra $1M Landing Page Rebuild — Fix 10 critical flaws
 
-## Files Created (26 files)
+Work Log:
+- Analyzed all 10 critical flaws in the existing landing page
+- Launched parallel agents to rebuild design system + components and all section components
+- Agent 1: Updated globals.css with new design tokens (text-display, text-h2, shadow-card-hover, shadow-featured-glow, shadow-elevated, scan-line 4s, link-underline), rebuilt LiveVendorChart (smooth bezier curves via catmull-rom-to-bezier, Auth0 starts degraded, per-vendor status probabilities, correlation alert banner every 8s, sine-wave+noise data), rebuilt VendorSparkline (bezier curves, gradient fill), rebuilt CorrelationTimeline (auto-play loop every 6s with phase-based animation), updated FoundingSpotCounter (count DOWN from 25, spring physics, 10px round dots), updated EvidenceReportPreview (scan-line class, $2,840 count-up), updated BrowserMockup (rounded-2xl, shadow-elevated)
+- Agent 2: Rebuilt all 13 existing section components (Navbar 72px with status indicator, Hero with dark CTAs, SocialProofBar with styled wordmarks, Problem with stagger cards, Solution with bento+correlation, Evidence with bullets, LiveVendorGrid with status variance, ComparisonTable with prominent RED X marks, UseCases with layoutId pill tabs and animated counters, Pricing with featured glow and founding program, FAQ with rotating plus, FinalCTA with mini product demo, Footer with status indicator), created new FounderSection (Emmanuel Osei), updated page.tsx with 14 sections
+- Fixed missing `useEffect` import in LiveVendorGrid.tsx
+- Verified: ESLint clean, dev server 200, browser-verified all 10 H2s, mobile responsive, zero console errors
 
-### Marketing Pages (11 routes, 22 files)
-
-| Route | Server Page | Client Component |
-|-------|------------|------------------|
-| `/pricing` | `src/app/(marketing)/pricing/page.tsx` | `pricing-content.tsx` |
-| `/status` | `src/app/(marketing)/status/page.tsx` | `status-content.tsx` |
-| `/track/[vendor]` | `src/app/(marketing)/track/[vendor]/page.tsx` | `track-vendor-content.tsx` |
-| `/blog` | `src/app/(marketing)/blog/page.tsx` | `blog-content.tsx` |
-| `/blog/[slug]` | `src/app/(marketing)/blog/[slug]/page.tsx` | `blog-post-content.tsx` |
-| `/community` | `src/app/(marketing)/community/page.tsx` | `community-content.tsx` |
-| `/investors` | `src/app/(marketing)/investors/page.tsx` | `investors-content.tsx` |
-| `/about` | `src/app/(marketing)/about/page.tsx` | `about-content.tsx` |
-| `/changelog` | `src/app/(marketing)/changelog/page.tsx` | `changelog-content.tsx` |
-| `/contact` | `src/app/(marketing)/contact/page.tsx` | `contact-content.tsx` |
-
-### Legal Pages (3 routes, 3 files)
-
-| Route | File |
-|-------|------|
-| `/terms` | `src/app/(legal)/terms/page.tsx` |
-| `/privacy` | `src/app/(legal)/privacy/page.tsx` |
-| `/guarantee` | `src/app/(legal)/guarantee/page.tsx` |
-
-### API Routes (2 files)
-
-| Route | File |
-|-------|------|
-| `POST /api/contact` | `src/app/api/contact/route.ts` |
-| `POST /api/newsletter/subscribe` | `src/app/api/newsletter/subscribe/route.ts` |
-
-### Shared Data (1 file)
-
-| File | Purpose |
-|------|---------|
-| `src/lib/blog-data.ts` | Blog post data (3 posts with full content, shared between blog index and slug pages) |
-
----
-
-## Deviations from Spec
-
-1. **Font**: Spec requested `next/font/google` Inter with `--font-inter` variable, but modifying `layout.tsx` is prohibited. Used the existing Geist Sans font already configured in the project.
-
-2. **Status page dot position**: Used inline `style` for the timeline dot positioning in changelog rather than a more complex CSS approach — functionally equivalent.
-
-3. **Legal pages**: Terms (15 sections), Privacy (10 sections), and Guarantee pages are all fully written with realistic SaaS content, not stubs.
-
----
-
-## Known Issues
-
-1. **No existing files modified** — as required. However, the layout uses the `Toaster` component (from `@/components/ui/toaster`), while the contact/investor forms use `sonner`'s `toast()`. Both are present in the codebase. If the Sonner `<Toaster />` is not mounted in the layout, toast notifications from `sonner` won't render. The existing layout imports from `@/components/ui/toaster` (radix toast), not from `@/components/ui/sonner`. This may need the layout to be updated by the landing page agent to include the Sonner Toaster.
-
-2. **Static vendor pages**: The `/track/[vendor]` pages generate static params for 6 vendors. If a user navigates to a vendor not in the list, Next.js will return a 404.
-
-3. **Press Kit and Pitch Deck links**: These are placeholder links (`href="#"`) that prevent default navigation but show no content.
-
----
-
-## Verification
-
-- ✅ ESLint passes with zero errors
-- ✅ Dev server compiles all pages without errors
-- ✅ No existing files were modified
-- ✅ All client components have `'use client'` directive
-- ✅ All pages use semantic HTML with proper `<main>`, `<section>`, `<article>` elements
-- ✅ Mobile-first responsive design with Tailwind breakpoints
-- ✅ Design tokens from spec applied consistently
+Stage Summary:
+- All 10 critical flaws fixed
+- 8 custom/section files modified, 1 new section created, 1 page file updated
+- Key fixes: smooth bezier sparklines, status variance (Auth0 degraded, Twilio down), auto-playing correlation demo, scan-line evidence report, founder section, styled wordmarks, prominent X marks, dark CTAs, mini product demo in final CTA, "14-day trial" removed
+- Verified via agent-browser: desktop + mobile, all sections render, zero errors

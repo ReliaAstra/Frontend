@@ -1,115 +1,108 @@
 'use client';
-
 import { motion } from 'framer-motion';
 import { Satellite, GitCompare, FileText } from 'lucide-react';
 import { CorrelationTimeline } from '@/components/CorrelationTimeline';
+import { cn } from '@/lib/utils';
+
+const ease = [0.25, 0.1, 0.25, 1] as const;
 
 const BENTO_CARDS = [
   {
     icon: Satellite,
-    title: 'Track',
-    subtitle: 'Independent Vendor Monitoring',
-    description:
-      'Monitor every third-party API from your own infrastructure. Real-time latency, uptime, and error tracking — no more relying on vendor status pages.',
+    sublabel: 'INDEPENDENT VENDOR MONITORING',
+    title: 'Track Every Critical Vendor',
+    body: 'Deploy lightweight checks from independent regions that monitor your vendors’ APIs directly—completely separate from your infrastructure. Know the moment they break, before your users do.',
   },
   {
     icon: GitCompare,
-    title: 'Correlate',
-    subtitle: 'Cross-Reference Your Stack',
-    description:
-      'Automatically correlate vendor degradation with your own service metrics. See the causal chain from API failure to customer impact.',
+    sublabel: 'CROSS-REFERENCE YOUR STACK',
+    body: 'Automatically correlate vendor degradation events with your own service metrics. When your error rates spike, Reliastra shows you whether a vendor caused it—and when.',
+    title: 'Cross-Reference Your Stack',
   },
   {
     icon: FileText,
-    title: 'Prove',
-    subtitle: 'Timestamped SLA Evidence',
-    description:
-      'Generate court-ready evidence reports with independent verification, multi-region timestamps, and confidence scoring. Claim the credits you deserve.',
+    sublabel: 'TIMESTAMPED SLA EVIDENCE',
+    title: 'Generate SLA Evidence Reports',
+    body: 'One click generates a court-ready report with multi-region verification, timestamped logs, and correlated impact analysis. Accepted by major cloud vendors for SLA credit claims.',
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
-  },
-};
-
 export function SolutionSection() {
   return (
-    <section className="py-24 md:py-32 bg-[#F8F9FA]">
-      <div className="max-w-6xl mx-auto px-4 md:px-8">
-        {/* Heading */}
+    <section className="bg-[#F8F9FA] py-32">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+        {/* Header */}
         <motion.div
           className="text-center max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.6, ease }}
         >
-          <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-widest">
-            The Solution
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#09090B] mt-4 tracking-tight">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-4">
+            HOW IT WORKS
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#09090B]">
             Track. Correlate. Prove.
           </h2>
-          <p className="text-lg text-[#52525B] mt-4 leading-relaxed">
-            Three pillars that turn vendor failures from finger-pointing into
-            evidence-backed credit claims.
-          </p>
         </motion.div>
 
-        {/* Bento grid */}
-        <motion.div
-          className="grid md:grid-cols-3 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-        >
-          {BENTO_CARDS.map((card) => (
-            <motion.article
-              key={card.title}
-              variants={cardVariants}
-              className="rounded-xl border border-[#E4E4E7] bg-white p-6 shadow-card hover:-translate-y-1 hover:shadow-elevated hover:border-[#0891B2]/30 transition-all duration-300"
+        {/* Bento Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
+          {BENTO_CARDS.map((card, i) => (
+            <motion.div
+              key={card.sublabel}
+              className="bg-white rounded-2xl p-8 border border-[#E4E4E7] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-4 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] hover:border-[#0891B2]/30"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, delay: i * 0.1, ease }}
             >
-              <div className="w-10 h-10 rounded-lg bg-[#ECFEFF] flex items-center justify-center mb-4">
-                <card.icon className="w-5 h-5 text-[#0891B2]" />
+              <div className="w-12 h-12 rounded-xl bg-[#0891B2]/10 flex items-center justify-center mb-6">
+                <card.icon className="w-6 h-6 text-[#0891B2]" aria-hidden="true" />
               </div>
-              <h3 className="text-xl font-bold text-[#09090B]">{card.title}</h3>
-              <p className="text-xs font-semibold text-[#0891B2] mt-1 uppercase tracking-wider">
-                {card.subtitle}
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#0891B2] mb-3">
+                {card.sublabel}
               </p>
-              <p className="text-sm text-[#52525B] mt-3 leading-relaxed">{card.description}</p>
-            </motion.article>
+              <h3 className="text-lg font-semibold text-[#09090B] mb-3">
+                {card.title}
+              </h3>
+              <p className="text-sm text-[#52525B] leading-relaxed">
+                {card.body}
+              </p>
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Live correlation demo */}
+        {/* Correlation Demo */}
         <motion.div
-          className="mt-12 rounded-xl bg-[#0A0A0F] border border-white/10 p-8 grid-pattern"
+          className="bg-[#0A0A0F] rounded-3xl p-10 md:p-16 text-white overflow-hidden relative"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.8, ease }}
         >
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-bold text-white">Live Correlation Demo</h3>
-            <p className="text-sm text-[#A1A1AA] mt-1">
-              Real-time correlation between your service and vendor API
-            </p>
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <div className="text-center mb-4">
+              <h3 className="text-2xl font-semibold text-white mb-3">
+                Live Correlation Engine
+              </h3>
+              <p className="text-white/50 text-sm">
+                See how Reliastra correlates vendor degradation with your service impact in real-time.
+              </p>
+            </div>
+            <CorrelationTimeline />
           </div>
-          <CorrelationTimeline />
         </motion.div>
       </div>
     </section>

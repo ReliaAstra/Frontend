@@ -22,7 +22,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
   return (
     <div className="space-y-6">
       {/* Header Card */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <SeverityBadge severity={incident.severity} />
           <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 border-blue-200">
@@ -48,7 +48,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
                   className={
                     "h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors " +
                     (idx <= currentStep
-                      ? "bg-[#6366F1] border-[#6366F1] text-white"
+                      ? "bg-[#0891B2] border-[#0891B2] text-white"
                       : "bg-transparent border-gray-200 text-gray-400")
                   }
                 >
@@ -59,7 +59,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
                 </span>
               </div>
               {idx < statusSteps.length - 1 && (
-                <div className={"h-0.5 w-12 sm:w-20 mx-1 mb-4 " + (idx < currentStep ? "bg-[#6366F1]" : "bg-gray-200")} />
+                <div className={"h-0.5 w-12 sm:w-20 mx-1 mb-4 " + (idx < currentStep ? "bg-[#0891B2]" : "bg-gray-200")} />
               )}
             </div>
           ))}
@@ -67,7 +67,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
       </div>
 
       {/* Description */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Description</h3>
         <div className="prose prose-sm max-w-none text-gray-500 text-sm leading-relaxed whitespace-pre-wrap">
           {incident.description}
@@ -79,14 +79,14 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
         {/* Left Column */}
         <div className="space-y-6">
           {/* Timeline */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-4">Timeline</h3>
             <IncidentTimeline events={timeline} />
           </div>
 
           {/* Correlated Signals */}
           {signals.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-4">Correlated Signals</h3>
               <div className="space-y-4">
                 {signals.map((signal) => (
@@ -100,7 +100,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
                         <LineChart data={signal.values.map((v) => ({ v }))} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                           <XAxis dataKey="v" hide />
                           <YAxis hide />
-                          <Line type="monotone" dataKey="v" stroke="#8B5CF6" strokeWidth={1.5} dot={false} />
+                          <Line type="monotone" dataKey="v" stroke="#0891B2" strokeWidth={1.5} dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -115,7 +115,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
         {/* Right Column */}
         <div className="space-y-6">
           {/* Metadata */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-4">Metadata</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
@@ -144,7 +144,7 @@ export function IncidentDetail({ incident, timeline, signals }: IncidentDetailPr
           </div>
 
           {/* Evidence */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-4">Evidence Reports</h3>
             {timeline.some((e) => e.type === "evidence_generated") ? (
               <div className="space-y-2">

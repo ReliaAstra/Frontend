@@ -71,7 +71,7 @@ export function MemberTable({ members }: MemberTableProps) {
         <p className="text-sm text-gray-500">{localMembers.length} team members</p>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
+            <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
               <UserPlus className="h-3.5 w-3.5" />
               Invite Member
             </Button>
@@ -90,7 +90,7 @@ export function MemberTable({ members }: MemberTableProps) {
                   className="bg-gray-50 border-gray-200 text-gray-900"
                 />
               </div>
-              <Button onClick={handleInvite} className="w-full bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
+              <Button onClick={handleInvite} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
                 Send Invitation
               </Button>
             </div>
@@ -98,7 +98,7 @@ export function MemberTable({ members }: MemberTableProps) {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">
@@ -113,7 +113,7 @@ export function MemberTable({ members }: MemberTableProps) {
               <tr key={member.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-xs font-medium">
+                    <div className="h-8 w-8 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xs font-medium">
                       {member.full_name.charAt(0)}
                     </div>
                     <div>

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function StatusPage() {
   return (
-    <main className="min-h-screen bg-[#0A0A0F]">
+    <main className="min-h-screen bg-white pt-[72px]">
       <StatusContent />
     </main>
   );

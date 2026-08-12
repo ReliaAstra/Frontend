@@ -65,16 +65,16 @@ const incidents: Incident[] = [
 ];
 
 const statusConfig: Record<StatusLevel, { label: string; color: string; bg: string; dot: string; icon: typeof CheckCircle2 }> = {
-  operational: { label: 'Operational', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20', dot: 'bg-emerald-400', icon: CheckCircle2 },
-  degraded: { label: 'Degraded Performance', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20', dot: 'bg-amber-400', icon: AlertTriangle },
-  down: { label: 'Major Outage', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20', dot: 'bg-red-400', icon: AlertTriangle },
-  maintenance: { label: 'Under Maintenance', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/20', dot: 'bg-blue-400', icon: Clock },
+  operational: { label: 'Operational', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500', icon: CheckCircle2 },
+  degraded: { label: 'Degraded Performance', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', dot: 'bg-amber-500', icon: AlertTriangle },
+  down: { label: 'Major Outage', color: 'text-red-600', bg: 'bg-red-50 border-red-200', dot: 'bg-red-500', icon: AlertTriangle },
+  maintenance: { label: 'Under Maintenance', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', dot: 'bg-blue-500', icon: Clock },
 };
 
 const incidentStatusConfig = {
-  resolved: { label: 'Resolved', color: 'text-emerald-400 bg-emerald-400/10' },
-  monitoring: { label: 'Monitoring', color: 'text-amber-400 bg-amber-400/10' },
-  investigating: { label: 'Investigating', color: 'text-red-400 bg-red-400/10' },
+  resolved: { label: 'Resolved', color: 'text-emerald-600 bg-emerald-50' },
+  monitoring: { label: 'Monitoring', color: 'text-amber-600 bg-amber-50' },
+  investigating: { label: 'Investigating', color: 'text-red-600 bg-red-50' },
 };
 
 export function StatusContent() {
@@ -86,14 +86,14 @@ export function StatusContent() {
       <div className="text-center mb-16">
         <div className="flex items-center justify-center gap-2 mb-4">
           <Activity className="h-8 w-8 text-[#0891B2]" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white">System Status</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#09090B]">System Status</h1>
         </div>
-        <p className="text-gray-400 text-lg">
+        <p className="text-gray-500 text-lg">
           Real-time health of Reliastra&apos;s monitoring infrastructure.
         </p>
-        <div className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 border border-white/10 bg-white/5">
-          <span className={cn('h-2.5 w-2.5 rounded-full', hasActiveIssue ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400')} />
-          <span className={cn('text-sm font-medium', hasActiveIssue ? 'text-amber-400' : 'text-emerald-400')}>
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 border border-gray-200 bg-gray-50">
+          <span className={cn('h-2.5 w-2.5 rounded-full', hasActiveIssue ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500')} />
+          <span className={cn('text-sm font-medium', hasActiveIssue ? 'text-amber-600' : 'text-emerald-600')}>
             {hasActiveIssue ? 'Partial System Issue' : 'All Systems Operational'}
           </span>
         </div>
@@ -101,7 +101,7 @@ export function StatusContent() {
 
       {/* System Components */}
       <section className="mb-16" aria-label="System components">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Components</h2>
+        <h2 className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-4">Components</h2>
         <div className="space-y-3">
           {components.map((comp) => {
             const config = statusConfig[comp.status];
@@ -109,16 +109,16 @@ export function StatusContent() {
               <div
                 key={comp.name}
                 className={cn(
-                  'flex items-center justify-between rounded-xl border p-4 md:p-5',
+                  'flex items-center justify-between rounded-lg border p-4 md:p-5',
                   config.bg
                 )}
               >
                 <div className="flex items-center gap-3">
                   <span className={cn('h-3 w-3 rounded-full shrink-0', config.dot, comp.status === 'degraded' && 'animate-pulse')} />
-                  <span className="text-white font-medium">{comp.name}</span>
+                  <span className="text-[#09090B] font-medium">{comp.name}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-400 text-sm hidden sm:inline">90-day uptime</span>
+                  <span className="text-gray-500 text-sm hidden sm:inline">90-day uptime</span>
                   <span className={cn('text-sm font-semibold tabular-nums', config.color)}>
                     {comp.uptime.toFixed(2)}%
                   </span>
@@ -131,33 +131,33 @@ export function StatusContent() {
 
       {/* Incident History */}
       <section aria-label="Incident history">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Incident History</h2>
-        <div className="rounded-xl border border-white/10 overflow-hidden">
+        <h2 className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-4">Incident History</h2>
+        <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5">
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Component</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium hidden md:table-cell">Duration</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium hidden lg:table-cell">Summary</th>
+                <tr className="border-b border-[#E4E4E7] bg-[#F8F9FA]">
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Date</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Component</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Status</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium hidden md:table-cell">Duration</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium hidden lg:table-cell">Summary</th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.map((inc, i) => {
                   const sConfig = incidentStatusConfig[inc.status];
                   return (
-                    <tr key={i} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                      <td className="py-3 px-4 text-gray-300 whitespace-nowrap">{inc.date}</td>
-                      <td className="py-3 px-4 text-white font-medium">{inc.component}</td>
+                    <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{inc.date}</td>
+                      <td className="py-3 px-4 text-[#09090B] font-medium">{inc.component}</td>
                       <td className="py-3 px-4">
                         <span className={cn('text-xs font-medium px-2.5 py-1 rounded-full', sConfig.color)}>
                           {sConfig.label}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-gray-400 hidden md:table-cell">{inc.duration}</td>
-                      <td className="py-3 px-4 text-gray-400 max-w-xs truncate hidden lg:table-cell">{inc.summary}</td>
+                      <td className="py-3 px-4 text-gray-500 hidden md:table-cell">{inc.duration}</td>
+                      <td className="py-3 px-4 text-gray-500 max-w-xs truncate hidden lg:table-cell">{inc.summary}</td>
                     </tr>
                   );
                 })}
@@ -169,7 +169,7 @@ export function StatusContent() {
 
       {/* Footer note */}
       <div className="mt-12 text-center">
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-400 text-sm">
           Last updated: August 11, 2025 at 17:00 UTC &middot; Page refreshes every 60 seconds
         </p>
       </div>

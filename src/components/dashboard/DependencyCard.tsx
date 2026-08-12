@@ -17,7 +17,7 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
   const maxVal = Math.max(...dependency.recent_response_times, 1);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
+    <div className="rounded-lg border border-gray-200 bg-white p-5 flex flex-col gap-4">
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">

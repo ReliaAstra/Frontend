@@ -62,7 +62,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
         <p className="text-sm text-gray-500">{localKeys.length} API keys</p>
         <Dialog open={createOpen && !rawKey} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
-          <Button className="gap-2 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
+          <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
             <Plus className="h-3.5 w-3.5" />
             Create Key
           </Button>
@@ -81,7 +81,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
                 className="bg-gray-50 border-gray-200 text-gray-900"
               />
             </div>
-            <Button onClick={handleCreate} className="w-full bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
+            <Button onClick={handleCreate} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
               Create Key
             </Button>
           </div>
@@ -91,7 +91,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
 
       {/* Raw Key Display (one-time) */}
       {rawKey && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 mb-4">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 mb-4">
           <p className="text-sm font-medium text-amber-600 mb-2">Save this key now — it won't be shown again</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-900 font-mono break-all">
@@ -110,7 +110,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">

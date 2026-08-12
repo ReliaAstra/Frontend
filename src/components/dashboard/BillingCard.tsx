@@ -14,18 +14,18 @@ export function BillingCard({ plan }: BillingCardProps) {
   const checkUsage = (plan.current_usage.checks_this_month / plan.checks_per_month) * 100;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <Zap className="h-5 w-5 text-[#6366F1]" />
+          <div className="h-10 w-10 rounded-lg bg-[#0891B2]/8 flex items-center justify-center">
+            <Zap className="h-5 w-5 text-[#0891B2]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{plan.name} Plan</h3>
             <p className="text-sm text-gray-500">${plan.price_monthly}/month</p>
           </div>
         </div>
-        <Button className="bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
+        <Button className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
           Upgrade
         </Button>
       </div>

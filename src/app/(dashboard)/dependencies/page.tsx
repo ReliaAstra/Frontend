@@ -70,7 +70,7 @@ export default function DependenciesPage() {
         </div>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
+            <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
               <Plus className="h-3.5 w-3.5" />
               Add Dependency
             </Button>
@@ -118,7 +118,7 @@ export default function DependenciesPage() {
                   />
                 </div>
               </div>
-              <Button onClick={handleAdd} className="w-full bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
+              <Button onClick={handleAdd} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
                 Add Dependency
               </Button>
             </div>
@@ -158,7 +158,7 @@ export default function DependenciesPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[280px] rounded-xl bg-white" />
+            <Skeleton key={i} className="h-[280px] rounded-lg bg-white" />
           ))}
         </div>
       ) : (

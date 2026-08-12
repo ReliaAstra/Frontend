@@ -81,7 +81,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
         <p className="text-sm text-gray-500">{localChannels.length} channels</p>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
+            <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
               <Plus className="h-3.5 w-3.5" />
               Add Channel
             </Button>
@@ -104,7 +104,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                       <button
                         key={t}
                         onClick={() => setType(t)}
-                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#6366F1] bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#0891B2] bg-[#0891B2]/8 text-[#0891B2]" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
                       >
                         <Icon className="h-4 w-4" />
                         {t}
@@ -117,7 +117,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                 <label className="text-xs text-gray-500 mb-1.5 block">{configLabel[type]}</label>
                 <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabel[type].toLowerCase()}`} className="bg-gray-50 border-gray-200 text-gray-900" />
               </div>
-              <Button onClick={handleAdd} className="w-full bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
+              <Button onClick={handleAdd} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
                 Add Channel
               </Button>
             </div>
@@ -129,7 +129,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
         {localChannels.map((channel) => {
           const Icon = typeIcons[channel.type];
           return (
-            <div key={channel.id} className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
+            <div key={channel.id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.type]}`}>
                   <Icon className="h-4 w-4" />

@@ -2,11 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Layers, AlertTriangle, Settings, LogOut, Shield } from "lucide-react";
+import {
+  LayoutGrid, Layers, AlertTriangle, Shield, Settings, LogOut, Search,
+  HelpCircle, Bell, UserCircle, ChevronDown, Users, Database, FileText, Key,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+interface NavGroup {
+  section: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
     section: "OVERVIEW",
     items: [
@@ -21,8 +36,17 @@ const navItems = [
     ],
   },
   {
-    section: "SYSTEM",
+    section: "INTELLIGENCE",
     items: [
+      { label: "Evidence", href: "#", icon: Shield },
+      { label: "Vendors", href: "#", icon: Database },
+    ],
+  },
+  {
+    section: "OPERATIONS",
+    items: [
+      { label: "Notifications", href: "/settings", icon: Bell },
+      { label: "API Keys", href: "/settings", icon: Key },
       { label: "Settings", href: "/settings", icon: Settings },
     ],
   },
@@ -34,44 +58,45 @@ export function DashboardSidebar() {
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "#") return false;
     return pathname.startsWith(href);
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[260px] flex-col bg-white border-r border-gray-200">
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[240px] flex-col bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 px-6 border-b border-gray-200">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6366F1]">
-          <Shield className="h-4.5 w-4.5 text-white" />
+      <div className="flex h-14 items-center gap-2.5 px-5 border-b border-gray-200">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0891B2]">
+          <Shield className="h-4 w-4 text-white" strokeWidth={2.5} />
         </div>
-        <span className="text-lg font-semibold text-gray-900 tracking-tight">Reliastra</span>
+        <span className="text-[15px] font-semibold text-gray-900 tracking-tight">Reliastra</span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {navItems.map((group) => (
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        {navGroups.map((group) => (
           <div key={group.section}>
-            <p className="px-3 mb-2 text-[11px] font-medium uppercase tracking-wider text-gray-400">
+            <p className="px-3 mb-1.5 text-[11px] font-medium uppercase tracking-wider text-gray-400">
               {group.section}
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link
-                    key={item.href}
+                    key={item.href + item.label}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative",
+                      "flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors relative",
                       active
-                        ? "bg-indigo-50 text-indigo-700"
+                        ? "bg-[#0891B2]/8 text-[#0891B2]"
                         : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                     )}
                   >
                     {active && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-600" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-[#0891B2]" />
                     )}
-                    <item.icon className="h-4.5 w-4.5 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                     {item.label}
                   </Link>
                 );
@@ -82,25 +107,25 @@ export function DashboardSidebar() {
       </nav>
 
       {/* User Footer */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#6366F1] text-white text-sm font-medium">
+      <div className="border-t border-gray-200 px-3 py-3">
+        <div className="flex items-center gap-2.5 px-1 mb-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0891B2] text-white text-xs font-medium">
             {user?.full_name?.charAt(0) || "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-[13px] font-medium text-gray-900 truncate leading-tight">
               {user?.full_name || "User"}
             </p>
-            <p className="text-xs text-gray-400 truncate capitalize">
-              {currentOrg?.role || "Member"}
+            <p className="text-[11px] text-gray-400 truncate capitalize leading-tight">
+              {currentOrg?.name || "Organization"}
             </p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-3.5 w-3.5" />
           Sign Out
         </button>
       </div>

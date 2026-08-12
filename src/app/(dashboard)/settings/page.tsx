@@ -80,9 +80,9 @@ export default function SettingsPage() {
       {/* Tab Content */}
       <div className="max-w-3xl">
         {activeTab === "profile" && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-5">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-16 w-16 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-xl font-semibold">
+              <div className="h-16 w-16 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xl font-semibold">
                 {user?.full_name?.charAt(0) || "U"}
               </div>
               <div>
@@ -98,7 +98,7 @@ export default function SettingsPage() {
               <label className="text-xs text-gray-500 mb-1.5 block">Email</label>
               <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
             </div>
-            <Button onClick={handleProfileUpdate} className="bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
+            <Button onClick={handleProfileUpdate} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
               Update Profile
             </Button>
           </div>
@@ -110,7 +110,7 @@ export default function SettingsPage() {
 
         {activeTab === "notifications" && <NotificationSettings channels={channels} />}
 
-        {activeTab === "billing" && (plan ? <BillingCard plan={plan} /> : <Skeleton className="h-[400px] rounded-xl bg-white" />)}
+        {activeTab === "billing" && (plan ? <BillingCard plan={plan} /> : <Skeleton className="h-[400px] rounded-lg bg-white" />)}
       </div>
     </div>
   );

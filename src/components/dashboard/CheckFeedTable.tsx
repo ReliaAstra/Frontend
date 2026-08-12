@@ -2,7 +2,7 @@
 
 import { StatusBadge } from "./StatusBadge";
 import type { CheckResult } from "@/services/dashboardService";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 
 interface CheckFeedTableProps {
   data: CheckResult[];
@@ -10,25 +10,44 @@ interface CheckFeedTableProps {
 
 export function CheckFeedTable({ data }: CheckFeedTableProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Checks</h3>
-      <div className="space-y-3">
-        {data.map((check) => (
-          <div key={check.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-            <div className="flex items-center gap-3 min-w-0">
-              <StatusBadge status={check.status} />
-              <span className="text-sm text-gray-900 truncate">{check.dependency_name}</span>
-            </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <span className="text-xs text-gray-500 font-mono">
-                {check.status === "down" ? "—" : `${check.response_time_ms}ms`}
-              </span>
-              <span className="text-xs text-gray-400 w-16 text-right">
-                {formatDistanceToNow(new Date(check.checked_at), { addSuffix: true })}
-              </span>
-            </div>
-          </div>
-        ))}
+    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+        <h3 className="text-[13px] font-semibold text-gray-900">Recent Checks</h3>
+        <span className="text-[11px] text-gray-400">Last {data.length} observations</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="text-left px-5 py-2.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">Status</th>
+              <th className="text-left px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">Dependency</th>
+              <th className="text-right px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">Response</th>
+              <th className="text-right px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">Code</th>
+              <th className="text-right px-5 py-2.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">Checked At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((check) => (
+              <tr key={check.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                <td className="px-5 py-2.5">
+                  <StatusBadge status={check.status} />
+                </td>
+                <td className="px-3 py-2.5 text-[13px] text-gray-900 font-medium">{check.dependency_name}</td>
+                <td className="px-3 py-2.5 text-[13px] text-gray-900 font-mono tabular-nums text-right">
+                  {check.status === "down" ? "—" : `${check.response_time_ms}ms`}
+                </td>
+                <td className="px-3 py-2.5 text-[13px] font-mono tabular-nums text-right">
+                  <span className={check.status_code >= 500 ? "text-red-600" : check.status_code >= 400 ? "text-amber-600" : "text-gray-900"}>
+                    {check.status_code}
+                  </span>
+                </td>
+                <td className="px-5 py-2.5 text-[12px] text-gray-400 font-mono text-right">
+                  {format(new Date(check.checked_at), "HH:mm:ss")}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -127,7 +127,7 @@ function generateMockIncidents(): VendorIncidentsResponse {
 export const vendorService = {
   async listPublicVendors(): Promise<VendorResponse[]> {
     try {
-      const { data } = await apiClient.get<VendorResponse[]>("/public/vendors");
+      const { data } = await apiClient.get<VendorResponse[]>("/status/public");
       return data;
     } catch {
       return mockVendors;
@@ -136,7 +136,7 @@ export const vendorService = {
 
   async getVendorDetail(vendorName: string): Promise<VendorDetailResponse> {
     try {
-      const { data } = await apiClient.get<VendorDetailResponse>(`/public/vendors/${vendorName}`);
+      const { data } = await apiClient.get<VendorDetailResponse>(`/status/public/${vendorName}`);
       return data;
     } catch {
       const mock = mockVendors.find((v) => v.slug === vendorName || v.vendor_name.toLowerCase() === vendorName.toLowerCase());
@@ -166,7 +166,7 @@ export const vendorService = {
 
   async getVendorHistory(vendorName: string): Promise<VendorHistoryResponse> {
     try {
-      const { data } = await apiClient.get<VendorHistoryResponse>(`/public/vendors/${vendorName}/history`);
+      const { data } = await apiClient.get<VendorHistoryResponse>(`/status/public/${vendorName}/history`);
       return data;
     } catch {
       return generateMockHistory();
@@ -176,7 +176,7 @@ export const vendorService = {
   async getVendorMetrics(vendorName: string, window?: string): Promise<VendorMetricsResponse> {
     try {
       const params = window ? { window } : {};
-      const { data } = await apiClient.get<VendorMetricsResponse>(`/public/vendors/${vendorName}/metrics`, { params });
+      const { data } = await apiClient.get<VendorMetricsResponse>(`/status/public/${vendorName}/metrics`, { params });
       return data;
     } catch {
       return generateMockMetrics();
@@ -185,7 +185,7 @@ export const vendorService = {
 
   async getVendorIncidents(vendorName: string, limit = 50): Promise<VendorIncidentsResponse> {
     try {
-      const { data } = await apiClient.get<VendorIncidentsResponse>(`/public/vendors/${vendorName}/incidents`, { params: { limit } });
+      const { data } = await apiClient.get<VendorIncidentsResponse>(`/status/public/${vendorName}/incidents`, { params: { limit } });
       return data;
     } catch {
       return generateMockIncidents();

@@ -50,7 +50,7 @@ export default function IncidentsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] rounded-xl bg-white" />
+            <Skeleton key={i} className="h-[100px] rounded-lg bg-white" />
           ))}
         </div>
       ) : (

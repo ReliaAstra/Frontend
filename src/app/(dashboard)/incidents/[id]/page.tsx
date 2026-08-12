@@ -40,10 +40,10 @@ export default function IncidentDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-[200px] rounded-xl bg-white" />
+        <Skeleton className="h-[200px] rounded-lg bg-white" />
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <Skeleton className="h-[300px] rounded-xl bg-white" />
-          <Skeleton className="h-[300px] rounded-xl bg-white" />
+          <Skeleton className="h-[300px] rounded-lg bg-white" />
+          <Skeleton className="h-[300px] rounded-lg bg-white" />
         </div>
       </div>
     );

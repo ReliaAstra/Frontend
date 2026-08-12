@@ -21,7 +21,7 @@ const statusMap: Record<string, "up" | "down" | "degraded"> = {
 export function IncidentList({ incidents }: IncidentListProps) {
   if (incidents.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
+      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
         <p className="text-gray-400">No incidents found.</p>
       </div>
     );
@@ -32,7 +32,7 @@ export function IncidentList({ incidents }: IncidentListProps) {
       {incidents.map((incident) => (
         <div
           key={incident.id}
-          className="rounded-xl border border-gray-200 bg-white p-5 hover:border-gray-300 transition-colors"
+          className="rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-300 transition-colors"
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1 min-w-0">

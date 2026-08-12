@@ -12,7 +12,7 @@ interface DependencyGridProps {
 export function DependencyGrid({ dependencies, onToggle, onDelete }: DependencyGridProps) {
   if (dependencies.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
+      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
         <p className="text-gray-400">No dependencies found. Add your first dependency to start monitoring.</p>
       </div>
     );

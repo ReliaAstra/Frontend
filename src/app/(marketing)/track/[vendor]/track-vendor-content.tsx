@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, ExternalLink, CheckCircle2, AlertTriangle, Clock, ArrowUpRight, Activity, Shield, TrendingUp } from 'lucide-react';
+import { Bell, ExternalLink, CheckCircle2, AlertTriangle, Clock, ArrowUpRight, Activity, Shield, TrendingUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,30 +11,28 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { vendorService, type VendorDetailResponse, type VendorHistoryResponse, type VendorMetricsResponse, type VendorIncidentsResponse, type VendorIncident } from '@/services/vendorService';
 import { formatDistanceToNow, format } from 'date-fns';
-
-type Vendor = 'stripe' | 'auth0' | 'cloudflare' | 'openai' | 'twilio' | 'vercel';
+import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  operational: { label: 'Operational', color: 'text-emerald-700 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-  degraded_performance: { label: 'Degraded Performance', color: 'text-amber-700 bg-amber-50 border-amber-200', icon: AlertTriangle },
-  partial_outage: { label: 'Partial Outage', color: 'text-orange-700 bg-orange-50 border-orange-200', icon: AlertTriangle },
-  major_outage: { label: 'Major Outage', color: 'text-red-700 bg-red-50 border-red-200', icon: AlertTriangle },
+  operational: { label: 'Operational', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+  degraded_performance: { label: 'Degraded Performance', color: 'text-amber-600 bg-amber-50 border-amber-200', icon: AlertTriangle },
+  partial_outage: { label: 'Partial Outage', color: 'text-orange-600 bg-orange-50 border-orange-200', icon: AlertTriangle },
+  major_outage: { label: 'Major Outage', color: 'text-red-600 bg-red-50 border-red-200', icon: AlertTriangle },
   unknown: { label: 'Unknown', color: 'text-gray-500 bg-gray-50 border-gray-200', icon: Shield },
 };
 
 const severityConfig: Record<string, { label: string; color: string }> = {
-  critical: { label: 'Critical', color: 'text-red-700 bg-red-50 border-red-200' },
-  high: { label: 'High', color: 'text-orange-700 bg-orange-50 border-orange-200' },
-  medium: { label: 'Medium', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-  low: { label: 'Low', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+  critical: { label: 'Critical', color: 'text-red-600 bg-red-50 border-red-200' },
+  high: { label: 'High', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  medium: { label: 'Medium', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  low: { label: 'Low', color: 'text-blue-600 bg-blue-50 border-blue-200' },
 };
 
 interface TrackVendorContentProps {
-  vendor: Vendor;
-  vendorLabel: string;
+  vendorSlug: string;
 }
 
-export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentProps) {
+export function TrackVendorContent({ vendorSlug }: TrackVendorContentProps) {
   const [email, setEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
 
@@ -43,44 +41,70 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
   const [metrics, setMetrics] = useState<VendorMetricsResponse | null>(null);
   const [incidents, setIncidents] = useState<VendorIncidentsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastFetch, setLastFetch] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const vendorName = vendorLabel.toLowerCase();
+  const vendorLabel = detail?.display_name || vendorSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const vendorName = detail?.vendor_name || vendorSlug;
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
     try {
       const [d, h, m, i] = await Promise.all([
-        vendorService.getVendorDetail(vendorName),
-        vendorService.getVendorHistory(vendorName),
-        vendorService.getVendorMetrics(vendorName),
-        vendorService.getVendorIncidents(vendorName, 20),
+        vendorService.getVendorDetail(vendorSlug),
+        vendorService.getVendorHistory(vendorSlug),
+        vendorService.getVendorMetrics(vendorSlug),
+        vendorService.getVendorIncidents(vendorSlug, 20),
       ]);
       setDetail(d);
       setHistory(h);
       setMetrics(m);
       setIncidents(i);
+      setLastFetch(new Date().toISOString());
     } catch (err) {
       console.error('Failed to fetch vendor data:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [vendorName]);
+  }, [vendorSlug]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   // Process metrics for the latency chart
-  const chartData = metrics
-    ? Object.entries(metrics.metrics)
-        .map(([, w]) => ({
-          hour: format(new Date(w.window), 'HH:00'),
-          latency: Math.round(w.avg_latency_ms),
-          p95: Math.round(w.p95_latency_ms),
-          errorRate: w.error_rate * 100,
-        }))
-        .sort((a, b) => a.hour.localeCompare(b.hour))
-    : [];
+  const chartData = useMemo(() => {
+    if (!metrics) return [];
+    return Object.entries(metrics.metrics)
+      .map(([, w]) => ({
+        hour: format(new Date(w.window), 'HH:00'),
+        window: w.window,
+        latency: Math.round(w.avg_latency_ms),
+        p95: Math.round(w.p95_latency_ms),
+        errorRate: w.error_rate * 100,
+        uptime: w.uptime_percentage,
+      }))
+      .sort((a, b) => a.hour.localeCompare(b.hour));
+  }, [metrics]);
+
+  // Build a set of incident windows for chart markers
+  const incidentWindows = useMemo(() => {
+    if (!incidents || !chartData.length) return new Set<string>();
+    const windows = new Set<string>();
+    for (const inc of incidents.incidents) {
+      const start = new Date(inc.started_at);
+      const end = inc.resolved_at ? new Date(inc.resolved_at) : new Date();
+      for (const cd of chartData) {
+        const wTime = new Date(cd.window);
+        if (wTime >= start && wTime <= end) {
+          windows.add(cd.hour);
+        }
+      }
+    }
+    return windows;
+  }, [incidents, chartData]);
 
   const maxLatency = chartData.length > 0 ? Math.max(...chartData.map((d) => d.latency), ...chartData.map((d) => d.p95)) : 1;
   const maxP95 = chartData.length > 0 ? Math.max(...chartData.map((d) => d.p95)) : 1;
@@ -92,6 +116,9 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
   const avgLatency = history?.avg_latency_ms_24h ?? 0;
   const totalChecks = history?.recent_checks_count ?? 0;
 
+  // Calculate latest p95 for the header
+  const latestP95 = chartData.length > 0 ? chartData[chartData.length - 1].p95 : null;
+
   const handleSubscribe = async () => {
     if (!email.includes('@')) {
       toast.error('Please enter a valid email address.');
@@ -102,7 +129,7 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, vendor }),
+        body: JSON.stringify({ email, vendor: vendorSlug }),
       });
       if (res.ok) {
         toast.success(`Subscribed to ${vendorLabel} alerts!`);
@@ -132,15 +159,33 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
       <section className="bg-gradient-to-b from-slate-50 to-white py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-2 mb-4">
-              <ExternalLink className="h-4 w-4 text-[#0891B2]" />
-              <span className="text-sm text-[#52525B]">Independent Monitoring</span>
-              {detail?.last_check_at && (
-                <span className="text-xs text-gray-400 ml-2">
-                  Last checked {formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true })}
-                </span>
+            {/* Breadcrumb + data freshness */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Link href="/track" className="text-sm text-gray-400 hover:text-[#0891B2] transition-colors">
+                  All Vendors
+                </Link>
+                <span className="text-gray-300">/</span>
+                <ExternalLink className="h-4 w-4 text-[#0891B2]" />
+                <span className="text-sm text-[#52525B] font-medium">{vendorLabel}</span>
+              </div>
+              {lastFetch && !loading && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => fetchData(true)}
+                    disabled={refreshing}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#0891B2] transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin')} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
+                  <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-0.5 rounded">
+                    {format(new Date(lastFetch), 'HH:mm:ss')} UTC
+                  </span>
+                </div>
               )}
             </div>
+
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-[#09090B] tracking-tight">
@@ -148,7 +193,7 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
                 </h1>
                 <p className="mt-2 text-[#52525B] max-w-xl">
                   Real-time, third-party monitoring of {vendorLabel}&apos;s API endpoints.
-                  Data is collected independently — not from {vendorLabel}&apos;s own status page.
+                  Data collected independently — not from {vendorLabel}&apos;s own status page.
                 </p>
               </div>
               <Badge className={cn('text-sm px-3 py-1 w-fit border', statusStyle.color)} variant="secondary">
@@ -156,6 +201,17 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
                 {statusStyle.label}
               </Badge>
             </div>
+
+            {/* Data freshness bar */}
+            {detail?.last_check_at && (
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span>
+                  Last check: {formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true })}
+                  {detail.endpoints && detail.endpoints.length > 0 && ` · ${detail.endpoints.length} endpoint${detail.endpoints.length > 1 ? 's' : ''} monitored`}
+                </span>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -163,37 +219,47 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
       {/* KPI Summary Cards */}
       <section className="py-8">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-4">24-Hour Summary</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl bg-gray-100" />
+              Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-lg bg-gray-100" />
               ))
             ) : (
               <>
-                <div className="rounded-xl border border-[#E4E4E7] bg-white p-5">
+                <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium uppercase tracking-wider text-[#52525B]">24h Uptime</span>
-                    <Activity className="h-4 w-4 text-emerald-500" />
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Uptime</span>
+                    <Activity className="h-3.5 w-3.5 text-emerald-500" />
                   </div>
-                  <p className={cn('text-2xl font-bold', uptimeValue >= 99.9 ? 'text-emerald-600' : uptimeValue >= 99 ? 'text-amber-600' : 'text-red-600')}>
+                  <p className={cn('text-xl font-bold font-mono', uptimeValue >= 99.9 ? 'text-emerald-600' : uptimeValue >= 99 ? 'text-amber-600' : 'text-red-600')}>
                     {uptimeValue.toFixed(2)}%
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#E4E4E7] bg-white p-5">
+                <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium uppercase tracking-wider text-[#52525B]">Avg Latency (24h)</span>
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Avg Latency</span>
+                    <TrendingUp className="h-3.5 w-3.5 text-gray-400" />
                   </div>
-                  <p className={cn('text-2xl font-bold', avgLatency > 500 ? 'text-red-600' : avgLatency > 200 ? 'text-amber-600' : 'text-gray-900')}>
-                    {avgLatency.toFixed(0)}ms
+                  <p className={cn('text-xl font-bold font-mono', avgLatency > 500 ? 'text-red-600' : avgLatency > 200 ? 'text-amber-600' : 'text-[#09090B]')}>
+                    {avgLatency.toFixed(0)}<span className="text-sm font-normal text-gray-400 ml-0.5">ms</span>
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#E4E4E7] bg-white p-5">
+                <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium uppercase tracking-wider text-[#52525B]">Total Checks (24h)</span>
-                    <Shield className="h-4 w-4 text-[#0891B2]" />
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">P95 Latency</span>
+                    <TrendingUp className="h-3.5 w-3.5 text-[#0891B2]" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className={cn('text-xl font-bold font-mono', (latestP95 ?? 0) > 500 ? 'text-red-600' : (latestP95 ?? 0) > 300 ? 'text-amber-600' : 'text-[#09090B]')}>
+                    {latestP95 ?? '—'}<span className="text-sm font-normal text-gray-400 ml-0.5">ms</span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Total Checks</span>
+                    <Shield className="h-3.5 w-3.5 text-[#0891B2]" />
+                  </div>
+                  <p className="text-xl font-bold font-mono text-[#09090B]">
                     {totalChecks.toLocaleString()}
                   </p>
                 </div>
@@ -203,33 +269,40 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
         </div>
       </section>
 
-      {/* Latency Chart - Real Data */}
+      {/* Latency Chart */}
       <section className="py-8">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-[#09090B]">24-Hour Response Latency</h2>
-            <div className="flex items-center gap-4 text-xs text-[#52525B]">
-              <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#0891B2]" /> Avg</div>
-              <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#0891B2]/30" /> P95</div>
-              <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" /> &gt; 500ms</div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">24-Hour Response Latency</p>
+            <div className="flex items-center gap-4 text-[11px] text-gray-400">
+              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]" /> Avg</div>
+              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]/25" /> P95</div>
+              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-400" /> &gt;500ms</div>
+              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-200" /> Incident</div>
             </div>
           </div>
           {loading ? (
-            <Skeleton className="h-64 rounded-xl bg-gray-100" />
+            <Skeleton className="h-64 rounded-lg bg-gray-100" />
           ) : chartData.length > 0 ? (
-            <div className="rounded-xl border border-[#E4E4E7] p-6 bg-white">
+            <div className="rounded-lg border border-[#E4E4E7] p-5 bg-white">
               <div className="flex items-end gap-[3px] h-48">
                 {chartData.map((d, idx) => {
                   const avgHeight = (d.latency / maxLatency) * 100;
                   const p95Height = (d.p95 / maxP95) * 100;
                   const isHigh = d.latency > 500;
+                  const hasIncident = incidentWindows.has(d.hour);
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-0.5 group relative">
-                      <div className="absolute -top-10 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      {/* Tooltip */}
+                      <div className="absolute -top-10 bg-[#09090B] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 font-mono">
                         Avg: {d.latency}ms / P95: {d.p95}ms
                       </div>
+                      {/* Incident marker bar */}
+                      {hasIncident && (
+                        <div className="w-full h-1 rounded-t-sm bg-amber-200 mb-0.5" title="Incident period" />
+                      )}
                       <div className="w-full flex gap-[1px] items-end">
-                        {/* P95 bar (lighter, behind) */}
+                        {/* P95 bar */}
                         <div
                           className="flex-1 rounded-t-sm bg-[#0891B2]/20 transition-all min-h-[2px]"
                           style={{ height: `${Math.max(p95Height, 2)}%` }}
@@ -247,82 +320,94 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
                   );
                 })}
               </div>
-              <div className="flex justify-between mt-2 text-xs text-[#A1A1AA]">
-                {chartData.filter((_, i) => i % Math.max(Math.floor(chartData.length / 6), 1) === 0).map((d) => (
+              <div className="flex justify-between mt-2 text-[11px] text-[#A1A1AA] font-mono">
+                {chartData.filter((_, i) => i % Math.max(Math.floor(chartData.length / 8), 1) === 0).map((d) => (
                   <span key={d.hour}>{d.hour}</span>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E4E4E7] bg-white p-12 text-center text-gray-400">
+            <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center text-gray-400">
               No latency data available yet.
             </div>
           )}
         </div>
       </section>
 
-      {/* Monitored Endpoints */}
+      {/* Monitored Endpoints — Table style */}
       {detail?.endpoints && detail.endpoints.length > 0 && (
         <section className="py-8">
           <div className="max-w-6xl mx-auto px-4 md:px-8">
-            <h2 className="text-lg font-semibold text-[#09090B] mb-6">Monitored Endpoints</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {detail.endpoints.map((ep) => {
-                const epStatus = statusConfig[ep.health_status] || statusConfig.unknown;
-                const EpIcon = epStatus.icon;
-                return (
-                  <div key={ep.id} className="rounded-xl border border-[#E4E4E7] bg-white p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge className={cn('text-xs px-2 py-0.5 border', epStatus.color)} variant="secondary">
-                        <EpIcon className="h-3 w-3 mr-1" />
-                        {epStatus.label}
-                      </Badge>
-                      {ep.is_active && (
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      )}
-                    </div>
-                    <p className="text-sm font-mono text-gray-900 break-all mb-3">{ep.endpoint_url}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {ep.regions.map((r) => (
-                        <span key={r} className="text-[10px] font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-500">
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                    {ep.last_check_at && (
-                      <p className="text-[10px] text-gray-400 mt-2">
-                        Last check: {formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true })}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+            <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-4">Monitored Endpoints</p>
+            <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Endpoint</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Regions</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Status</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400 hidden sm:table-cell">Last Check</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.endpoints.map((ep) => {
+                      const epStatus = statusConfig[ep.health_status] || statusConfig.unknown;
+                      const EpIcon = epStatus.icon;
+                      return (
+                        <tr key={ep.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                          <td className="py-3 px-4 font-mono text-xs text-[#09090B] max-w-[300px] truncate">{ep.endpoint_url}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap gap-1">
+                              {ep.regions.map((r) => (
+                                <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium', epStatus.color)}>
+                              <EpIcon className="h-3 w-3" />
+                              {epStatus.label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-xs text-gray-400 hidden sm:table-cell">
+                            {ep.last_check_at ? formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true }) : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* Incident History - Real Data */}
+      {/* Incident History */}
       <section className="py-8">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <h2 className="text-lg font-semibold text-[#09090B] mb-6">Incident History</h2>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-4">Incident History</p>
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-1">
+              <Skeleton className="h-10 w-full bg-gray-100 rounded-t-lg rounded-b-none" />
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl bg-gray-100" />
+                <Skeleton key={i} className="h-14 w-full bg-gray-50" />
               ))}
             </div>
           ) : incidents && incidents.incidents.length > 0 ? (
-            <div className="rounded-xl border border-[#E4E4E7] overflow-hidden">
+            <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-[#E4E4E7]">
-                      <th className="text-left py-3 px-4 font-medium text-[#52525B]">Service</th>
-                      <th className="text-left py-3 px-4 font-medium text-[#52525B]">Severity</th>
-                      <th className="text-left py-3 px-4 font-medium text-[#52525B]">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-[#52525B]">Duration</th>
-                      <th className="text-left py-3 px-4 font-medium text-[#52525B]">Started</th>
+                    <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Service</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Severity</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400">Status</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400 hidden md:table-cell">Duration</th>
+                      <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-gray-400 hidden sm:table-cell">Started</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -333,12 +418,12 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
                         <tr key={inc.incident_id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-900 font-medium">{inc.dependency_name}</span>
-                              <ArrowUpRight className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                              <span className="text-[#09090B] font-medium">{inc.dependency_name}</span>
+                              <ArrowUpRight className="h-3.5 w-3.5 text-gray-300 shrink-0" />
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium', sev.color)}>
+                            <span className={cn('inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium', sev.color)}>
                               {sev.label}
                             </span>
                           </td>
@@ -351,10 +436,10 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
                               {isResolved ? 'Resolved' : 'Open'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono text-xs text-gray-600">
+                          <td className="py-3 px-4 font-mono text-xs text-gray-500 hidden md:table-cell">
                             {formatDuration(inc.duration_seconds)}
                           </td>
-                          <td className="py-3 px-4 text-xs text-gray-500">
+                          <td className="py-3 px-4 text-xs text-gray-400 hidden sm:table-cell">
                             {formatDistanceToNow(new Date(inc.started_at), { addSuffix: true })}
                           </td>
                         </tr>
@@ -365,7 +450,7 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E4E4E7] bg-white p-12 text-center">
+            <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
               <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
               <p className="text-gray-600 font-medium">No incidents recorded</p>
               <p className="text-sm text-gray-400 mt-1">{vendorLabel} has had a clean record.</p>
@@ -375,7 +460,7 @@ export function TrackVendorContent({ vendor, vendorLabel }: TrackVendorContentPr
       </section>
 
       {/* Subscribe to Alerts */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-24 bg-[#F8F9FA]">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

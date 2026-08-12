@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 type StatusType = "up" | "down" | "degraded" | "unknown";
 
 const statusConfig: Record<StatusType, { label: string; className: string; dotClass: string }> = {
-  up: { label: "Operational", className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", dotClass: "bg-emerald-500" },
-  down: { label: "Down", className: "bg-red-500/10 text-red-400 border-red-500/20", dotClass: "bg-red-500" },
-  degraded: { label: "Degraded", className: "bg-amber-500/10 text-amber-400 border-amber-500/20", dotClass: "bg-amber-500" },
-  unknown: { label: "Unknown", className: "bg-slate-500/10 text-slate-400 border-slate-500/20", dotClass: "bg-slate-500" },
+  up: { label: "Operational", className: "bg-emerald-50 text-emerald-600 border-emerald-200", dotClass: "bg-emerald-500" },
+  down: { label: "Down", className: "bg-red-50 text-red-600 border-red-200", dotClass: "bg-red-500" },
+  degraded: { label: "Degraded", className: "bg-amber-50 text-amber-600 border-amber-200", dotClass: "bg-amber-500" },
+  unknown: { label: "Unknown", className: "bg-gray-100 text-gray-500 border-gray-300", dotClass: "bg-slate-500" },
 };
 
 export function StatusBadge({ status }: { status: StatusType }) {

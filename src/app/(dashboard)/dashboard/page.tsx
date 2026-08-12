@@ -25,8 +25,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Breadcrumb & Title */}
       <div>
-        <h1 className="text-xl font-semibold text-[#F1F5F9]">Dashboard</h1>
-        <p className="text-sm text-[#64748B] mt-1">Overview of your external dependency health</p>
+        <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-400 mt-1">Overview of your external dependency health</p>
       </div>
 
       {/* KPI Cards */}
@@ -39,14 +39,14 @@ export default function DashboardPage() {
           {latency.length > 0 ? (
             <LatencyChart data={latency} />
           ) : (
-            <Skeleton className="h-[360px] rounded-xl bg-[#1A1D27]" />
+            <Skeleton className="h-[360px] rounded-xl bg-white" />
           )}
         </div>
 
         {/* Right: SLA + Check Feed */}
         <div className="space-y-6">
-          {sla ? <SlaDegradationWidget data={sla} /> : <Skeleton className="h-[320px] rounded-xl bg-[#1A1D27]" />}
-          {checks.length > 0 ? <CheckFeedTable data={checks} /> : <Skeleton className="h-[240px] rounded-xl bg-[#1A1D27]" />}
+          {sla ? <SlaDegradationWidget data={sla} /> : <Skeleton className="h-[320px] rounded-xl bg-white" />}
+          {checks.length > 0 ? <CheckFeedTable data={checks} /> : <Skeleton className="h-[240px] rounded-xl bg-white" />}
         </div>
       </div>
     </div>
@@ -57,7 +57,7 @@ function KpiCardsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-[120px] rounded-xl bg-[#1A1D27]" />
+        <Skeleton key={i} className="h-[120px] rounded-xl bg-white" />
       ))}
     </div>
   );

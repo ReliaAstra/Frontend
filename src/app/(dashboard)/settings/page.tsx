@@ -58,18 +58,18 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-[#F1F5F9]">Settings</h1>
-        <p className="text-sm text-[#64748B] mt-1">Manage your account and organization</p>
+        <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+        <p className="text-sm text-gray-400 mt-1">Manage your account and organization</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 rounded-lg bg-[#1A1D27] border border-[#2A2D3A] p-1 w-fit overflow-x-auto">
+      <div className="flex gap-1 rounded-lg bg-white border border-gray-200 p-1 w-fit overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`rounded-md px-4 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab ? "bg-[#2A2D3A] text-[#F1F5F9]" : "text-[#64748B] hover:text-[#94A3B8]"
+              activeTab === tab ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:text-gray-500"
             }`}
           >
             {tabLabels[tab]}
@@ -80,23 +80,23 @@ export default function SettingsPage() {
       {/* Tab Content */}
       <div className="max-w-3xl">
         {activeTab === "profile" && (
-          <div className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-6 space-y-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-5">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-16 w-16 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-xl font-semibold">
                 {user?.full_name?.charAt(0) || "U"}
               </div>
               <div>
-                <p className="text-lg font-medium text-[#F1F5F9]">{user?.full_name}</p>
-                <p className="text-sm text-[#94A3B8] capitalize">{user?.role}</p>
+                <p className="text-lg font-medium text-gray-900">{user?.full_name}</p>
+                <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
               </div>
             </div>
             <div>
-              <label className="text-xs text-[#94A3B8] mb-1.5 block">Full Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-[#0F1117] border-[#2A2D3A] text-[#F1F5F9]" />
+              <label className="text-xs text-gray-500 mb-1.5 block">Full Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
             </div>
             <div>
-              <label className="text-xs text-[#94A3B8] mb-1.5 block">Email</label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-[#0F1117] border-[#2A2D3A] text-[#F1F5F9]" />
+              <label className="text-xs text-gray-500 mb-1.5 block">Email</label>
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
             </div>
             <Button onClick={handleProfileUpdate} className="bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
               Update Profile
@@ -110,7 +110,7 @@ export default function SettingsPage() {
 
         {activeTab === "notifications" && <NotificationSettings channels={channels} />}
 
-        {activeTab === "billing" && (plan ? <BillingCard plan={plan} /> : <Skeleton className="h-[400px] rounded-xl bg-[#1A1D27]" />)}
+        {activeTab === "billing" && (plan ? <BillingCard plan={plan} /> : <Skeleton className="h-[400px] rounded-xl bg-white" />)}
       </div>
     </div>
   );

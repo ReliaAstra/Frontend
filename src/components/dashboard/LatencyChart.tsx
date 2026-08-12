@@ -10,13 +10,13 @@ interface LatencyChartProps {
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string; color: string }>; label?: string }) {
   if (!active || !payload) return null;
   return (
-    <div className="rounded-lg border border-[#2A2D3A] bg-[#1A1D27] px-4 py-3 shadow-xl">
-      <p className="text-xs text-[#64748B] mb-2">{label}</p>
+    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-xl">
+      <p className="text-xs text-gray-400 mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-[#94A3B8] capitalize">{entry.dataKey.replace(/_/g, " ")}:</span>
-          <span className="text-[#F1F5F9] font-medium">{entry.value.toFixed(0)}ms</span>
+          <span className="text-gray-500 capitalize">{entry.dataKey.replace(/_/g, " ")}:</span>
+          <span className="text-gray-900 font-medium">{entry.value.toFixed(0)}ms</span>
         </div>
       ))}
     </div>
@@ -32,11 +32,11 @@ export function LatencyChart({ data }: LatencyChartProps) {
   }));
 
   return (
-    <div className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-6">
+    <div className="rounded-xl border border-gray-200 bg-white p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-sm font-semibold text-[#F1F5F9]">Response Latency</h3>
-          <p className="text-xs text-[#64748B] mt-1">Multi-region latency over 24 hours</p>
+          <h3 className="text-sm font-semibold text-gray-900">Response Latency</h3>
+          <p className="text-xs text-gray-400 mt-1">Multi-region latency over 24 hours</p>
         </div>
       </div>
       <div className="h-[280px] w-full">
@@ -56,14 +56,14 @@ export function LatencyChart({ data }: LatencyChartProps) {
                 <stop offset="100%" stopColor="#F59E0B" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2A2D3A" />
-            <XAxis dataKey="time" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} unit="ms" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis dataKey="time" tick={{ fill: "#9CA3AF", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#9CA3AF", fontSize: 11 }} axisLine={false} tickLine={false} unit="ms" />
             <Tooltip content={<CustomTooltip />} />
             <Legend
               iconType="circle"
               iconSize={6}
-              wrapperStyle={{ fontSize: 12, color: "#94A3B8" }}
+              wrapperStyle={{ fontSize: 12, color: "#6B7280" }}
             />
             <Area type="monotone" dataKey="US East" stroke="#3B82F6" strokeWidth={2} fill="url(#gradUS)" />
             <Area type="monotone" dataKey="EU West" stroke="#10B981" strokeWidth={2} fill="url(#gradEU)" />

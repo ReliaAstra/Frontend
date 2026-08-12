@@ -40,10 +40,10 @@ export default function IncidentDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-[200px] rounded-xl bg-[#1A1D27]" />
+        <Skeleton className="h-[200px] rounded-xl bg-white" />
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <Skeleton className="h-[300px] rounded-xl bg-[#1A1D27]" />
-          <Skeleton className="h-[300px] rounded-xl bg-[#1A1D27]" />
+          <Skeleton className="h-[300px] rounded-xl bg-white" />
+          <Skeleton className="h-[300px] rounded-xl bg-white" />
         </div>
       </div>
     );
@@ -52,8 +52,8 @@ export default function IncidentDetailPage() {
   if (!incident) {
     return (
       <div className="text-center py-20">
-        <p className="text-[#64748B]">Incident not found.</p>
-        <Button variant="ghost" onClick={() => router.push("/incidents")} className="mt-4 text-[#94A3B8]">
+        <p className="text-gray-400">Incident not found.</p>
+        <Button variant="ghost" onClick={() => router.push("/incidents")} className="mt-4 text-gray-500">
           Back to Incidents
         </Button>
       </div>
@@ -64,7 +64,7 @@ export default function IncidentDetailPage() {
     <div className="space-y-6">
       <button
         onClick={() => router.push("/incidents")}
-        className="flex items-center gap-2 text-sm text-[#94A3B8] hover:text-[#F1F5F9] transition-colors"
+        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Incidents

@@ -23,10 +23,10 @@ const typeIcons: Record<ChannelType, React.ComponentType<{ className?: string }>
 };
 
 const typeColors: Record<ChannelType, string> = {
-  slack: "bg-purple-500/10 text-purple-400",
-  email: "bg-blue-500/10 text-blue-400",
-  pagerduty: "bg-amber-500/10 text-amber-400",
-  webhook: "bg-emerald-500/10 text-emerald-400",
+  slack: "bg-purple-50 text-purple-600",
+  email: "bg-blue-50 text-blue-600",
+  pagerduty: "bg-amber-50 text-amber-600",
+  webhook: "bg-emerald-50 text-emerald-600",
 };
 
 interface NotificationSettingsProps {
@@ -78,7 +78,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-[#94A3B8]">{localChannels.length} channels</p>
+        <p className="text-sm text-gray-500">{localChannels.length} channels</p>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white text-xs h-9">
@@ -86,17 +86,17 @@ export function NotificationSettings({ channels: initialChannels }: Notification
               Add Channel
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1A1D27] border-[#2A2D3A] text-[#F1F5F9]">
+          <DialogContent className="bg-white border-gray-200 text-gray-900">
             <DialogHeader>
               <DialogTitle>Add Notification Channel</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs text-[#94A3B8] mb-1.5 block">Channel Name</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Engineering Alerts" className="bg-[#0F1117] border-[#2A2D3A] text-[#F1F5F9]" />
+                <label className="text-xs text-gray-500 mb-1.5 block">Channel Name</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Engineering Alerts" className="bg-gray-50 border-gray-200 text-gray-900" />
               </div>
               <div>
-                <label className="text-xs text-[#94A3B8] mb-1.5 block">Type</label>
+                <label className="text-xs text-gray-500 mb-1.5 block">Type</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(Object.keys(typeIcons) as ChannelType[]).map((t) => {
                     const Icon = typeIcons[t];
@@ -104,7 +104,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                       <button
                         key={t}
                         onClick={() => setType(t)}
-                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#6366F1] bg-[#6366F1]/10 text-[#F1F5F9]" : "border-[#2A2D3A] text-[#94A3B8] hover:border-[#3A3D4A]"}`}
+                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#6366F1] bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
                       >
                         <Icon className="h-4 w-4" />
                         {t}
@@ -114,8 +114,8 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[#94A3B8] mb-1.5 block">{configLabel[type]}</label>
-                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabel[type].toLowerCase()}`} className="bg-[#0F1117] border-[#2A2D3A] text-[#F1F5F9]" />
+                <label className="text-xs text-gray-500 mb-1.5 block">{configLabel[type]}</label>
+                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabel[type].toLowerCase()}`} className="bg-gray-50 border-gray-200 text-gray-900" />
               </div>
               <Button onClick={handleAdd} className="w-full bg-[#6366F1] hover:bg-[#6366F1]/90 text-white">
                 Add Channel
@@ -129,19 +129,19 @@ export function NotificationSettings({ channels: initialChannels }: Notification
         {localChannels.map((channel) => {
           const Icon = typeIcons[channel.type];
           return (
-            <div key={channel.id} className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-4 flex items-center justify-between">
+            <div key={channel.id} className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.type]}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-[#F1F5F9]">{channel.name}</p>
-                  <p className="text-xs text-[#64748B] capitalize">{channel.type}</p>
+                  <p className="text-sm font-medium text-gray-900">{channel.name}</p>
+                  <p className="text-xs text-gray-400 capitalize">{channel.type}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Switch checked={channel.is_active} onCheckedChange={(checked) => handleToggle(channel.id, checked)} />
-                <button onClick={() => handleDelete(channel.id)} className="text-[#64748B] hover:text-red-400 transition-colors">
+                <button onClick={() => handleDelete(channel.id)} className="text-gray-400 hover:text-red-600 transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>

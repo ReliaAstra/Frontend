@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-[#0F1117]">
+      <div className="min-h-screen bg-slate-50">
         <DashboardSidebar />
         <div className="ml-[260px]">
           <DashboardHeader />

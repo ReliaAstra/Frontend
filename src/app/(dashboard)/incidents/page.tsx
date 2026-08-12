@@ -25,20 +25,20 @@ export default function IncidentsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-[#F1F5F9]">Incidents</h1>
-        <p className="text-sm text-[#64748B] mt-1">Track and manage dependency incidents</p>
+        <h1 className="text-xl font-semibold text-gray-900">Incidents</h1>
+        <p className="text-sm text-gray-400 mt-1">Track and manage dependency incidents</p>
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1 rounded-lg bg-[#1A1D27] border border-[#2A2D3A] p-1 w-fit">
+      <div className="flex gap-1 rounded-lg bg-white border border-gray-200 p-1 w-fit">
         {statusFilters.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`rounded-md px-4 py-2 text-xs font-medium transition-colors ${
               statusFilter === s
-                ? "bg-[#2A2D3A] text-[#F1F5F9]"
-                : "text-[#64748B] hover:text-[#94A3B8]"
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-400 hover:text-gray-500"
             }`}
           >
             {statusLabels[s]}
@@ -50,7 +50,7 @@ export default function IncidentsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] rounded-xl bg-[#1A1D27]" />
+            <Skeleton key={i} className="h-[100px] rounded-xl bg-white" />
           ))}
         </div>
       ) : (

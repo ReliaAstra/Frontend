@@ -13,7 +13,7 @@ const cards = [
     label: "Total Dependencies",
     icon: Layers,
     color: "text-[#8B5CF6]",
-    bg: "bg-violet-500/10",
+    bg: "bg-violet-50",
     format: (v: number) => v.toString(),
   },
   {
@@ -21,7 +21,7 @@ const cards = [
     label: "Active Incidents",
     icon: AlertTriangle,
     color: "text-[#EF4444]",
-    bg: "bg-red-500/10",
+    bg: "bg-red-50",
     format: (v: number) => v.toString(),
   },
   {
@@ -29,7 +29,7 @@ const cards = [
     label: "Uptime 24h",
     icon: Shield,
     color: "text-[#10B981]",
-    bg: "bg-emerald-500/10",
+    bg: "bg-emerald-50",
     format: (v: number) => `${v.toFixed(2)}%`,
   },
   {
@@ -37,7 +37,7 @@ const cards = [
     label: "Avg Latency",
     icon: Clock,
     color: "text-[#3B82F6]",
-    bg: "bg-blue-500/10",
+    bg: "bg-blue-50",
     format: (v: number) => `${v.toFixed(0)}ms`,
   },
 ];
@@ -48,17 +48,17 @@ export function KpiCards({ data }: KpiCardsProps) {
       {cards.map((card) => (
         <div
           key={card.key}
-          className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-5"
+          className="rounded-xl border border-gray-200 bg-white p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-[#64748B]">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
               {card.label}
             </p>
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${card.bg}`}>
               <card.icon className={`h-4 w-4 ${card.color}`} />
             </div>
           </div>
-          <p className="text-2xl font-semibold text-[#F1F5F9]">
+          <p className="text-2xl font-semibold text-gray-900">
             {card.format(data[card.key])}
           </p>
         </div>

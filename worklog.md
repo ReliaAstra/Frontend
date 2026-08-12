@@ -40,3 +40,28 @@ Stage Summary:
 - All API endpoints from OpenAPI spec integrated with mock fallbacks
 - Routes: /login, /register, /dashboard, /dependencies, /incidents, /incidents/[id], /settings
 - Production build passes cleanly
+---
+Task ID: 2
+Agent: Main Agent
+Task: Convert dashboard to white theme + build public vendor tracking page with real backend API
+
+Work Log:
+- Converted 27 dashboard files from dark theme to professional white/light theme
+- Color mapping: #0F1117→slate-50, #0B0F1A→white, #1A1D27→white, all dark text→gray-900/500/400
+- Sidebar: white bg, indigo-50 active state, indigo-600 accent border
+- Header: white/80 with backdrop-blur, gray-50 search/bell buttons
+- Charts: #E5E7EB grid lines, #9CA3AF axis ticks, white tooltips
+- Badges: -50 bg, -600 text, -200 borders for all severity/status colors
+- Rewrote vendorService.ts with full OpenAPI type definitions for all 5 public vendor endpoints
+- Added mock data fallbacks for each endpoint
+- Rewrote track-vendor-content.tsx to consume real backend data:
+  - KPI cards (24h uptime, avg latency, total checks) from /history
+  - Latency chart with dual bars (avg + p95) from /metrics
+  - Monitored endpoints section from /vendors/{name} detail
+  - Incident history table from /incidents
+- Build verified with zero errors
+
+Stage Summary:
+- Dashboard is now professionally clean white theme
+- Public tracking pages consume real backend with mock fallback
+- All routes compiled successfully

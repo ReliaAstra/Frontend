@@ -17,21 +17,21 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
   const maxVal = Math.max(...dependency.recent_response_times, 1);
 
   return (
-    <div className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-5 flex flex-col gap-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-[#F1F5F9] truncate">{dependency.name}</h3>
+            <h3 className="text-sm font-semibold text-gray-900 truncate">{dependency.name}</h3>
             <StatusBadge status={dependency.status} />
           </div>
-          <p className="text-xs text-[#64748B] font-mono truncate flex items-center gap-1">
+          <p className="text-xs text-gray-400 font-mono truncate flex items-center gap-1">
             <ExternalLink className="h-3 w-3 shrink-0" />
             {dependency.target_url}
           </p>
         </div>
         <button
           onClick={() => onToggle?.(dependency.id, !dependency.is_active)}
-          className="shrink-0 ml-2 text-[#64748B] hover:text-[#F1F5F9] transition-colors"
+          className="shrink-0 ml-2 text-gray-400 hover:text-gray-900 transition-colors"
           title={dependency.is_active ? "Pause monitoring" : "Resume monitoring"}
         >
           {dependency.is_active ? <ToggleRight className="h-5 w-5 text-[#10B981]" /> : <ToggleLeft className="h-5 w-5" />}
@@ -40,24 +40,24 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#64748B] mb-0.5">Response Time</p>
-          <p className="text-sm font-medium text-[#F1F5F9]">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Response Time</p>
+          <p className="text-sm font-medium text-gray-900">
             {dependency.status === "down" ? "—" : `${dependency.last_response_time_ms}ms`}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#64748B] mb-0.5">Check Interval</p>
-          <p className="text-sm font-medium text-[#F1F5F9]">{dependency.check_interval_seconds}s</p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Check Interval</p>
+          <p className="text-sm font-medium text-gray-900">{dependency.check_interval_seconds}s</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#64748B] mb-0.5">Uptime 24h</p>
-          <p className={`text-sm font-medium ${dependency.uptime_24h >= 99.9 ? "text-emerald-400" : dependency.uptime_24h >= 99 ? "text-amber-400" : "text-red-400"}`}>
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Uptime 24h</p>
+          <p className={`text-sm font-medium ${dependency.uptime_24h >= 99.9 ? "text-emerald-600" : dependency.uptime_24h >= 99 ? "text-amber-600" : "text-red-600"}`}>
             {dependency.uptime_24h.toFixed(2)}%
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-[#64748B] mb-0.5">Last Check</p>
-          <p className="text-sm font-medium text-[#94A3B8]">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Last Check</p>
+          <p className="text-sm font-medium text-gray-500">
             {formatDistanceToNow(new Date(dependency.last_check_at), { addSuffix: true })}
           </p>
         </div>
@@ -82,10 +82,10 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#2A2D3A]">
+      <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-200">
         <button
           onClick={() => onDelete?.(dependency.id)}
-          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Remove

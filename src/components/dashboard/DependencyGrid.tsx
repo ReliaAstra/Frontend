@@ -1,0 +1,28 @@
+"use client";
+
+import { DependencyCard } from "./DependencyCard";
+import type { Dependency } from "@/services/dependencyService";
+
+interface DependencyGridProps {
+  dependencies: Dependency[];
+  onToggle?: (id: string, active: boolean) => void;
+  onDelete?: (id: string) => void;
+}
+
+export function DependencyGrid({ dependencies, onToggle, onDelete }: DependencyGridProps) {
+  if (dependencies.length === 0) {
+    return (
+      <div className="rounded-xl border border-[#2A2D3A] bg-[#1A1D27] p-12 text-center">
+        <p className="text-[#64748B]">No dependencies found. Add your first dependency to start monitoring.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {dependencies.map((dep) => (
+        <DependencyCard key={dep.id} dependency={dep} onToggle={onToggle} onDelete={onDelete} />
+      ))}
+    </div>
+  );
+}

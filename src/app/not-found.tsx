@@ -321,7 +321,7 @@ export default function NotFound() {
             </Link>
 
             <Link
-              href="/status"
+              href="/track"
               className="group inline-flex items-center gap-2 bg-white border border-[#E4E4E7] text-[#09090B] px-7 py-3.5 rounded-[10px] font-semibold text-sm hover:border-[#09090B] hover:bg-[#F8F9FA] transition-all duration-200"
             >
               <Search className="w-4 h-4" />

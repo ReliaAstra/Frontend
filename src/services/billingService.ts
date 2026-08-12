@@ -1,38 +1,35 @@
-import { apiClient } from "@/lib/api";
+import { apiClient, getOrgContext } from "@/lib/api";
 
-export interface BillingPlan {
-  name: string;
-  tier: string;
-  price_monthly: number;
-  dependencies_limit: number;
-  checks_per_month: number;
-  incidents_retention_days: number;
-  current_usage: {
-    dependencies: number;
-    checks_this_month: number;
-  };
+export interface BillingPlanResponse {
+  org_id: string;
+  plan: "free" | "standard" | "professional" | "agency";
+  max_dependencies: number;
+  min_check_interval_seconds: number;
+  subscription_status: string | null;
+  current_period_end: string | null;
 }
 
-export const mockPlan: BillingPlan = {
-  name: "Pro",
-  tier: "pro",
-  price_monthly: 149,
-  dependencies_limit: 50,
-  checks_per_month: 500000,
-  incidents_retention_days: 90,
-  current_usage: {
-    dependencies: 12,
-    checks_this_month: 245890,
-  },
-};
+export interface CheckoutResponse {
+  authorization_url: string;
+  reference: string;
+  access_code: string;
+}
 
 export const billingService = {
-  async getPlan(): Promise<BillingPlan> {
-    try {
-      const res = await apiClient.get("/billing/plan");
-      return res.data;
-    } catch {
-      return mockPlan;
-    }
+  async getPlan(): Promise<BillingPlanResponse> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.get<BillingPlanResponse>(`/orgs/${orgId}/billing/plan`);
+    return res.data;
+  },
+
+  async initializePayment(plan: string, email?: string): Promise<CheckoutResponse> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.post<CheckoutResponse>(`/orgs/${orgId}/billing/initialize`, {
+      plan,
+      email: email || null,
+    });
+    return res.data;
   },
 };

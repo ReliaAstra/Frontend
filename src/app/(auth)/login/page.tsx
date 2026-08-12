@@ -1,79 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Shield } from "lucide-react";
-import { toast } from "sonner";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const { login, loginError, clearErrors, isLoading } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(loginError);
+
+  if (loginError && !error) setError(loginError);
+  if (!loginError && error && error === loginError) setError(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    clearErrors();
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      setError("Please enter your email and password.");
       return;
     }
     setLoading(true);
     try {
       await login(email, password);
     } catch {
-      toast.error("Login failed");
+      // Error handled by auth context
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-gray-200 bg-white p-8">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6366F1]">
-            <Shield className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-semibold text-gray-900">Reliastra</span>
+    <div className="w-full max-w-[400px]">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-[20px] font-semibold text-[#09090B] tracking-[-0.02em]">
+          Sign in to Reliastra
+        </h1>
+        <p className="text-sm text-[#52525B] mt-1.5">
+          Access your dependency intelligence console.
+        </p>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mb-5 px-3.5 py-2.5 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="text-[13px] font-medium text-[#09090B] mb-1.5 block">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
+            autoComplete="email"
+            required
+            className="h-[42px] bg-white border-[#E4E4E7] text-[#09090B] placeholder:text-[#A1A1AA] text-sm rounded-lg focus-visible:ring-[#0891B2] focus-visible:border-[#0891B2]"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="text-[13px] font-medium text-[#09090B] mb-1.5 block">
+            Password
+          </label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+            className="h-[42px] bg-white border-[#E4E4E7] text-[#09090B] placeholder:text-[#A1A1AA] text-sm rounded-lg focus-visible:ring-[#0891B2] focus-visible:border-[#0891B2]"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="text-xs text-gray-500 mb-1.5 block">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="h-11 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1.5 block">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="h-11 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-medium"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
+        <Button
+          type="submit"
+          disabled={loading || isLoading}
+          className="w-full h-[42px] bg-[#09090B] hover:bg-[#09090B]/90 text-white font-medium text-sm rounded-lg transition-colors"
+        >
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Signing in...
+            </span>
+          ) : (
+            "Sign in"
+          )}
+        </Button>
+      </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-[#6366F1] hover:underline">
-            Sign Up
+      <div className="mt-6 flex items-center justify-between">
+        <p className="text-sm text-[#52525B]">
+          No account?{" "}
+          <Link href="/register" className="text-[#0891B2] hover:text-[#0E7490] font-medium transition-colors">
+            Create one
           </Link>
         </p>
       </div>

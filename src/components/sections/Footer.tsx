@@ -10,8 +10,8 @@ const FOOTER_LINKS = [
     links: [
       { label: 'Features', href: '/#solution' },
       { label: 'Pricing', href: '/pricing' },
-      { label: 'Status', href: '/status' },
-      { label: 'Public Tracking', href: '/status' },
+      { label: 'Vendor Intelligence', href: '/track' },
+      { label: 'Public Tracking', href: '/track' },
       { label: 'API Docs', href: '/blog' },
       { label: 'Changelog', href: '/changelog' },
     ],

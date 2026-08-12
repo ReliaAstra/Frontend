@@ -1,122 +1,176 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { KpiCards } from "@/components/dashboard/KpiCards";
 import { LatencyChart } from "@/components/dashboard/LatencyChart";
 import { SlaDegradationWidget } from "@/components/dashboard/SlaDegradationWidget";
 import { CheckFeedTable } from "@/components/dashboard/CheckFeedTable";
 import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
-import { dashboardService, type DashboardSummary, type LatencyPoint, type SlaDegradation, type CheckResult } from "@/services/dashboardService";
+import { dashboardService, type DashboardSummaryResponse, type LatencyDataPoint, type SlaDegradationResponse, type CheckResultResponse } from "@/services/dashboardService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Clock, ExternalLink } from "lucide-react";
+import { AlertTriangle, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-
-// Mock critical operations data
-const mockCriticalOps = [
-  {
-    id: "INC-2024-0847",
-    title: "Twilio SMS API returning 503 errors",
-    severity: "critical" as const,
-    dependency: "Twilio SMS",
-    client: "Acme Digital Agency",
-    site: "Production",
-    vendorCorrelation: "Twilio carrier outage — US East",
-    confidence: 0.94,
-    startedAt: "2026-08-12T17:32:00Z",
-  },
-  {
-    id: "INC-2024-0846",
-    title: "Auth0 OIDC token endpoint latency elevated",
-    severity: "high" as const,
-    dependency: "Auth0 OIDC",
-    client: "Acme Digital Agency",
-    site: "Production",
-    vendorCorrelation: null,
-    confidence: 0.78,
-    startedAt: "2026-08-12T16:15:00Z",
-  },
-];
+import { incidentService, type Incident } from "@/services/incidentService";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { currentOrg } = useAuth();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [latency, setLatency] = useState<LatencyPoint[]>([]);
-  const [sla, setSla] = useState<SlaDegradation | null>(null);
-  const [checks, setChecks] = useState<CheckResult[]>([]);
+  const { currentOrg, isLoading: authLoading } = useAuth();
+  const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
+  const [latency, setLatency] = useState<LatencyDataPoint[]>([]);
+  const [sla, setSla] = useState<SlaDegradationResponse | null>(null);
+  const [checks, setChecks] = useState<CheckResultResponse[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDashboard = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setError(null);
+    try {
+      const [s, l, sl, c, inc] = await Promise.all([
+        dashboardService.getSummary(),
+        dashboardService.getLatency(24),
+        dashboardService.getSlaDegradation(30),
+        dashboardService.getRecentChecks(10),
+        incidentService.list("open"),
+      ]);
+      setSummary(s);
+      setLatency(l);
+      setSla(sl);
+      setChecks(c);
+      setIncidents(inc);
+    } catch {
+      setError("Unable to load dashboard data.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    dashboardService.getSummary().then(setSummary);
-    dashboardService.getLatency().then(setLatency);
-    dashboardService.getSlaDegradation().then(setSla);
-    dashboardService.getRecentChecks().then(setChecks);
-  }, []);
+    if (!authLoading) fetchDashboard();
+  }, [authLoading, fetchDashboard]);
+
+  // Auth loading state
+  if (authLoading) {
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-20 rounded-lg" />
+        <Skeleton className="h-[320px] rounded-lg" />
+        <Skeleton className="h-[300px] rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-[15px] font-semibold text-gray-900 tracking-tight">OPERATIONS OVERVIEW</h1>
-          <span className="text-[11px] text-gray-400 font-normal">{currentOrg?.name || "Acme Digital Agency"}</span>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-[15px] font-semibold text-[#09090B] tracking-tight">
+              OPERATIONS OVERVIEW
+            </h1>
+            <span className="text-[11px] text-[#A1A1AA] font-normal">
+              {currentOrg?.name || "—"}
+            </span>
+          </div>
+          <p className="text-[12px] text-[#A1A1AA]">
+            {summary ? (
+              <>
+                <span className="text-[#52525B] font-medium">{summary.active_dependencies_count}</span> dependencies
+                {" · "}
+                <span className={summary.open_incidents_count > 0 ? "text-amber-600" : "text-emerald-600"}>
+                  <span className="font-medium">{summary.open_incidents_count}</span>
+                </span> open incidents
+                {" · "}
+                <span className={cn(
+                  "font-medium",
+                  summary.overall_uptime_percentage >= 99.9 ? "text-emerald-600" : summary.overall_uptime_percentage >= 99 ? "text-amber-600" : "text-red-600"
+                )}>
+                  {summary.overall_uptime_percentage.toFixed(2)}%
+                </span> reliability
+              </>
+            ) : loading ? "Loading observations..." : "No data available"}
+          </p>
         </div>
-        <p className="text-[12px] text-gray-400">
-          Production Intelligence — {summary ? (
-            <>
-              <span className="text-gray-600 font-medium">{summary.total_dependencies}</span> Dependencies
-              {" · "}
-              <span className="text-gray-600 font-medium">{summary.active_incidents}</span> Active Incidents
-              {" · "}
-              <span className={summary.uptime_24h >= 99.9 ? "text-emerald-600" : "text-amber-600"}><span className="font-medium">{summary.uptime_24h.toFixed(2)}%</span></span> Dependency Reliability
-            </>
-          ) : "Analyzing observations..."}
-        </p>
+        <button
+          onClick={() => fetchDashboard(true)}
+          disabled={refreshing || loading}
+          className="p-2 rounded-md border border-[#E4E4E7] hover:bg-[#F8F9FA] transition-colors text-[#52525B] disabled:opacity-50"
+          aria-label="Refresh dashboard"
+        >
+          <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />
+        </button>
       </div>
 
-      {/* KPI Metric Strip */}
-      {summary ? <KpiCards data={summary} /> : <KpiStripSkeleton />}
-
-      {/* Critical Operations */}
-      <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-200 flex items-center gap-2">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-          <h2 className="text-[13px] font-semibold text-gray-900">Critical Operations</h2>
-          <span className="text-[11px] text-gray-400 ml-auto">{mockCriticalOps.length} incidents requiring attention</span>
+      {/* Error */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-700">{error}</p>
+            <p className="text-xs text-red-500 mt-0.5">
+              Check that the backend is accessible and your session is valid.
+            </p>
+          </div>
+          <button onClick={() => fetchDashboard()} className="text-xs font-medium text-red-600 hover:text-red-800">
+            Retry
+          </button>
         </div>
-        <div className="divide-y divide-gray-100">
-          {mockCriticalOps.map((inc) => (
-            <Link
-              key={inc.id}
-              href={`/incidents/${inc.id}`}
-              className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50/50 transition-colors group"
-            >
-              <SeverityBadge severity={inc.severity} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-medium text-gray-900 group-hover:text-[#0891B2] transition-colors">
-                    {inc.title}
+      )}
+
+      {/* KPI Strip */}
+      {loading ? <KpiStripSkeleton /> : summary ? <KpiCards data={summary} /> : null}
+
+      {/* Active Incidents */}
+      {!loading && incidents.length > 0 && (
+        <div className="rounded-lg border border-[#E4E4E7] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#E4E4E7] flex items-center gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+            <h2 className="text-[13px] font-semibold text-[#09090B]">Active Incidents</h2>
+            <span className="text-[11px] text-[#A1A1AA] ml-auto">{incidents.length} requiring attention</span>
+          </div>
+          <div className="divide-y divide-[#F0F0F0]">
+            {incidents.map((inc) => (
+              <Link
+                key={inc.id}
+                href={`/incidents/${inc.id}`}
+                className="flex items-center gap-4 px-5 py-3 hover:bg-[#FAFAFA] transition-colors group"
+              >
+                <SeverityBadge severity={inc.severity} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-[13px] font-medium text-[#09090B] group-hover:text-[#0891B2] transition-colors">
+                    {inc.description || `Incident ${inc.id.slice(0, 8)}`}
                   </span>
+                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[#A1A1AA]">
+                    <span className="font-mono text-[#52525B]">{inc.id.slice(0, 12)}</span>
+                    <span className="capitalize">{inc.root_cause?.replace("_", " ") || "Unknown"}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
-                  <span className="font-mono text-gray-500">{inc.id}</span>
-                  <span>{inc.client} / {inc.site}</span>
-                  <span>{inc.dependency}</span>
-                </div>
-              </div>
-              {inc.vendorCorrelation && (
-                <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-1">
-                  <span>Vendor correlation detected</span>
-                </div>
-              )}
-              <div className="text-right shrink-0">
-                <div className="text-[11px] text-gray-400">Confidence</div>
-                <div className="text-[13px] font-mono font-medium text-gray-900">{(inc.confidence * 100).toFixed(0)}%</div>
-              </div>
-              <ExternalLink className="h-3.5 w-3.5 text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
-            </Link>
-          ))}
+                <ExternalLink className="h-3.5 w-3.5 text-[#E4E4E7] group-hover:text-[#0891B2] shrink-0 transition-colors" />
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* No incidents + no data state */}
+      {!loading && !error && incidents.length === 0 && (
+        <div className="rounded-lg border border-[#E4E4E7] bg-white p-6 text-center">
+          <p className="text-sm text-[#09090B] font-medium">No active incidents</p>
+          <p className="text-xs text-[#A1A1AA] mt-1">
+            {summary
+              ? `${summary.active_dependencies_count} dependencies are operating normally.`
+              : "Connect to the backend to see operational data."
+            }
+          </p>
+        </div>
+      )}
 
       {/* Main Grid: Chart + SLA */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
@@ -124,20 +178,34 @@ export default function DashboardPage() {
           {latency.length > 0 ? (
             <LatencyChart data={latency} />
           ) : (
-            <Skeleton className="h-[320px] rounded-lg bg-white" />
+            <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+              <p className="text-sm text-[#52525B]">No latency data available yet.</p>
+              <p className="text-xs text-[#A1A1AA] mt-1">
+                Latency trends will appear once observations are collected.
+              </p>
+            </div>
           )}
         </div>
         <div>
-          {sla ? <SlaDegradationWidget data={sla} /> : <Skeleton className="h-[260px] rounded-lg bg-white" />}
+          {sla ? <SlaDegradationWidget data={sla} /> : (
+            <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+              <p className="text-sm text-[#52525B]">No SLA degradation data.</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Recent Checks Table */}
+      {/* Recent Checks */}
       <div>
         {checks.length > 0 ? (
           <CheckFeedTable data={checks} />
         ) : (
-          <Skeleton className="h-[300px] rounded-lg bg-white" />
+          <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+            <p className="text-sm text-[#52525B]">No recent check results.</p>
+            <p className="text-xs text-[#A1A1AA] mt-1">
+              Check results will appear once dependencies are configured and measurements begin.
+            </p>
+          </div>
         )}
       </div>
     </div>
@@ -146,12 +214,12 @@ export default function DashboardPage() {
 
 function KpiStripSkeleton() {
   return (
-    <div className="border border-gray-200 bg-white rounded-lg overflow-hidden">
-      <div className="divide-x divide-gray-200 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+    <div className="border border-[#E4E4E7] bg-white rounded-lg overflow-hidden">
+      <div className="divide-x divide-[#E4E4E7] grid grid-cols-2 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="px-5 py-4 space-y-2">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-3 w-24 bg-[#F8F9FA]" />
+            <Skeleton className="h-6 w-16 bg-[#F8F9FA]" />
           </div>
         ))}
       </div>

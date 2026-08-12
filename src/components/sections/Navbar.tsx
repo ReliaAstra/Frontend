@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: 'Features', href: '/#solution' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Docs', href: '/blog' },
-  { label: 'Status', href: '/status' },
+  { label: 'Vendor Intelligence', href: '/track' },
 ];
 
 export function Navbar() {
@@ -62,14 +62,14 @@ export function Navbar() {
           </div>
 
           <a
-            href="/pricing"
+            href="/login"
             className="text-sm font-medium text-[#52525B] hover:text-[#09090B] transition-colors"
           >
             Sign In
           </a>
 
           <motion.a
-            href="/pricing"
+            href="/register"
             className="bg-[#0A0A0F] text-white px-5 py-2.5 rounded-[10px] font-semibold text-sm inline-block"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -112,13 +112,13 @@ export function Navbar() {
                   <span className="text-xs font-medium text-[#16A34A]">All systems up</span>
                 </div>
                 <a
-                  href="/signin"
+                  href="/login"
                   className="block px-3 py-3 text-sm font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F8F9FA] rounded-lg transition-colors"
                 >
                   Sign In
                 </a>
                 <a
-                  href="/signup"
+                  href="/register"
                   className="block bg-[#0A0A0F] text-white px-5 py-3 rounded-[10px] font-semibold text-sm text-center"
                 >
                   Start Free

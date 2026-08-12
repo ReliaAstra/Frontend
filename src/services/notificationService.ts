@@ -1,62 +1,56 @@
-import { apiClient } from "@/lib/api";
+import { apiClient, getOrgContext } from "@/lib/api";
 
-export type ChannelType = "slack" | "email" | "pagerduty" | "webhook";
+export type ChannelType = "email" | "slack" | "pagerduty" | "webhook";
 
-export interface NotificationChannel {
+export interface AlertConfig {
   id: string;
-  name: string;
-  type: ChannelType;
-  config: Record<string, string>;
+  org_id: string;
+  channel_type: ChannelType;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
-export const mockChannels: NotificationChannel[] = [
-  { id: "ch_001", name: "Engineering Slack", type: "slack", config: { webhook_url: "https://hooks.slack.com/services/T00/B00/xxx", channel: "#incidents" }, is_active: true, created_at: "2025-03-01T00:00:00Z" },
-  { id: "ch_002", name: "On-Call Email", type: "email", config: { recipients: "oncall@acme.com, sre@acme.com" }, is_active: true, created_at: "2025-03-15T00:00:00Z" },
-  { id: "ch_003", name: "PagerDuty", type: "pagerduty", config: { routing_key: "pd_key_xxx", severity: "high,critical" }, is_active: true, created_at: "2025-05-20T00:00:00Z" },
-  { id: "ch_004", name: "Status Page Webhook", type: "webhook", config: { url: "https://status.acme.com/api/hooks/reliability", secret: "whsec_xxx" }, is_active: false, created_at: "2025-08-01T00:00:00Z" },
-];
+export interface CreateAlertConfigRequest {
+  channel_type: ChannelType;
+  config: Record<string, string>;
+  is_active?: boolean;
+}
 
 export const notificationService = {
-  async list(): Promise<NotificationChannel[]> {
-    try {
-      const res = await apiClient.get("/notifications/channels");
-      return res.data;
-    } catch {
-      return mockChannels;
-    }
+  async list(): Promise<AlertConfig[]> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.get<AlertConfig[]>(`/orgs/${orgId}/notifications/configs`);
+    return res.data;
   },
 
-  async create(data: { name: string; type: ChannelType; config: Record<string, string> }): Promise<NotificationChannel> {
-    try {
-      const res = await apiClient.post("/notifications/channels", data);
-      return res.data;
-    } catch {
-      return {
-        id: `ch_${Date.now()}`,
-        name: data.name,
-        type: data.type,
-        config: data.config,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
-    }
+  async create(data: CreateAlertConfigRequest): Promise<AlertConfig> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.post<AlertConfig>(`/orgs/${orgId}/notifications/configs`, data);
+    return res.data;
   },
 
-  async toggleActive(id: string, active: boolean): Promise<void> {
-    try {
-      await apiClient.patch(`/notifications/channels/${id}`, { is_active: active });
-    } catch {
-      // mock ok
-    }
+  async update(id: string, data: Partial<CreateAlertConfigRequest>): Promise<AlertConfig> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.patch<AlertConfig>(`/orgs/${orgId}/notifications/configs/${id}`, data);
+    return res.data;
   },
 
   async delete(id: string): Promise<void> {
-    try {
-      await apiClient.delete(`/notifications/channels/${id}`);
-    } catch {
-      // mock ok
-    }
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    await apiClient.delete(`/orgs/${orgId}/notifications/configs/${id}`);
+  },
+
+  async test(id: string): Promise<{ success: boolean; message: string }> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.post<{ success: boolean; message: string }>(`/orgs/${orgId}/notifications/test`, {
+      config_id: id,
+    });
+    return res.data;
   },
 };

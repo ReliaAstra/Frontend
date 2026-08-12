@@ -77,7 +77,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.3, ease }}
             >
               <a
-                href="/pricing"
+                href="/register"
                 className="group inline-flex items-center justify-center gap-2 bg-[#0A0A0F] text-white px-7 py-3.5 rounded-[10px] font-semibold text-sm hover:shadow-xl transition-all duration-200"
                 style={{ transitionProperty: 'transform, box-shadow' }}
                 onMouseEnter={(e) => {
@@ -91,7 +91,7 @@ export function HeroSection() {
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
               </a>
               <a
-                href="/status"
+                href="/track"
                 className="group inline-flex items-center justify-center gap-2 bg-white border border-[#E4E4E7] text-[#09090B] px-7 py-3.5 rounded-[10px] font-semibold text-sm hover:border-[#09090B] hover:bg-[#F8F9FA] transition-all duration-200"
               >
                 <Activity className="w-4 h-4" />

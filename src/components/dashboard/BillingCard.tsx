@@ -1,17 +1,44 @@
 "use client";
 
-import { Progress } from "@/components/ui/progress";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Zap, Check } from "lucide-react";
-import type { BillingPlan } from "@/services/billingService";
+import { Zap } from "lucide-react";
+import { billingService } from "@/services/billingService";
+import type { BillingPlanResponse } from "@/services/billingService";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface BillingCardProps {
-  plan: BillingPlan;
+  plan: BillingPlanResponse;
 }
 
+const planDetails: Record<string, { label: string; price: string }> = {
+  free: { label: "Free", price: "$0" },
+  standard: { label: "Standard", price: "$49" },
+  professional: { label: "Professional", price: "$99" },
+  agency: { label: "Agency", price: "Custom" },
+};
+
 export function BillingCard({ plan }: BillingCardProps) {
-  const depUsage = (plan.current_usage.dependencies / plan.dependencies_limit) * 100;
-  const checkUsage = (plan.current_usage.checks_this_month / plan.checks_per_month) * 100;
+  const details = planDetails[plan.plan] || { label: plan.plan, price: "Custom" };
+
+  const handleUpgrade = async () => {
+    if (plan.plan === "agency") {
+      toast.info("Contact Reliastra for Agency pricing.");
+      return;
+    }
+    const targetPlan = plan.plan === "free" ? "standard" : plan.plan === "standard" ? "professional" : null;
+    if (!targetPlan) {
+      toast.info("You are on the highest available plan.");
+      return;
+    }
+    try {
+      const res = await billingService.initializePayment(targetPlan);
+      window.location.href = res.authorization_url;
+    } catch {
+      toast.error("Failed to initialize payment. Please try again.");
+    }
+  };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-6">
@@ -21,35 +48,60 @@ export function BillingCard({ plan }: BillingCardProps) {
             <Zap className="h-5 w-5 text-[#0891B2]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{plan.name} Plan</h3>
-            <p className="text-sm text-gray-500">${plan.price_monthly}/month</p>
+            <h3 className="text-lg font-semibold text-gray-900">{details.label} Plan</h3>
+            <p className="text-sm text-gray-500">{details.price}/month</p>
           </div>
         </div>
-        <Button className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
-          Upgrade
-        </Button>
+        {plan.plan !== "professional" && plan.plan !== "agency" && (
+          <Button onClick={handleUpgrade} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
+            Upgrade
+          </Button>
+        )}
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">Dependencies</span>
-            <span className="text-sm text-gray-900 font-medium">{plan.current_usage.dependencies} / {plan.dependencies_limit}</span>
-          </div>
-          <Progress value={depUsage} className="h-2 bg-gray-200" />
+      {plan.subscription_status && (
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+            plan.subscription_status === "active"
+              ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+              : plan.subscription_status === "past_due"
+              ? "bg-red-50 text-red-600 border-red-200"
+              : "bg-gray-50 text-gray-500 border-gray-200"
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${
+              plan.subscription_status === "active" ? "bg-emerald-500" : "bg-gray-400"
+            }`} />
+            {plan.subscription_status.replace("_", " ")}
+          </span>
+          {plan.current_period_end && (
+            <span className="text-xs text-gray-400">
+              Renews {format(new Date(plan.current_period_end), "MMM d, yyyy")}
+            </span>
+          )}
         </div>
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">Checks this month</span>
-            <span className="text-sm text-gray-900 font-medium">{(plan.current_usage.checks_this_month / 1000).toFixed(0)}k / {(plan.checks_per_month / 1000).toFixed(0)}k</span>
-          </div>
-          <Progress value={checkUsage} className="h-2 bg-gray-200" />
+      )}
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">Dependencies</span>
+          <span className="text-sm text-gray-900 font-medium">{plan.max_dependencies === 10000 ? "Unlimited" : plan.max_dependencies}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">Min check interval</span>
+          <span className="text-sm text-gray-900 font-medium">{plan.min_check_interval_seconds}s</span>
         </div>
       </div>
 
       <div className="border-t border-gray-200 pt-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">Plan Features</p>
-        {[`Up to ${plan.dependencies_limit} dependencies`, `${(plan.checks_per_month / 1000).toFixed(0)}k checks/month`, `${plan.incidents_retention_days}-day incident retention`, "SLA evidence reports", "Multi-region monitoring", "Email & Slack notifications"].map((f) => (
+        {[
+          `Up to ${plan.max_dependencies === 10000 ? "unlimited" : plan.max_dependencies} dependencies`,
+          `${plan.min_check_interval_seconds}s minimum check interval`,
+          "SLA evidence reports",
+          "Multi-region monitoring",
+          "Email, Slack, PagerDuty, and webhook notifications",
+          "API key access",
+        ].map((f) => (
           <div key={f} className="flex items-center gap-2 text-sm text-gray-500">
             <Check className="h-4 w-4 text-emerald-600 shrink-0" />
             {f}

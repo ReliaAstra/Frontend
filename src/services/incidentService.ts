@@ -32,6 +32,26 @@ export interface IncidentDetail extends Incident {
   correlations: IncidentCorrelation[];
 }
 
+// Timeline events derived from incident data + correlations
+// (no dedicated backend timeline endpoint — built from incident fields)
+export interface TimelineEvent {
+  id: string;
+  type: "status_change" | "correlation" | "evidence_generated" | "resolved" | "acknowledged" | "note";
+  timestamp: string;
+  action: string;
+  details: string;
+  actor: string;
+}
+
+// Correlated signals derived from incident correlations
+export interface CorrelatedSignal {
+  id: string;
+  name: string;
+  correlation: number;
+  metric: string;
+  values: number[];
+}
+
 export interface VendorIncident {
   incident_id: string;
   dependency_name: string;
@@ -45,6 +65,72 @@ export interface VendorIncident {
 export interface VendorIncidentsResponse {
   vendor_name: string;
   incidents: VendorIncident[];
+}
+
+// Build timeline events from incident data
+export function buildTimeline(incident: IncidentDetail): TimelineEvent[] {
+  const events: TimelineEvent[] = [];
+
+  // Incident started
+  events.push({
+    id: `${incident.id}-start`,
+    type: "status_change",
+    timestamp: incident.started_at,
+    action: "Incident opened",
+    details: `Severity: ${incident.severity}. ${incident.description || "No description provided."}`,
+    actor: "System",
+  });
+
+  // Correlations
+  for (const c of incident.correlations) {
+    events.push({
+      id: c.id,
+      type: "correlation",
+      timestamp: c.created_at,
+      action: `Correlation established`,
+      details: `Dependency correlated via ${c.correlation_method} method (confidence: ${(c.correlation_confidence * 100).toFixed(0)}%, window: ${c.time_window_seconds}s).`,
+      actor: c.correlation_method === "manual" ? "User" : "System",
+    });
+  }
+
+  // Evidence
+  if (incident.evidence_report_id) {
+    events.push({
+      id: `${incident.id}-evidence`,
+      type: "evidence_generated",
+      timestamp: incident.updated_at,
+      action: "Evidence report generated",
+      details: `Evidence snapshot created for this incident.`,
+      actor: "System",
+    });
+  }
+
+  // Resolution
+  if (incident.resolved_at) {
+    events.push({
+      id: `${incident.id}-resolved`,
+      type: "resolved",
+      timestamp: incident.resolved_at,
+      action: "Incident resolved",
+      details: incident.root_cause !== "unknown"
+        ? `Root cause: ${incident.root_cause.replace(/_/g, " ")}.`
+        : "Root cause was not determined.",
+      actor: "System",
+    });
+  }
+
+  return events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+// Build correlated signals from incident correlations
+export function buildCorrelatedSignals(incident: IncidentDetail): CorrelatedSignal[] {
+  return incident.correlations.map((c) => ({
+    id: c.id,
+    name: `Dependency ${c.correlated_dependency_id.slice(0, 8)}`,
+    correlation: c.correlation_confidence,
+    metric: `Time window: ${c.time_window_seconds}s · Method: ${c.correlation_method}`,
+    values: [],
+  }));
 }
 
 export const incidentService = {

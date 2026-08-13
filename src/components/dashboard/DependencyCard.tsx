@@ -1,20 +1,23 @@
 "use client";
 
-import { BarChart, Bar, ResponsiveContainer, Cell } from "recharts";
 import { ExternalLink, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
 import { formatDistanceToNow } from "date-fns";
 import type { Dependency } from "@/services/dependencyService";
 
 interface DependencyCardProps {
   dependency: Dependency;
+  history?: { uptime_percentage: number; avg_latency_ms: number } | null;
   onToggle?: (id: string, active: boolean) => void;
   onDelete?: (id: string) => void;
 }
 
-export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCardProps) {
-  const sparkData = dependency.recent_response_times.map((v) => ({ v }));
-  const maxVal = Math.max(...dependency.recent_response_times, 1);
+function statusFromActive(dep: Dependency): "up" | "down" | "unknown" {
+  if (!dep.is_active) return "unknown";
+  return "up";
+}
+
+export function DependencyCard({ dependency, history, onToggle, onDelete }: DependencyCardProps) {
+  const status = statusFromActive(dependency);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5 flex flex-col gap-4">
@@ -22,11 +25,20 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-sm font-semibold text-gray-900 truncate">{dependency.name}</h3>
-            <StatusBadge status={dependency.status} />
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border ${
+              status === "up" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+              status === "down" ? "bg-red-50 text-red-600 border-red-200" :
+              "bg-gray-50 text-gray-500 border-gray-200"
+            }`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${
+                status === "up" ? "bg-emerald-500" : status === "down" ? "bg-red-500" : "bg-gray-400"
+              }`} />
+              {status === "up" ? "Active" : status === "down" ? "Down" : "Paused"}
+            </span>
           </div>
           <p className="text-xs text-gray-400 font-mono truncate flex items-center gap-1">
             <ExternalLink className="h-3 w-3 shrink-0" />
-            {dependency.target_url}
+            {dependency.endpoint_url}
           </p>
         </div>
         <button
@@ -34,53 +46,46 @@ export function DependencyCard({ dependency, onToggle, onDelete }: DependencyCar
           className="shrink-0 ml-2 text-gray-400 hover:text-gray-900 transition-colors"
           title={dependency.is_active ? "Pause monitoring" : "Resume monitoring"}
         >
-          {dependency.is_active ? <ToggleRight className="h-5 w-5 text-[#10B981]" /> : <ToggleLeft className="h-5 w-5" />}
+          {dependency.is_active ? <ToggleRight className="h-5 w-5 text-emerald-500" /> : <ToggleLeft className="h-5 w-5" />}
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Response Time</p>
-          <p className="text-sm font-medium text-gray-900">
-            {dependency.status === "down" ? "—" : `${dependency.last_response_time_ms}ms`}
-          </p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Method</p>
+          <p className="text-sm font-medium text-gray-900">{dependency.method.toUpperCase()}</p>
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Check Interval</p>
           <p className="text-sm font-medium text-gray-900">{dependency.check_interval_seconds}s</p>
         </div>
+        {history && (
+          <>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Uptime 24h</p>
+              <p className={`text-sm font-medium ${history.uptime_percentage >= 99.9 ? "text-emerald-600" : history.uptime_percentage >= 99 ? "text-amber-600" : "text-red-600"}`}>
+                {history.uptime_percentage.toFixed(2)}%
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Avg Latency</p>
+              <p className={`text-sm font-medium ${history.avg_latency_ms > 500 ? "text-red-600" : history.avg_latency_ms > 200 ? "text-amber-600" : "text-gray-900"}`}>
+                {Math.round(history.avg_latency_ms)}ms
+              </p>
+            </div>
+          </>
+        )}
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Uptime 24h</p>
-          <p className={`text-sm font-medium ${dependency.uptime_24h >= 99.9 ? "text-emerald-600" : dependency.uptime_24h >= 99 ? "text-amber-600" : "text-red-600"}`}>
-            {dependency.uptime_24h.toFixed(2)}%
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Regions</p>
+          <p className="text-sm font-medium text-gray-500 capitalize">
+            {dependency.regions?.join(", ") || "default"}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Last Check</p>
-          <p className="text-sm font-medium text-gray-500">
-            {formatDistanceToNow(new Date(dependency.last_check_at), { addSuffix: true })}
-          </p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Timeout</p>
+          <p className="text-sm font-medium text-gray-900">{dependency.timeout_seconds}s</p>
         </div>
       </div>
-
-      {sparkData.length > 0 && (
-        <div className="h-[40px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={sparkData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <Bar dataKey="v" radius={[2, 2, 0, 0]} isAnimationActive={false}>
-                {sparkData.map((_, i) => {
-                  const val = sparkData[i].v;
-                  let color = "#10B981";
-                  if (val > maxVal * 0.8) color = "#EF4444";
-                  else if (val > maxVal * 0.5) color = "#F59E0B";
-                  if (val === 0) color = "#EF4444";
-                  return <Cell key={i} fill={color} />;
-                })}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-200">
         <button

@@ -2,7 +2,7 @@
 
 import { SeverityBadge } from "./SeverityBadge";
 import { StatusBadge } from "./StatusBadge";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import type { Incident } from "@/services/incidentService";
@@ -13,9 +13,8 @@ interface IncidentListProps {
 
 const statusMap: Record<string, "up" | "down" | "degraded"> = {
   open: "down",
-  investigating: "degraded",
-  monitoring: "degraded",
   resolved: "up",
+  false_positive: "up",
 };
 
 export function IncidentList({ incidents }: IncidentListProps) {
@@ -39,19 +38,23 @@ export function IncidentList({ incidents }: IncidentListProps) {
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <SeverityBadge severity={incident.severity} />
                 <StatusBadge status={statusMap[incident.status] || "degraded"} />
-                <span className="text-xs text-gray-400 font-mono">{incident.id}</span>
+                <span className="text-xs text-gray-400 font-mono">{incident.id.slice(0, 12)}</span>
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{incident.title}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                {incident.description || `Incident ${incident.id.slice(0, 8)}`}
+              </h3>
               <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                <span>{incident.dependency_name}</span>
+                <span className="font-mono">{incident.dependency_id.slice(0, 12)}</span>
                 <span className="flex items-center gap-1">
-                  <span className="text-gray-400">Correlations:</span>
-                  <span className="text-gray-900 font-medium">{incident.correlation_count}</span>
+                  <span className="text-gray-400">Root cause:</span>
+                  <span className="text-gray-900 font-medium capitalize">{incident.root_cause?.replace(/_/g, " ") || "Unknown"}</span>
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="text-gray-400">Confidence:</span>
-                  <span className="text-gray-900 font-medium">{(incident.confidence_score * 100).toFixed(0)}%</span>
-                </span>
+                {incident.correlations && (
+                  <span className="flex items-center gap-1">
+                    <span className="text-gray-400">Correlations:</span>
+                    <span className="text-gray-900 font-medium">{incident.correlations.length}</span>
+                  </span>
+                )}
                 <span>{formatDistanceToNow(new Date(incident.started_at), { addSuffix: true })}</span>
               </div>
             </div>

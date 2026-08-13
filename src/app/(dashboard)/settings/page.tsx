@@ -6,10 +6,11 @@ import { MemberTable } from "@/components/dashboard/MemberTable";
 import { ApiKeyManager } from "@/components/dashboard/ApiKeyManager";
 import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
 import { BillingCard } from "@/components/dashboard/BillingCard";
-import { orgService, type OrgMember } from "@/services/orgService";
-import { apiKeyService, type ApiKey } from "@/services/apiKeyService";
-import { notificationService, type NotificationChannel } from "@/services/notificationService";
-import { billingService, type BillingPlan } from "@/services/billingService";
+import { orgService, type OrgMemberResponse } from "@/services/orgService";
+import { apiKeyService, type ApiKeyResponse } from "@/services/apiKeyService";
+import { notificationService, type AlertConfig } from "@/services/notificationService";
+import { billingService, type BillingPlanResponse } from "@/services/billingService";
+import { apiClient, BackendError } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -19,14 +20,15 @@ const tabs = ["profile", "team", "api-keys", "notifications", "billing"] as cons
 const tabLabels: Record<string, string> = { profile: "Profile", team: "Team", "api-keys": "API Keys", notifications: "Notifications", billing: "Billing" };
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, memberRole } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("profile");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [members, setMembers] = useState<OrgMember[]>([]);
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [channels, setChannels] = useState<NotificationChannel[]>([]);
-  const [plan, setPlan] = useState<BillingPlan | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [members, setMembers] = useState<OrgMemberResponse[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKeyResponse[]>([]);
+  const [channels, setChannels] = useState<AlertConfig[]>([]);
+  const [plan, setPlan] = useState<BillingPlanResponse | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -36,23 +38,35 @@ export default function SettingsPage() {
   }, [user]);
 
   useEffect(() => {
-    if (activeTab === "team") orgService.listMembers().then(setMembers);
+    if (activeTab === "team") orgService.listMembers().then(setMembers).catch(() => {});
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "api-keys") apiKeyService.list().then(setApiKeys);
+    if (activeTab === "api-keys") apiKeyService.list().then(setApiKeys).catch(() => {});
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "notifications") notificationService.list().then(setChannels);
+    if (activeTab === "notifications") notificationService.list().then(setChannels).catch(() => {});
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "billing") billingService.getPlan().then(setPlan);
+    if (activeTab === "billing") billingService.getPlan().then(setPlan).catch(() => {});
   }, [activeTab]);
 
-  const handleProfileUpdate = () => {
-    toast.success("Profile updated");
+  const handleProfileUpdate = async () => {
+    setSaving(true);
+    try {
+      await apiClient.patch("/users/me", { full_name: name, email });
+      toast.success("Profile updated");
+    } catch (err) {
+      if (err instanceof BackendError) {
+        toast.error(err.message);
+      } else {
+        toast.error("Failed to update profile.");
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -87,7 +101,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-lg font-medium text-gray-900">{user?.full_name}</p>
-                <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
+                <p className="text-sm text-gray-500 capitalize">{memberRole || "Member"}</p>
               </div>
             </div>
             <div>
@@ -98,8 +112,8 @@ export default function SettingsPage() {
               <label className="text-xs text-gray-500 mb-1.5 block">Email</label>
               <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
             </div>
-            <Button onClick={handleProfileUpdate} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-              Update Profile
+            <Button onClick={handleProfileUpdate} disabled={saving} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
+              {saving ? "Saving..." : "Update Profile"}
             </Button>
           </div>
         )}

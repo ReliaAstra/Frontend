@@ -175,7 +175,7 @@ export function TrackPageContent() {
               </thead>
               <tbody>
                 {filtered.map((vendor) => {
-                  const status = vendor.current_status || vendor.recent_status || 'unknown';
+                  const status = 'unknown';
                   const sConfig = statusConfig[status] || statusConfig.unknown;
                   return (
                     <Link

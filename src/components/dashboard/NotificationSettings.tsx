@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import type { NotificationChannel, ChannelType } from "@/services/notificationService";
+import { notificationService, type AlertConfig, type ChannelType } from "@/services/notificationService";
 
 const typeIcons: Record<ChannelType, React.ComponentType<{ className?: string }>> = {
   slack: Hash,
@@ -29,50 +29,63 @@ const typeColors: Record<ChannelType, string> = {
   webhook: "bg-emerald-50 text-emerald-600",
 };
 
+const configLabels: Record<ChannelType, string> = {
+  slack: "Webhook URL",
+  email: "Recipients (comma-separated)",
+  pagerduty: "Routing Key",
+  webhook: "Endpoint URL",
+};
+
 interface NotificationSettingsProps {
-  channels: NotificationChannel[];
+  channels: AlertConfig[];
 }
 
 export function NotificationSettings({ channels: initialChannels }: NotificationSettingsProps) {
   const [localChannels, setLocalChannels] = useState(initialChannels);
   const [addOpen, setAddOpen] = useState(false);
-  const [name, setName] = useState("");
   const [type, setType] = useState<ChannelType>("slack");
   const [configValue, setConfigValue] = useState("");
+  const [adding, setAdding] = useState(false);
 
-  const configLabel: Record<ChannelType, string> = {
-    slack: "Webhook URL",
-    email: "Recipients (comma-separated)",
-    pagerduty: "Routing Key",
-    webhook: "Endpoint URL",
+  const handleAdd = async () => {
+    if (!configValue) return;
+    setAdding(true);
+    const configKey = type === "slack" ? "webhook_url" : type === "email" ? "email" : type === "pagerduty" ? "routing_key" : "url";
+    try {
+      const newChannel = await notificationService.create({
+        channel_type: type,
+        config: { [configKey]: configValue },
+        is_active: true,
+      });
+      setLocalChannels([...localChannels, newChannel]);
+      setConfigValue("");
+      setAddOpen(false);
+      toast.success("Notification channel added");
+    } catch {
+      toast.error("Failed to add notification channel.");
+    } finally {
+      setAdding(false);
+    }
   };
 
-  const handleAdd = () => {
-    if (!name || !configValue) return;
-    const configKey = type === "slack" || type === "webhook" ? (type === "slack" ? "webhook_url" : "url") : type === "email" ? "recipients" : "routing_key";
-    const newChannel: NotificationChannel = {
-      id: `ch_${Date.now()}`,
-      name,
-      type,
-      config: { [configKey]: configValue },
-      is_active: true,
-      created_at: new Date().toISOString(),
-    };
-    setLocalChannels([...localChannels, newChannel]);
-    setName("");
-    setConfigValue("");
-    setAddOpen(false);
-    toast.success("Notification channel added");
+  const handleToggle = async (id: string, active: boolean) => {
+    try {
+      const updated = await notificationService.update(id, { is_active: active });
+      setLocalChannels(localChannels.map((c) => (c.id === id ? updated : c)));
+      toast.success(active ? "Channel enabled" : "Channel disabled");
+    } catch {
+      toast.error("Failed to update channel.");
+    }
   };
 
-  const handleToggle = (id: string, active: boolean) => {
-    setLocalChannels(localChannels.map((c) => (c.id === id ? { ...c, is_active: active } : c)));
-    toast.success(active ? "Channel enabled" : "Channel disabled");
-  };
-
-  const handleDelete = (id: string) => {
-    setLocalChannels(localChannels.filter((c) => c.id !== id));
-    toast.success("Channel removed");
+  const handleDelete = async (id: string) => {
+    try {
+      await notificationService.delete(id);
+      setLocalChannels(localChannels.filter((c) => c.id !== id));
+      toast.success("Channel removed");
+    } catch {
+      toast.error("Failed to remove channel.");
+    }
   };
 
   return (
@@ -92,10 +105,6 @@ export function NotificationSettings({ channels: initialChannels }: Notification
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">Channel Name</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Engineering Alerts" className="bg-gray-50 border-gray-200 text-gray-900" />
-              </div>
-              <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">Type</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(Object.keys(typeIcons) as ChannelType[]).map((t) => {
@@ -114,11 +123,11 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">{configLabel[type]}</label>
-                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabel[type].toLowerCase()}`} className="bg-gray-50 border-gray-200 text-gray-900" />
+                <label className="text-xs text-gray-500 mb-1.5 block">{configLabels[type]}</label>
+                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabels[type].toLowerCase()}`} className="bg-gray-50 border-gray-200 text-gray-900" />
               </div>
-              <Button onClick={handleAdd} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-                Add Channel
+              <Button onClick={handleAdd} disabled={adding} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
+                {adding ? "Adding..." : "Add Channel"}
               </Button>
             </div>
           </DialogContent>
@@ -126,28 +135,34 @@ export function NotificationSettings({ channels: initialChannels }: Notification
       </div>
 
       <div className="space-y-3">
-        {localChannels.map((channel) => {
-          const Icon = typeIcons[channel.type];
-          return (
-            <div key={channel.id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.type]}`}>
-                  <Icon className="h-4 w-4" />
+        {localChannels.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+            <p className="text-sm text-gray-400">No notification channels configured.</p>
+          </div>
+        ) : (
+          localChannels.map((channel) => {
+            const Icon = typeIcons[channel.channel_type];
+            return (
+              <div key={channel.id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.channel_type] || "bg-gray-50 text-gray-500"}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 capitalize">{channel.channel_type}</p>
+                    <p className="text-xs text-gray-400">ID: {channel.id.slice(0, 8)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{channel.name}</p>
-                  <p className="text-xs text-gray-400 capitalize">{channel.type}</p>
+                <div className="flex items-center gap-3">
+                  <Switch checked={channel.is_active} onCheckedChange={(checked) => handleToggle(channel.id, checked)} />
+                  <button onClick={() => handleDelete(channel.id)} className="text-gray-400 hover:text-red-600 transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Switch checked={channel.is_active} onCheckedChange={(checked) => handleToggle(channel.id, checked)} />
-                <button onClick={() => handleDelete(channel.id)} className="text-gray-400 hover:text-red-600 transition-colors">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

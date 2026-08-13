@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { IncidentDetail } from "@/components/dashboard/IncidentDetail";
-import { incidentService, type Incident, type TimelineEvent, type CorrelatedSignal } from "@/services/incidentService";
+import { incidentService, type IncidentDetail as IncidentDetailType, type TimelineEvent, type CorrelatedSignal, buildTimeline, buildCorrelatedSignals } from "@/services/incidentService";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -13,28 +13,30 @@ export default function IncidentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [incident, setIncident] = useState<Incident | null>(null);
+  const [incident, setIncident] = useState<IncidentDetailType | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [signals, setSignals] = useState<CorrelatedSignal[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      incidentService.getById(id),
-      incidentService.getTimeline(id),
-      incidentService.getCorrelatedSignals(id),
-    ]).then(([inc, tl, sig]) => {
+    incidentService.getById(id).then((inc) => {
       setIncident(inc);
-      setTimeline(tl);
-      setSignals(sig);
+      setTimeline(buildTimeline(inc));
+      setSignals(buildCorrelatedSignals(inc));
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
   }, [id]);
 
-  const handleStatusUpdate = async (status: "investigating" | "resolved") => {
-    await incidentService.updateStatus(id, status);
-    if (incident) setIncident({ ...incident, status });
-    toast.success(`Incident marked as ${status}`);
+  const handleStatusUpdate = async (status: "open" | "resolved" | "false_positive") => {
+    try {
+      await incidentService.update(id, { status });
+      if (incident) setIncident({ ...incident, status });
+      toast.success(`Incident marked as ${status.replace("_", " ")}`);
+    } catch {
+      toast.error("Failed to update incident status.");
+    }
   };
 
   if (loading) {
@@ -69,7 +71,12 @@ export default function IncidentDetailPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Incidents
       </button>
-      <IncidentDetail incident={incident} timeline={timeline} signals={signals} />
+      <IncidentDetail
+        incident={incident}
+        timeline={timeline}
+        signals={signals}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

@@ -130,28 +130,4 @@ export const authService = {
     sessionStorage.removeItem("github_oauth_state");
     return await authService.exchangeGitHubCode(code);
   },
-
-  // ── Password Reset ────────────────────────────────────────────────
-
-  /** Request a password reset email. Always returns 200 to prevent enumeration. */
-  async requestPasswordReset(email: string): Promise<void> {
-    await apiClient.post("/auth/password-reset/request", { email });
-  },
-
-  /** Confirm password reset with token + new password. */
-  async confirmPasswordReset(token: string, new_password: string): Promise<void> {
-    await apiClient.post("/auth/password-reset/confirm", { token, new_password });
-  },
-
-  // ── Email Verification ────────────────────────────────────────────
-
-  /** Request email verification (re-send verification email). */
-  async requestEmailVerification(): Promise<void> {
-    await apiClient.post("/auth/email-verify/request");
-  },
-
-  /** Confirm email verification with token. */
-  async confirmEmailVerification(token: string): Promise<void> {
-    await apiClient.post("/auth/email-verify/confirm", { token });
-  },
 };

@@ -42,12 +42,12 @@ export function ProblemSection() {
             You know the conversation. &lsquo;Is it us or them?&rsquo;
           </h2>
           <p className="text-[#52525B] leading-relaxed">
-            The pager goes off at 2 AM. Error rates spike. Your team scrambles to
-            triage. After 45 minutes of digging, someone says: &ldquo;I think it’s
-            Stripe.&rdquo; But you can’t prove it. The vendor’s status page says
-            &ldquo;all systems operational.&rdquo; Your on-call engineer just lost an hour of
-            sleep for nothing—and your SLA credit claim gets denied for lack of
-            evidence.
+            Your pager goes off. Your site is down. Your team jumps on a call. Someone
+            checks Stripe’s status page — green. Someone checks
+            AWS — green. Forty-five minutes later, you find the root
+            cause buried in a vendor’s API latency spike. Your customers don’t
+            care whose fault it was. But your CFO will when you can’t prove it for
+            the SLA claim.
           </p>
         </motion.div>
 

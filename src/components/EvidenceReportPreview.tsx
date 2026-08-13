@@ -5,7 +5,7 @@ import { BrowserMockup } from '@/components/BrowserMockup';
 
 export function EvidenceReportPreview() {
   const reportRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(reportRef, { once: true, margin: '-100px' });
+  const isInView = useInView(reportRef, { once: true, margin: '-50px' });
   const motionCount = useMotionValue(0);
   const displayAmount = useTransform(motionCount, (v) => `$${Math.round(v).toLocaleString()}`);
   const [displayValue, setDisplayValue] = useState('$0');
@@ -17,10 +17,16 @@ export function EvidenceReportPreview() {
 
   useEffect(() => {
     if (isInView) {
-      animate(motionCount, 2840, {
-        duration: 2,
-        ease: [0.25, 0.1, 0.25, 1],
-      });
+      // Small delay ensures transform listener is active before animation starts
+      const timer = setTimeout(() => {
+        animate(motionCount, 2840, {
+          type: 'spring',
+          stiffness: 80,
+          damping: 20,
+          duration: 1.5,
+        });
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [isInView, motionCount]);
 

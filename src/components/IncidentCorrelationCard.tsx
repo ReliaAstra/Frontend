@@ -5,8 +5,8 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
-/* ── Animated number counter ── */
-function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
+/* ── Animated number counter — waits for `start` signal ── */
+function AnimatedNumber({ target, suffix = '', start = false }: { target: number; suffix?: string; start?: boolean }) {
   const count = useMotionValue(0);
   const display = useTransform(count, (v) => Math.round(v));
   const [text, setText] = useState('0');
@@ -17,6 +17,7 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
   }, [display]);
 
   useEffect(() => {
+    if (!start) return;
     const ctrl = animate(count, target, {
       duration: 0.8,
       type: 'spring',
@@ -24,7 +25,7 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
       damping: 18,
     });
     return () => ctrl.stop();
-  }, [target, count]);
+  }, [start, target, count]);
 
   return <span>{text}{suffix}</span>;
 }
@@ -56,7 +57,7 @@ export function IncidentCorrelationCard() {
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 
-  // Derived visibility booleans — computed in useMemo to satisfy exhaustive-deps
+  // Derived visibility booleans
   const headerVisible = useMemo(() => skipAnimation || phaseIndex(phase) >= phaseIndex('header'), [phase, skipAnimation]);
   const serviceVisible = useMemo(() => skipAnimation || phaseIndex(phase) >= phaseIndex('service'), [phase, skipAnimation]);
   const depsVisible = useMemo(() => skipAnimation || phaseIndex(phase) >= phaseIndex('deps'), [phase, skipAnimation]);
@@ -219,11 +220,15 @@ export function IncidentCorrelationCard() {
             </p>
             <p className="text-[13px] flex justify-between" style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
               <span className="text-[#A1A1AA]">Temporal correlation</span>
-              <span className="text-[#09090B]"><AnimatedNumber target={94} suffix="%" /></span>
+              <span className="text-[#09090B]">
+                <AnimatedNumber target={94} suffix="%" start={verdictVisible} />
+              </span>
             </p>
             <p className="text-[13px] flex justify-between" style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
               <span className="text-[#A1A1AA]">Regional correlation</span>
-              <span className="text-[#09090B]"><AnimatedNumber target={91} suffix="%" /></span>
+              <span className="text-[#09090B]">
+                <AnimatedNumber target={91} suffix="%" start={verdictVisible} />
+              </span>
             </p>
           </div>
         </motion.div>
@@ -238,10 +243,16 @@ export function IncidentCorrelationCard() {
           <motion.button
             className="w-full bg-[#0891B2] text-white py-3 rounded-[10px] font-semibold text-[14px] text-center cursor-pointer hover:bg-[#0E7490] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2] focus-visible:ring-offset-2"
             animate={buttonGlowActive
-              ? { boxShadow: '0 0 20px rgba(8,145,178,0.3)' }
+              ? {
+                  boxShadow: [
+                    '0 0 20px rgba(8,145,178,0.3)',
+                    '0 0 40px rgba(8,145,178,0.15)',
+                    '0 0 20px rgba(8,145,178,0.3)',
+                  ],
+                }
               : { boxShadow: '0 0 0px rgba(8,145,178,0)' }
             }
-            transition={{ duration: 0.5, ease }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             aria-label="Generate Evidence Report for incident #1842"
           >
             Generate Evidence Report

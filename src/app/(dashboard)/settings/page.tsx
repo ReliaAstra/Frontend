@@ -72,18 +72,18 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-400 mt-1">Manage your account and organization</p>
+        <h1 className="text-[15px] font-semibold text-[#09090B] tracking-tight">SETTINGS</h1>
+        <p className="text-[12px] text-[#A1A1AA] mt-1">Manage your account and organization</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 rounded-lg bg-white border border-gray-200 p-1 w-fit overflow-x-auto">
+      <div className="flex gap-1 rounded-lg bg-white border border-[#E4E4E7] p-1 w-fit overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`rounded-md px-4 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:text-gray-500"
+              activeTab === tab ? "bg-[#F8F9FA] text-[#09090B]" : "text-[#A1A1AA] hover:text-[#52525B]"
             }`}
           >
             {tabLabels[tab]}
@@ -94,23 +94,23 @@ export default function SettingsPage() {
       {/* Tab Content */}
       <div className="max-w-3xl">
         {activeTab === "profile" && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
+          <div className="rounded-lg border border-[#E4E4E7] bg-white p-6 space-y-5">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-16 w-16 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xl font-semibold">
                 {user?.full_name?.charAt(0) || "U"}
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-900">{user?.full_name}</p>
-                <p className="text-sm text-gray-500 capitalize">{memberRole || "Member"}</p>
+                <p className="text-lg font-medium text-[#09090B]">{user?.full_name}</p>
+                <p className="text-sm text-[#52525B] capitalize">{memberRole || "Member"}</p>
               </div>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">Full Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
+              <label className="text-[13px] font-medium text-[#09090B] mb-1.5 block">Full Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-white border-[#E4E4E7] text-[#09090B]" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">Email</label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-gray-50 border-gray-200 text-gray-900" />
+              <label className="text-[13px] font-medium text-[#09090B] mb-1.5 block">Email</label>
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white border-[#E4E4E7] text-[#09090B]" />
             </div>
             <Button onClick={handleProfileUpdate} disabled={saving} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
               {saving ? "Saving..." : "Update Profile"}

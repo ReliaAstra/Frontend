@@ -65,7 +65,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">{localKeys.length} API keys</p>
+        <p className="text-sm text-[#52525B]">{localKeys.length} API keys</p>
         <Dialog open={createOpen && !rawKey} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
           <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
@@ -73,18 +73,18 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
             Create Key
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-white border-gray-200 text-gray-900">
+        <DialogContent className="bg-white border-[#E4E4E7] text-[#09090B]">
           <DialogHeader>
             <DialogTitle>Create API Key</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">Key Name</label>
+              <label className="text-xs text-[#52525B] mb-1.5 block">Key Name</label>
               <Input
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
                 placeholder="e.g. Production Integration"
-                className="bg-gray-50 border-gray-200 text-gray-900"
+                className="bg-[#F8F9FA] border-[#E4E4E7] text-[#09090B]"
               />
             </div>
             <Button onClick={handleCreate} disabled={creating} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
@@ -100,64 +100,64 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 mb-4">
           <p className="text-sm font-medium text-amber-600 mb-2">Save this key now — it won&apos;t be shown again</p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-900 font-mono break-all">
+            <code className="flex-1 rounded-lg bg-[#F8F9FA] px-3 py-2 text-xs text-[#09090B] font-mono break-all">
               {showRaw ? rawKey : "\u2022".repeat(48)}
             </code>
-            <button onClick={() => setShowRaw(!showRaw)} className="shrink-0 p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+            <button onClick={() => setShowRaw(!showRaw)} className="shrink-0 p-2 rounded-lg hover:bg-[#F8F9FA] text-[#52525B]">
               {showRaw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
-            <button onClick={() => copyToClipboard(rawKey, "raw")} className="shrink-0 p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+            <button onClick={() => copyToClipboard(rawKey, "raw")} className="shrink-0 p-2 rounded-lg hover:bg-[#F8F9FA] text-[#52525B]">
               {copiedId === "raw" ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
-          <Button onClick={() => setRawKey("")} variant="ghost" className="mt-3 text-xs text-gray-500 hover:text-gray-900">
+          <Button onClick={() => setRawKey("")} variant="ghost" className="mt-3 text-xs text-[#52525B] hover:text-[#09090B]">
             Done, I&apos;ve saved it
           </Button>
         </div>
       )}
 
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+      <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400">Name</th>
-              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400">Prefix</th>
-              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400">Created</th>
-              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400">Scopes</th>
-              <th className="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400">Actions</th>
+            <tr className="border-b border-[#E4E4E7]">
+              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-[#A1A1AA]">Name</th>
+              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-[#A1A1AA]">Prefix</th>
+              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-[#A1A1AA]">Created</th>
+              <th className="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-[#A1A1AA]">Scopes</th>
+              <th className="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-[#A1A1AA]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {localKeys.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-[#A1A1AA]">
                   No API keys yet.
                 </td>
               </tr>
             ) : (
               localKeys.map((key) => (
-                <tr key={key.id} className="border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+                <tr key={key.id} className="border-b border-[#E4E4E7] last:border-0 hover:bg-[#F8F9FA] transition-colors">
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-gray-900">{key.name}</span>
+                    <span className="text-sm font-medium text-[#09090B]">{key.name}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <code className="text-xs text-gray-500 font-mono">{key.prefix}...</code>
-                      <button onClick={() => copyToClipboard(key.prefix, key.id)} className="text-gray-400 hover:text-gray-900">
+                      <code className="text-xs text-[#52525B] font-mono">{key.prefix}...</code>
+                      <button onClick={() => copyToClipboard(key.prefix, key.id)} className="text-[#A1A1AA] hover:text-[#09090B]">
                         {copiedId === key.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{format(new Date(key.created_at), "MMM d, yyyy")}</td>
+                  <td className="px-4 py-3 text-xs text-[#52525B]">{format(new Date(key.created_at), "MMM d, yyyy")}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {key.scopes.slice(0, 3).map((s) => (
-                        <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-100">
+                        <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-[#F8F9FA] text-[#52525B] border border-[#F0F0F0]">
                           {s}
                         </span>
                       ))}
                       {key.scopes.length > 3 && (
-                        <span className="text-[10px] text-gray-400">+{key.scopes.length - 3}</span>
+                        <span className="text-[10px] text-[#A1A1AA]">+{key.scopes.length - 3}</span>
                       )}
                     </div>
                   </td>

@@ -8,8 +8,8 @@ const severityConfig: Record<string, { label: string; className: string }> = {
   major: { label: "Major", className: "bg-orange-50 text-orange-700 border-orange-200" },
   high: { label: "High", className: "bg-amber-50 text-amber-700 border-amber-200" },
   minor: { label: "Minor", className: "bg-amber-50 text-amber-700 border-amber-200" },
-  medium: { label: "Medium", className: "bg-gray-50 text-gray-600 border-gray-200" },
-  low: { label: "Low", className: "bg-gray-50 text-gray-500 border-gray-200" },
+  medium: { label: "Medium", className: "bg-[#F8F9FA] text-[#52525B] border-[#E4E4E7]" },
+  low: { label: "Low", className: "bg-[#F8F9FA] text-[#52525B] border-[#E4E4E7]" },
 };
 
 export function SeverityBadge({ severity }: { severity: IncidentSeverity }) {

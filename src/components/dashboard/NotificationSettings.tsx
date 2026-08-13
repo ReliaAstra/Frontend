@@ -91,7 +91,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">{localChannels.length} channels</p>
+        <p className="text-sm text-[#52525B]">{localChannels.length} channels</p>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
@@ -99,13 +99,13 @@ export function NotificationSettings({ channels: initialChannels }: Notification
               Add Channel
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200 text-gray-900">
+          <DialogContent className="bg-white border-[#E4E4E7] text-[#09090B]">
             <DialogHeader>
               <DialogTitle>Add Notification Channel</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">Type</label>
+                <label className="text-xs text-[#52525B] mb-1.5 block">Type</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(Object.keys(typeIcons) as ChannelType[]).map((t) => {
                     const Icon = typeIcons[t];
@@ -113,7 +113,7 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                       <button
                         key={t}
                         onClick={() => setType(t)}
-                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#0891B2] bg-[#0891B2]/8 text-[#0891B2]" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                        className={`flex flex-col items-center gap-1.5 rounded-lg p-3 border text-xs transition-colors capitalize ${type === t ? "border-[#0891B2] bg-[#0891B2]/8 text-[#0891B2]" : "border-[#E4E4E7] text-[#52525B] hover:border-[#D4D4D8]"}`}
                       >
                         <Icon className="h-4 w-4" />
                         {t}
@@ -123,8 +123,8 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">{configLabels[type]}</label>
-                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabels[type].toLowerCase()}`} className="bg-gray-50 border-gray-200 text-gray-900" />
+                <label className="text-xs text-[#52525B] mb-1.5 block">{configLabels[type]}</label>
+                <Input value={configValue} onChange={(e) => setConfigValue(e.target.value)} placeholder={`Enter ${configLabels[type].toLowerCase()}`} className="bg-[#F8F9FA] border-[#E4E4E7] text-[#09090B]" />
               </div>
               <Button onClick={handleAdd} disabled={adding} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
                 {adding ? "Adding..." : "Add Channel"}
@@ -136,26 +136,26 @@ export function NotificationSettings({ channels: initialChannels }: Notification
 
       <div className="space-y-3">
         {localChannels.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-            <p className="text-sm text-gray-400">No notification channels configured.</p>
+          <div className="rounded-lg border border-[#E4E4E7] bg-white p-8 text-center">
+            <p className="text-sm text-[#A1A1AA]">No notification channels configured.</p>
           </div>
         ) : (
           localChannels.map((channel) => {
             const Icon = typeIcons[channel.channel_type];
             return (
-              <div key={channel.id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between">
+              <div key={channel.id} className="rounded-lg border border-[#E4E4E7] bg-white p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.channel_type] || "bg-gray-50 text-gray-500"}`}>
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${typeColors[channel.channel_type] || "bg-[#F8F9FA] text-[#52525B]"}`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 capitalize">{channel.channel_type}</p>
-                    <p className="text-xs text-gray-400">ID: {channel.id.slice(0, 8)}</p>
+                    <p className="text-sm font-medium text-[#09090B] capitalize">{channel.channel_type}</p>
+                    <p className="text-xs text-[#A1A1AA]">ID: {channel.id.slice(0, 8)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Switch checked={channel.is_active} onCheckedChange={(checked) => handleToggle(channel.id, checked)} />
-                  <button onClick={() => handleDelete(channel.id)} className="text-gray-400 hover:text-red-600 transition-colors">
+                  <button onClick={() => handleDelete(channel.id)} className="text-[#A1A1AA] hover:text-red-600 transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

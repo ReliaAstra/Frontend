@@ -19,7 +19,7 @@ const typeStyles: Record<string, { dot: string; label: string }> = {
 
 export function IncidentTimeline({ events }: IncidentTimelineProps) {
   if (events.length === 0) {
-    return <p className="text-sm text-gray-400">No timeline events.</p>;
+    return <p className="text-sm text-[#A1A1AA]">No timeline events.</p>;
   }
 
   return (
@@ -30,15 +30,15 @@ export function IncidentTimeline({ events }: IncidentTimelineProps) {
           <div key={event.id} className="flex gap-4 pb-6 last:pb-0">
             <div className="flex flex-col items-center">
               <div className={cn("h-3 w-3 rounded-full shrink-0 mt-1", style.dot)} />
-              {idx < events.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
+              {idx < events.length - 1 && <div className="w-px flex-1 bg-[#E4E4E7] mt-1" />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-gray-900">{event.action}</span>
-                <span className="text-[10px] rounded bg-gray-100 px-1.5 py-0.5 text-gray-500">{style.label}</span>
+                <span className="text-xs font-medium text-[#09090B]">{event.action}</span>
+                <span className="text-[10px] rounded bg-[#F8F9FA] px-1.5 py-0.5 text-[#52525B]">{style.label}</span>
               </div>
-              <p className="text-xs text-gray-500 mb-1">{event.details}</p>
-              <div className="flex items-center gap-3 text-[10px] text-gray-400">
+              <p className="text-xs text-[#52525B] mb-1">{event.details}</p>
+              <div className="flex items-center gap-3 text-[10px] text-[#A1A1AA]">
                 <span>{event.actor}</span>
                 <span>·</span>
                 <span>{formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}</span>

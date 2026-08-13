@@ -54,8 +54,8 @@ export default function IncidentDetailPage() {
   if (!incident) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-400">Incident not found.</p>
-        <Button variant="ghost" onClick={() => router.push("/incidents")} className="mt-4 text-gray-500">
+        <p className="text-[#A1A1AA]">Incident not found.</p>
+        <Button variant="ghost" onClick={() => router.push("/incidents")} className="mt-4 text-[#52525B]">
           Back to Incidents
         </Button>
       </div>
@@ -66,7 +66,7 @@ export default function IncidentDetailPage() {
     <div className="space-y-6">
       <button
         onClick={() => router.push("/incidents")}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        className="flex items-center gap-2 text-sm text-[#52525B] hover:text-[#09090B] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Incidents

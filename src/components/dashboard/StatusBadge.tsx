@@ -8,7 +8,7 @@ const statusConfig: Record<StatusType, { label: string; className: string; dotCl
   up: { label: "Operational", className: "bg-emerald-50 text-emerald-700 border-emerald-200", dotClass: "bg-emerald-500" },
   down: { label: "Down", className: "bg-red-50 text-red-700 border-red-200", dotClass: "bg-red-500" },
   degraded: { label: "Degraded", className: "bg-amber-50 text-amber-700 border-amber-200", dotClass: "bg-amber-500" },
-  unknown: { label: "Unknown", className: "bg-gray-50 text-gray-500 border-gray-200", dotClass: "bg-gray-400" },
+  unknown: { label: "Unknown", className: "bg-[#F8F9FA] text-[#52525B] border-[#E4E4E7]", dotClass: "bg-[#71717A]" },
 };
 
 export function StatusBadge({ status }: { status: StatusType }) {

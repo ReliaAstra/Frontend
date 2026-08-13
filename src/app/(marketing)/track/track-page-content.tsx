@@ -6,9 +6,14 @@ import { ArrowRight, AlertCircle, Search, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { vendorService, type VendorResponse } from '@/services/vendorService';
+import { vendorService, type VendorResponse, type VendorDetailResponse } from '@/services/vendorService';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+
+interface VendorWithStatus extends VendorResponse {
+  recent_status: string;
+  endpoints_count: number;
+}
 
 const statusConfig: Record<string, { label: string; dotColor: string; textColor: string }> = {
   up: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-600' },
@@ -31,7 +36,7 @@ function formatLastObserved(dateStr: string | null): string {
 }
 
 export function TrackPageContent() {
-  const [vendors, setVendors] = useState<VendorResponse[]>([]);
+  const [vendors, setVendors] = useState<VendorWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
@@ -43,8 +48,34 @@ export function TrackPageContent() {
     else setLoading(true);
     setError(null);
     try {
-      const data = await vendorService.listPublicVendors();
-      setVendors(data);
+      // Fetch the vendor list
+      const vendorList = await vendorService.listPublicVendors();
+
+      // Fetch details for each vendor to get recent_status
+      const enrichedVendors = await Promise.allSettled(
+        vendorList.map(async (v): Promise<VendorWithStatus> => {
+          try {
+            const detail = await vendorService.getVendorDetail(v.vendor_name);
+            return {
+              ...v,
+              recent_status: detail.recent_status || 'unknown',
+              endpoints_count: detail.endpoints?.length || 0,
+            };
+          } catch {
+            return {
+              ...v,
+              recent_status: 'unknown',
+              endpoints_count: 0,
+            };
+          }
+        })
+      );
+
+      const successful = enrichedVendors
+        .filter((r): r is PromiseFulfilledResult<VendorWithStatus> => r.status === 'fulfilled')
+        .map((r) => r.value);
+
+      setVendors(successful);
       setLastSuccess(new Date().toISOString());
     } catch {
       setError('Unable to load vendor data. The measurement service may be unavailable.');
@@ -58,11 +89,30 @@ export function TrackPageContent() {
     fetchVendors();
   }, [fetchVendors]);
 
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const id = setInterval(() => fetchVendors(true), 60000);
+    return () => clearInterval(id);
+  }, [fetchVendors]);
+
   const filtered = vendors.filter(
     (v) =>
       v.display_name.toLowerCase().includes(filter.toLowerCase()) ||
       v.category.toLowerCase().includes(filter.toLowerCase()) ||
       v.vendor_name.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  // Aggregate status summary
+  const statusSummary = vendors.reduce(
+    (acc, v) => {
+      const s = v.recent_status;
+      if (s === 'up' || s === 'operational') acc.operational++;
+      else if (s === 'degraded' || s === 'degraded_performance') acc.degraded++;
+      else if (s === 'down' || s === 'major_outage' || s === 'partial_outage') acc.down++;
+      else acc.unknown++;
+      return acc;
+    },
+    { operational: 0, degraded: 0, down: 0, unknown: 0 }
   );
 
   return (
@@ -87,6 +137,32 @@ export function TrackPageContent() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {!loading && vendors.length > 0 && (
+              <div className="flex items-center gap-3 text-[11px] font-medium">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-emerald-600">{statusSummary.operational}</span>
+                </span>
+                {statusSummary.degraded > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span className="text-amber-600">{statusSummary.degraded}</span>
+                  </span>
+                )}
+                {statusSummary.down > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                    <span className="text-red-600">{statusSummary.down}</span>
+                  </span>
+                )}
+                {statusSummary.unknown > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                    <span className="text-gray-500">{statusSummary.unknown}</span>
+                  </span>
+                )}
+              </div>
+            )}
             {lastSuccess && !loading && (
               <p className="text-[11px] font-mono text-[#A1A1AA]">
                 Updated {formatLastObserved(lastSuccess)}
@@ -175,8 +251,8 @@ export function TrackPageContent() {
               </thead>
               <tbody>
                 {filtered.map((vendor) => {
-                  const status = 'unknown';
-                  const sConfig = statusConfig[status] || statusConfig.unknown;
+                  const sConfig = statusConfig[vendor.recent_status] || statusConfig.unknown;
+                  const isDegraded = ['degraded', 'degraded_performance', 'partial_outage'].includes(vendor.recent_status);
                   return (
                     <Link
                       key={vendor.id}
@@ -197,7 +273,7 @@ export function TrackPageContent() {
                             <span className={cn(
                               'h-1.5 w-1.5 rounded-full shrink-0',
                               sConfig.dotColor,
-                              (status === 'degraded' || status === 'degraded_performance' || status === 'partial_outage') && 'animate-pulse'
+                              isDegraded && 'animate-pulse'
                             )} />
                             <span className={cn('text-xs font-medium', sConfig.textColor)}>
                               {sConfig.label}

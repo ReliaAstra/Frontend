@@ -8,6 +8,16 @@ import { cn } from '@/lib/utils';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
+/* Stagger container for child animations */
+const stagger = {
+  animate: { transition: { staggerChildren: 0.12 } },
+};
+
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
+};
+
 export function HeroSection() {
   return (
     <section
@@ -21,15 +31,15 @@ export function HeroSection() {
     >
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left Column */}
-          <div className="space-y-8">
+          {/* Left Column — use animate (not whileInView) for above-the-fold */}
+          <motion.div
+            className="space-y-8"
+            variants={stagger}
+            initial="initial"
+            animate="animate"
+          >
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, ease }}
-            >
+            <motion.div variants={fadeUp}>
               <div className="inline-flex items-center gap-2.5 bg-[#F8F9FA] border border-[#F0F0F0] rounded-full px-4 py-2">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
@@ -44,10 +54,7 @@ export function HeroSection() {
             {/* Headline — 3-line structure */}
             <motion.h1
               className="text-[40px] sm:text-[48px] lg:text-[64px] leading-[1.1] tracking-[-0.03em] text-[#09090B]"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, delay: 0.1, ease }}
+              variants={fadeUp}
             >
               <span className="font-[800]">Your site went down.</span>
               <br />
@@ -58,10 +65,7 @@ export function HeroSection() {
             {/* Subheadline */}
             <motion.p
               className="text-lg text-[#52525B] leading-relaxed max-w-lg mt-2"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, delay: 0.2, ease }}
+              variants={fadeUp}
             >
               Reliastra monitors the external services your infrastructure depends on,
               correlates their failures with your incidents, and produces independent
@@ -71,10 +75,7 @@ export function HeroSection() {
             {/* CTAs */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, delay: 0.3, ease }}
+              variants={fadeUp}
             >
               <a
                 href="/register"
@@ -102,23 +103,19 @@ export function HeroSection() {
             {/* Trust line */}
             <motion.div
               className="flex items-center gap-2 text-sm text-[#A1A1AA]"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, delay: 0.4, ease }}
+              variants={fadeUp}
             >
               <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
               <span>No credit card required · Free vendor tracking forever</span>
             </motion.div>
-          </div>
+          </motion.div>
 
           {/* Right Column — Incident Correlation Card in Browser Mockup */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.8, delay: 0.2, ease }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease }}
           >
             <BrowserMockup url="reliastra.com/incidents/1842" aria-label="Live incident correlation card showing checkout degradation traced to Stripe EU outage">
               <div className="flex justify-center py-6 px-4 md:px-8">

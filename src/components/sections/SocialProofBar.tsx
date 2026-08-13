@@ -97,7 +97,7 @@ export function SocialProofBar() {
           {BRANDS.map((brand, i) => (
             <motion.div
               key={brand.name}
-              className="opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-default select-none"
+              className="text-[#71717A] opacity-40 grayscale hover:opacity-100 hover:grayscale-0 hover:text-[#52525B] transition-all duration-300 cursor-default select-none"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-100px' }}
@@ -113,7 +113,7 @@ export function SocialProofBar() {
           {BRANDS.map((brand) => (
             <div
               key={brand.name}
-              className="opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-default select-none snap-center shrink-0 flex items-center"
+              className="text-[#71717A] opacity-40 grayscale hover:opacity-100 hover:grayscale-0 hover:text-[#52525B] transition-all duration-300 cursor-default select-none snap-center shrink-0 flex items-center"
             >
               <brand.Component style={{ width: brand.width, height: brand.height }} />
             </div>

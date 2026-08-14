@@ -130,22 +130,4 @@ export const authService = {
     sessionStorage.removeItem("github_oauth_state");
     return await authService.exchangeGitHubCode(code);
   },
-
-  // ── Password Reset ────────────────────────────────────────────────
-  async requestPasswordReset(email: string): Promise<void> {
-    await apiClient.post("/auth/password-reset/request", { email });
-  },
-
-  async confirmPasswordReset(token: string, new_password: string): Promise<void> {
-    await apiClient.post("/auth/password-reset/confirm", { token, new_password });
-  },
-
-  // ── Email Verification ────────────────────────────────────────────
-  async requestEmailVerification(): Promise<void> {
-    await apiClient.post("/auth/email-verify/request");
-  },
-
-  async confirmEmailVerification(token: string): Promise<void> {
-    await apiClient.post("/auth/email-verify/confirm", { token });
-  },
 };

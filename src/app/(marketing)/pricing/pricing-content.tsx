@@ -1,320 +1,519 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Check, X, Zap, Building2, Rocket, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { motion } from "framer-motion";
+import { Check, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+
+// ── Easing ──────────────────────────────────────────────────────────────
+
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
+// ── Tier Data ───────────────────────────────────────────────────────────
+// Aligned with backend Paystack billing: GET /v1/orgs/{org_id}/billing/plan
+// Backend plan values: "free", "starter", "standard", "professional", "agency"
 
 const tiers = [
   {
-    name: 'Free',
-    price: '$0',
-    period: '/mo',
-    description: 'For individual developers monitoring a handful of vendors.',
-    icon: Zap,
-    features: ['5 vendors monitored', '1-minute check intervals', 'Basic status dashboard', 'Email alerts', '7-day data retention'],
-    cta: 'Start Free',
-    variant: 'outline' as const,
+    key: "free",
+    name: "Free",
+    price: "$0",
+    period: "/month",
+    positioning: "Start measuring your dependencies.",
+    dependencies: "3 monitored dependencies",
+    capabilities: [
+      "Custom endpoint URLs",
+      "24-hour data retention",
+      "Email alerts",
+      "Basic incident detection",
+      "Limited attribution preview",
+      "1 evidence report / month",
+    ],
+    cta: "Start free",
+    ctaStyle: "bg-white border border-[#E4E4E7] text-[#09090B] hover:bg-[#F8F9FA]",
     highlighted: false,
   },
   {
-    name: 'Standard',
-    price: '$49',
-    period: '/month',
-    description: 'For growing teams that need real-time reliability intelligence.',
-    icon: Star,
-    features: ['25 vendors monitored', '15-second check intervals', 'Full analytics dashboard', 'Multi-region verification', '90-day data retention', 'Incident correlation', 'SLA evidence reports', 'Email alerts & webhooks'],
-    cta: 'Start Standard',
-    variant: 'default' as const,
+    key: "starter",
+    name: "Starter",
+    price: "$19",
+    period: "/month",
+    positioning: "Track more of your stack without committing to the full workflow.",
+    dependencies: "10 monitored dependencies",
+    capabilities: [
+      "7-day data retention",
+      "Email alerts",
+      "Limited attribution",
+      "Limited evidence generation",
+      "Basic dependency history",
+    ],
+    cta: "Start Starter",
+    ctaStyle: "bg-white border border-[#E4E4E7] text-[#09090B] hover:bg-[#F8F9FA]",
+    highlighted: false,
+  },
+  {
+    key: "standard",
+    name: "Standard",
+    price: "$49",
+    period: "/month",
+    positioning: "Investigate and prove dependency failures.",
+    dependencies: "30 monitored dependencies",
+    capabilities: [
+      "Incident correlation",
+      "Deterministic attribution",
+      "Evidence generation",
+      "PDF & JSON evidence",
+      "Cryptographic verification",
+      "Slack alerts",
+      "API access",
+      "Historical analysis",
+    ],
+    cta: "Start Standard",
+    ctaStyle: "bg-[#0891B2] text-white hover:bg-[#0E7490]",
     highlighted: true,
+    badge: "Most Popular",
   },
   {
-    name: 'Professional',
-    price: '$99',
-    period: '/month',
-    description: 'For organizations with complex dependency graphs and compliance needs.',
-    icon: Building2,
-    features: ['Unlimited vendors', '5-second check intervals', 'Custom dashboards', 'All notification channels', '1-year data retention', 'Advanced correlation engine', 'SLA evidence generation', 'Team management', 'SSO & API access', 'Dedicated support'],
-    cta: 'Start Professional',
-    variant: 'outline' as const,
+    key: "professional",
+    name: "Professional",
+    price: "$99",
+    period: "/month",
+    positioning: "Operate dependency intelligence at team scale.",
+    dependencies: "100 monitored dependencies",
+    capabilities: [
+      "90-day data retention",
+      "All notification channels",
+      "Webhook integration",
+      "Custom-branded evidence",
+      "Faster check intervals",
+      "Priority processing",
+      "API access",
+      "Advanced operational workflows",
+    ],
+    cta: "Start Professional",
+    ctaStyle: "bg-[#0A0A0F] text-white hover:bg-[#1A1A2F]",
     highlighted: false,
+  },
+  {
+    key: "agency",
+    name: "Agency",
+    price: "$199",
+    period: "/month",
+    positioning: "Manage reliability across your entire client portfolio.",
+    dependencies: "500 monitored dependencies",
+    capabilities: [
+      "Client groups & isolation",
+      "Per-client organization",
+      "Client-facing dashboards",
+      "Client-facing reports",
+      "Agency branding",
+      "Branded evidence",
+      "Cross-client incident awareness",
+      "Everything in Professional",
+    ],
+    cta: "Start Agency",
+    ctaStyle: "bg-[#0A0A0F] text-white hover:bg-[#1A1A2F]",
+    highlighted: false,
+    badge: "Built for Agencies",
   },
 ];
 
-const agencyTier = {
-  name: 'Agency',
-  price: 'Custom',
-  period: '',
-  description: 'White-label monitoring for agencies managing multiple client infrastructures.',
-  icon: Rocket,
-  features: ['Everything in Business', 'White-label dashboards', 'Client sub-accounts', 'Dedicated account manager', 'Custom SLA terms', 'SSO / SAML'],
-  cta: 'Talk to Us',
-};
+// ── Comparison Rows ──────────────────────────────────────────────────────
 
-const comparisonFeatures = [
-  { name: 'Vendors monitored', starter: '5', pro: '25', business: 'Unlimited', agency: 'Unlimited' },
-  { name: 'Check interval', starter: '1 min', pro: '15 sec', business: '5 sec', agency: '5 sec' },
-  { name: 'Status dashboard', starter: true, pro: true, business: true, agency: true },
-  { name: 'Email alerts', starter: true, pro: true, business: true, agency: true },
-  { name: 'Slack alerts', starter: false, pro: true, business: true, agency: true },
-  { name: 'Webhook alerts', starter: false, pro: false, business: true, agency: true },
-  { name: 'Data retention', starter: '7 days', pro: '90 days', business: '1 year', agency: '2 years' },
-  { name: 'Incident correlation', starter: false, pro: true, business: true, agency: true },
-  { name: 'SLA evidence reports', starter: false, pro: true, business: true, agency: true },
-  { name: 'Team management', starter: false, pro: false, business: true, agency: true },
-  { name: 'API access', starter: false, pro: false, business: true, agency: true },
-  { name: 'Custom dashboards', starter: false, pro: false, business: true, agency: true },
-  { name: 'White-label', starter: false, pro: false, business: false, agency: true },
-  { name: 'SSO / SAML', starter: false, pro: false, business: false, agency: true },
-  { name: 'Priority support', starter: false, pro: false, business: true, agency: true },
-  { name: 'Dedicated account manager', starter: false, pro: false, business: false, agency: true },
+type CellValue = string | boolean;
+
+interface ComparisonRow {
+  feature: string;
+  free: CellValue;
+  starter: CellValue;
+  standard: CellValue;
+  professional: CellValue;
+  agency: CellValue;
+}
+
+const comparisonRows: ComparisonRow[] = [
+  { feature: "Monitored dependencies", free: "3", starter: "10", standard: "30", professional: "100", agency: "500" },
+  { feature: "Data retention", free: "24 hours", starter: "7 days", standard: "30 days", professional: "90 days", agency: "90 days" },
+  { feature: "Custom endpoint URLs", free: true, starter: true, standard: true, professional: true, agency: true },
+  { feature: "Email alerts", free: true, starter: true, standard: true, professional: true, agency: true },
+  { feature: "Slack alerts", free: false, starter: false, standard: true, professional: true, agency: true },
+  { feature: "Webhook integration", free: false, starter: false, standard: false, professional: true, agency: true },
+  { feature: "PagerDuty", free: false, starter: false, standard: false, professional: true, agency: true },
+  { feature: "API access", free: false, starter: false, standard: true, professional: true, agency: true },
+  { feature: "Incident correlation", free: false, starter: false, standard: true, professional: true, agency: true },
+  { feature: "Deterministic attribution", free: false, starter: false, standard: true, professional: true, agency: true },
+  { feature: "Evidence generation", free: "1/month", starter: "Limited", standard: true, professional: true, agency: true },
+  { feature: "Evidence formats", free: false, starter: false, standard: "PDF, JSON", professional: "PDF, JSON, Branded", agency: "PDF, JSON, Branded" },
+  { feature: "Cryptographic verification", free: false, starter: false, standard: true, professional: true, agency: true },
+  { feature: "Historical analysis", free: false, starter: "Basic", standard: true, professional: true, agency: true },
+  { feature: "Check interval", free: "Standard", starter: "Standard", standard: "Standard", professional: "Faster", agency: "Faster" },
+  { feature: "Priority processing", free: false, starter: false, standard: false, professional: true, agency: true },
+  { feature: "Client management", free: false, starter: false, standard: false, professional: false, agency: true },
+  { feature: "Client isolation", free: false, starter: false, standard: false, professional: false, agency: true },
+  { feature: "Agency branding", free: false, starter: false, standard: false, professional: false, agency: true },
+  { feature: "Support", free: "Community", starter: "Email", standard: "Priority email", professional: "Priority + chat", agency: "Dedicated" },
 ];
+
+// ── FAQ ──────────────────────────────────────────────────────────────────
 
 const faqs = [
   {
-    q: 'Can I cancel anytime?',
-    a: 'Yes. All paid plans are month-to-month with no long-term contracts. You can cancel from your dashboard at any time, and your plan will remain active until the end of your current billing period.',
+    q: "How does billing work?",
+    a: "All plans are billed monthly via Paystack. You can upgrade, downgrade, or cancel at any time from your organization settings. When upgrading, you're prorated for the remainder of the billing cycle. When downgrading, the new rate takes effect at the next billing cycle.",
   },
   {
-    q: 'What happens to my data?',
-    a: 'When you cancel, your data is retained for the duration of your plan’s data retention period. After that, it is permanently deleted from our systems. You can also request an immediate data export at any time.',
+    q: "Can I cancel anytime?",
+    a: "Yes. There are no long-term contracts. Cancel from your billing settings and your plan remains active until the end of the current billing period. Your data is retained according to your plan's retention policy after cancellation.",
   },
   {
-    q: 'Do you offer refunds?',
-    a: 'We offer a full refund within the first 14 days of any paid plan. After that, we prorate refunds on a case-by-case basis. Contact our support team for assistance.',
+    q: "What counts as a monitored dependency?",
+    a: "A monitored dependency is a single endpoint URL you configure Reliastra to actively check. This could be a third-party API, a SaaS service, a payment provider, or any external service your infrastructure depends on.",
   },
   {
-    q: 'Can I switch plans?',
-    a: 'Absolutely. You can upgrade or downgrade your plan at any time from your billing settings. When upgrading, you’ll be prorated for the remainder of the billing cycle. When downgrading, the new rate takes effect at the next billing cycle.',
+    q: "What happens when I reach my dependency limit?",
+    a: "You'll be notified when you approach your limit. You can upgrade your plan to add more monitored dependencies, or remove existing ones to stay within your current limit. No data is lost when you remove a dependency — historical data is retained according to your plan's retention period.",
+  },
+  {
+    q: "Do you offer annual billing?",
+    a: "Not yet. All plans are currently billed monthly. Annual billing options may be introduced in the future.",
+  },
+  {
+    q: "How does the Agency plan work?",
+    a: "The Agency plan provides a single Reliastra organization with 500 monitored dependencies that you can partition across client groups. Each client gets isolated dashboards and reports with your agency branding. Clients cannot see each other's data. If you need more than 500 dependencies, contact us for an expanded deployment.",
+  },
+  {
+    q: "What is evidence generation?",
+    a: "When Reliastra detects an incident on a dependency, it automatically produces a cryptographically verifiable evidence report containing timestamped observations, correlation data, and attribution analysis. These reports can be shared with vendors to support SLA credit claims.",
+  },
+  {
+    q: "Is there a free trial for paid plans?",
+    a: "No. Every plan starts with a free tier that provides full access to core monitoring capabilities. Upgrade when you need more dependencies, longer retention, or advanced features like incident correlation and evidence generation.",
   },
 ];
 
-function FeatureValue({ value }: { value: string | boolean }) {
-  if (typeof value === 'boolean') {
+// ── Cell Renderer ────────────────────────────────────────────────────────
+
+function Cell({ value }: { value: CellValue }) {
+  if (typeof value === "boolean") {
     return value ? (
-      <Check className="mx-auto h-5 w-5 text-[#16A34A]" />
+      <Check className="mx-auto h-4 w-4 text-[#16A34A]" />
     ) : (
-      <X className="mx-auto h-5 w-5 text-[#A1A1AA]" />
+      <Minus className="mx-auto h-4 w-4 text-[#D4D4D8]" />
     );
   }
-  return <span className="text-sm text-[#09090B]">{value}</span>;
+  return <span className="text-[13px] text-[#09090B]">{value}</span>;
 }
+
+// ── Component ────────────────────────────────────────────────────────────
 
 export function PricingContent() {
   return (
     <>
-      {/* Header */}
-      <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <section className="bg-white pt-36 pb-20">
+        <div className="mx-auto max-w-[1200px] px-6 md:px-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            className="mx-auto max-w-2xl text-center"
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6, ease }}
           >
-            <Badge className="mb-4" variant="secondary">Pricing</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-[#09090B] tracking-tight">
-              Simple, transparent pricing
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[#0891B2]">
+              Pricing
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-[#09090B] sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+              Know what your infrastructure depends on.{" "}
+              <span className="text-[#0891B2]">Prove what failed.</span>
             </h1>
-            <p className="mt-4 text-lg text-[#52525B] max-w-2xl mx-auto">
-              Start free. Upgrade when you need more vendors, faster checks, or deeper insights.
-              No hidden fees, no surprises.
+            <p className="mt-5 text-[15px] leading-relaxed text-[#71717A]">
+              Reliastra independently measures external dependencies, correlates
+              incidents, and turns infrastructure failures into verifiable
+              evidence.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Pricing Grid */}
-      <section className="pb-24">
-        <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {tiers.map((tier, i) => {
-              const Icon = tier.icon;
-              return (
-                <motion.div
-                  key={tier.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
+      {/* ── Pricing Cards ───────────────────────────────────────────────── */}
+      <section className="bg-white pb-24">
+        <div className="mx-auto max-w-[1200px] px-6 md:px-12">
+          {/* Top row: Free + Starter + Standard */}
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 md:grid-cols-3">
+            {tiers.slice(0, 3).map((tier, i) => (
+              <motion.div
+                key={tier.key}
+                className={cn(
+                  "relative rounded-xl p-7",
+                  tier.highlighted
+                    ? "border-2 border-[#0891B2] bg-white shadow-[0_0_0_1px_#0891B2,0_0_60px_rgba(8,145,178,0.1)]"
+                    : "border border-[#E4E4E7] bg-white shadow-card",
+                )}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08, ease }}
+              >
+                {tier.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0891B2] px-3.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white rounded-full">
+                    {tier.badge}
+                  </span>
+                )}
+
+                {/* Tier name */}
+                <p className="text-sm font-semibold text-[#52525B]">{tier.name}</p>
+
+                {/* Price */}
+                <div className="mt-2 flex items-baseline gap-0.5">
+                  <span className="text-[40px] font-bold leading-none tracking-tight text-[#09090B]">
+                    {tier.price}
+                  </span>
+                  {tier.period && (
+                    <span className="text-sm text-[#A1A1AA]">{tier.period}</span>
+                  )}
+                </div>
+
+                {/* Positioning */}
+                <p className="mt-2 text-[13px] leading-relaxed text-[#71717A]">
+                  {tier.positioning}
+                </p>
+
+                {/* Dependencies count */}
+                <p className="mt-4 font-mono text-xs font-medium text-[#0891B2]">
+                  {tier.dependencies}
+                </p>
+
+                {/* Divider */}
+                <div className="my-5 border-t border-[#F0F0F0]" />
+
+                {/* Capabilities */}
+                <ul className="space-y-2.5">
+                  {tier.capabilities.map((cap) => (
+                    <li
+                      key={cap}
+                      className="flex items-start gap-2 text-[13px] text-[#52525B]"
+                    >
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#16A34A]"
+                        aria-hidden="true"
+                      />
+                      {cap}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <a
+                  href="/register"
+                  className={cn(
+                    "mt-6 block w-full rounded-[10px] py-3 text-center text-[13px] font-semibold transition-colors min-h-[44px] leading-[44px]",
+                    tier.ctaStyle,
+                  )}
                 >
-                  <Card
-                    className={cn(
-                      'relative flex flex-col h-full rounded-xl p-6',
-                      tier.highlighted && 'border-2 border-[#0891B2] shadow-lg shadow-cyan-500/10'
-                    )}
-                  >
-                    {tier.highlighted && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-[#0891B2] text-white">Most Popular</Badge>
-                      </div>
-                    )}
-                    <CardHeader className="p-0 pb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon className="h-5 w-5 text-[#0891B2]" />
-                        <h3 className="text-lg font-semibold text-[#09090B]">{tier.name}</h3>
-                      </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-[#09090B]">{tier.price}</span>
-                        <span className="text-[#52525B]">{tier.period}</span>
-                      </div>
-                      <p className="text-sm text-[#52525B] mt-2">{tier.description}</p>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1">
-                      <ul className="space-y-3">
-                        {tier.features.map((f) => (
-                          <li key={f} className="flex items-start gap-2 text-sm text-[#09090B]">
-                            <Check className="h-4 w-4 text-[#16A34A] mt-0.5 shrink-0" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <CardFooter className="p-0 pt-6">
-                      <Button
-                        className={cn('w-full rounded-lg', tier.highlighted && 'bg-[#0891B2] hover:bg-[#0E7490] text-white')}
-                        variant={tier.variant}
-                        size="lg"
-                      >
-                        {tier.cta}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                  {tier.cta}
+                </a>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Agency Tier */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-8"
-          >
-            <Card className="rounded-xl p-6 bg-[#0A0A0F] text-white">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Rocket className="h-5 w-5 text-[#0891B2]" />
-                    <h3 className="text-lg font-semibold">Agency</h3>
-                    <Badge variant="secondary" className="bg-white/10 text-white border-white/20">Custom</Badge>
-                  </div>
-                  <p className="text-sm text-gray-400 max-w-lg">{agencyTier.description}</p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {agencyTier.features.slice(0, 4).map((f) => (
-                      <span key={f} className="text-xs bg-white/10 rounded-full px-3 py-1 text-gray-300">
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <Button className="bg-[#0891B2] hover:bg-[#0E7490] text-white rounded-lg shrink-0" size="lg">
-                  {agencyTier.cta}
-                </Button>
-              </div>
-            </Card>
-          </motion.div>
+          {/* Bottom row: Professional + Agency */}
+          <div className="mx-auto mt-5 grid max-w-5xl grid-cols-1 gap-5 md:grid-cols-2">
+            {tiers.slice(3).map((tier, i) => (
+              <motion.div
+                key={tier.key}
+                className={cn(
+                  "relative rounded-xl p-7",
+                  tier.badge === "Built for Agencies"
+                    ? "border border-[#E4E4E7] bg-[#F8F9FA]"
+                    : "border border-[#E4E4E7] bg-white shadow-card",
+                )}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 + i * 0.08, ease }}
+              >
+                {tier.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0A0A0F] px-3.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white rounded-full">
+                    {tier.badge}
+                  </span>
+                )}
 
-          {/* Founding Customer Program */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-8"
-          >
-            <Card className="rounded-xl p-6 border-dashed border-2 border-[#0891B2]/30 bg-cyan-50/50">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-[#09090B]">Founding Customer Program</h3>
-                  <p className="text-sm text-[#52525B] mt-1 max-w-lg">
-                    Join the first 25 customers and lock in 50% off any paid plan for life.
-                    Includes early access to features and direct input on the product roadmap.
-                  </p>
+                <p className="text-sm font-semibold text-[#52525B]">{tier.name}</p>
+
+                <div className="mt-2 flex items-baseline gap-0.5">
+                  <span className="text-[40px] font-bold leading-none tracking-tight text-[#09090B]">
+                    {tier.price}
+                  </span>
+                  {tier.period && (
+                    <span className="text-sm text-[#A1A1AA]">{tier.period}</span>
+                  )}
                 </div>
-                <Button variant="outline" className="rounded-lg border-[#0891B2] text-[#0891B2] hover:bg-[#0891B2] hover:text-white shrink-0" size="lg">
-                  Apply for Founding Program
-                </Button>
-              </div>
-            </Card>
-          </motion.div>
+
+                <p className="mt-2 text-[13px] leading-relaxed text-[#71717A]">
+                  {tier.positioning}
+                </p>
+
+                <p className="mt-4 font-mono text-xs font-medium text-[#0891B2]">
+                  {tier.dependencies}
+                </p>
+
+                <div className="my-5 border-t border-[#F0F0F0]" />
+
+                <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {tier.capabilities.map((cap) => (
+                    <li
+                      key={cap}
+                      className="flex items-start gap-2 text-[13px] text-[#52525B]"
+                    >
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#16A34A]"
+                        aria-hidden="true"
+                      />
+                      {cap}
+                    </li>
+                  ))}
+                </ul>
+
+                <a
+                  href="/register"
+                  className={cn(
+                    "mt-6 block w-full rounded-[10px] py-3 text-center text-[13px] font-semibold transition-colors min-h-[44px] leading-[44px]",
+                    tier.ctaStyle,
+                  )}
+                >
+                  {tier.cta}
+                </a>
+
+                {/* Agency expansion note */}
+                {tier.key === "agency" && (
+                  <p className="mt-4 text-center text-[12px] text-[#A1A1AA]">
+                    Need more than 500 monitored dependencies?{" "}
+                    <a
+                      href="/contact"
+                      className="font-medium text-[#0891B2] underline-offset-2 hover:underline"
+                    >
+                      Contact us
+                    </a>{" "}
+                    for an expanded deployment.
+                  </p>
+                )}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Feature Comparison Table */}
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-4 md:px-8">
+      {/* ── Feature Comparison ──────────────────────────────────────────── */}
+      <section className="bg-[#F8F9FA] py-24">
+        <div className="mx-auto max-w-[1200px] px-6 md:px-12">
           <motion.div
+            className="mx-auto mb-12 max-w-lg text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.5, ease }}
           >
-            <h2 className="text-3xl font-bold text-[#09090B]">Feature Comparison</h2>
-            <p className="mt-2 text-[#52525B]">See everything that&apos;s included in each plan.</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-[#09090B] sm:text-3xl">
+              Feature comparison
+            </h2>
+            <p className="mt-2 text-sm text-[#71717A]">
+              A detailed view of what&apos;s included in each plan.
+            </p>
           </motion.div>
-          <div className="overflow-x-auto">
+
+          <motion.div
+            className="overflow-x-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.5, delay: 0.1, ease }}
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E4E4E7]">
-                  <th className="text-left py-4 pr-4 font-semibold text-[#09090B]">Feature</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Free</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#0891B2] bg-cyan-50 rounded-t-xl">Standard</th>
-                  <th className="text-center py-4 px-4 font-semibold text-[#09090B]">Professional</th>
-                  <th className="text-center py-4 pl-4 font-semibold text-[#09090B]">Agency</th>
+                  <th className="pb-4 pr-6 text-left text-[13px] font-semibold text-[#09090B]">
+                    Feature
+                  </th>
+                  <th className="px-4 pb-4 text-center text-[13px] font-medium text-[#52525B]">
+                    Free
+                  </th>
+                  <th className="px-4 pb-4 text-center text-[13px] font-medium text-[#52525B]">
+                    Starter
+                  </th>
+                  <th className="bg-white px-4 pb-4 text-center text-[13px] font-semibold text-[#0891B2]">
+                    Standard
+                  </th>
+                  <th className="px-4 pb-4 text-center text-[13px] font-medium text-[#52525B]">
+                    Professional
+                  </th>
+                  <th className="pl-4 pb-4 text-center text-[13px] font-medium text-[#52525B]">
+                    Agency
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {comparisonFeatures.map((f, idx) => (
-                  <tr key={f.name} className={cn('border-b border-[#F0F0F0]', idx % 2 === 0 && 'bg-white')}>
-                    <td className="py-3 pr-4 text-[#09090B] font-medium">{f.name}</td>
-                    <td className="py-3 px-4 text-center">
-                      <FeatureValue value={f.starter} />
+                {comparisonRows.map((row, idx) => (
+                  <tr
+                    key={row.feature}
+                    className={cn(
+                      "border-b border-[#F0F0F0]",
+                      idx % 2 === 0 ? "bg-white" : "bg-[#F8F9FA]",
+                    )}
+                  >
+                    <td className="py-3 pr-6 text-[13px] font-medium text-[#09090B]">
+                      {row.feature}
                     </td>
-                    <td className="py-3 px-4 text-center bg-cyan-50/50">
-                      <FeatureValue value={f.pro} />
+                    <td className="py-3 px-4 text-center">
+                      <Cell value={row.free} />
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <FeatureValue value={f.business} />
+                      <Cell value={row.starter} />
+                    </td>
+                    <td className="bg-white py-3 px-4 text-center">
+                      <Cell value={row.standard} />
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <Cell value={row.professional} />
                     </td>
                     <td className="py-3 pl-4 text-center">
-                      <FeatureValue value={f.agency} />
+                      <Cell value={row.agency} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Billing FAQ */}
-      <section className="py-24">
-        <div className="max-w-3xl mx-auto px-4 md:px-8">
+      {/* ── FAQ ─────────────────────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-3xl px-6 md:px-12">
           <motion.div
+            className="mb-12 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.5, ease }}
           >
-            <h2 className="text-3xl font-bold text-[#09090B]">Billing FAQ</h2>
-            <p className="mt-2 text-[#52525B]">Common questions about pricing and billing.</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-[#09090B] sm:text-3xl">
+              Billing FAQ
+            </h2>
+            <p className="mt-2 text-sm text-[#71717A]">
+              Common questions about pricing and billing.
+            </p>
           </motion.div>
+
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-[#09090B] font-medium">
+                <AccordionTrigger className="text-left text-[14px] font-medium text-[#09090B]">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-[#52525B]">
+                <AccordionContent className="text-[14px] leading-relaxed text-[#71717A]">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>

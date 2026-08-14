@@ -130,4 +130,47 @@ export const authService = {
     sessionStorage.removeItem("github_oauth_state");
     return await authService.exchangeGitHubCode(code);
   },
+
+  // ── Email Verification ──────────────────────────────────────────────
+
+  /** Requests a new email verification link. Rate limited. */
+  async sendVerification(email: string): Promise<{ message: string; email: string }> {
+    const res = await apiClient.post<{ message: string; email: string }>(
+      "/auth/send-verification",
+      { email },
+    );
+    return res.data;
+  },
+
+  /** Verifies email using the token from the verification link. */
+  async verifyEmail(token: string): Promise<{ message: string; is_email_verified: boolean }> {
+    const res = await apiClient.post<{ message: string; is_email_verified: boolean }>(
+      "/auth/verify-email",
+      { token },
+    );
+    return res.data;
+  },
+
+  // ── Password Reset ──────────────────────────────────────────────────
+
+  /**
+   * Requests a password reset email. Always returns a generic success message
+   * (anti-enumeration — does not reveal whether the email exists). Rate limited.
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const res = await apiClient.post<{ message: string }>("/auth/forgot-password", { email });
+    return res.data;
+  },
+
+  /** Resets the user's password using the token from the reset email link. */
+  async resetPassword(
+    token: string,
+    new_password: string,
+  ): Promise<{ message: string }> {
+    const res = await apiClient.post<{ message: string }>("/auth/reset-password", {
+      token,
+      new_password,
+    });
+    return res.data;
+  },
 };

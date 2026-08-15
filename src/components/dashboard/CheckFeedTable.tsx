@@ -43,7 +43,7 @@ export function CheckFeedTable({ data }: CheckFeedTableProps) {
                   </span>
                 </td>
                 <td className="px-3 py-2.5 text-[13px] text-[#09090B] font-mono tabular-nums text-right">
-                  {check.is_up ? `${Math.round(check.latency_ms)}ms` : "—"}
+                  {check.is_up ? `${Math.round(check.latency_ms)}ms` : "N/A"}
                 </td>
                 <td className="px-3 py-2.5 text-[13px] font-mono tabular-nums text-right">
                   <span className={cn(

@@ -111,7 +111,7 @@ function _AuthProviderInner({ children }: { children: ReactNode }) {
             setMemberRole(myMembership.role);
           }
         } catch {
-          // Role fetch failed — continue without role
+          // Role fetch failed :  continue without role
         }
       }
     } catch {
@@ -248,7 +248,7 @@ function _AuthProviderInner({ children }: { children: ReactNode }) {
       try {
         await apiClient.post("/auth/logout", { refresh_token: refreshToken });
       } catch {
-        // Ignore — we're clearing local state anyway
+        // Ignore :  we're clearing local state anyway
       }
     }
     localStorage.removeItem("reliastra_access_token");

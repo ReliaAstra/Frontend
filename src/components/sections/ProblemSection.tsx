@@ -9,7 +9,7 @@ const PAIN_CARDS = [
   {
     icon: Eye,
     title: 'Blind to Vendor Failures',
-    body: 'Your monitoring only sees your own stack. When a vendor API starts returning 5xx errors, your dashboards show healthy—because from your infrastructure’s perspective, everything is fine. You’re the last to know.',
+    body: 'Your monitoring only sees your own stack. When a vendor API starts returning 5xx errors, your dashboards show healthy: because from your infrastructure’s perspective, everything is fine. You’re the last to know.',
   },
   {
     icon: GitCompare,
@@ -19,7 +19,7 @@ const PAIN_CARDS = [
   {
     icon: FileCheck,
     title: 'Credits Left on the Table',
-    body: 'SLA credits require evidence—downtime duration, affected endpoints, independent verification. Without automated evidence collection, claiming credits is manual, tedious, and usually abandoned.',
+    body: 'SLA credits require evidence: downtime duration, affected endpoints, independent verification. Without automated evidence collection, claiming credits is manual, tedious, and usually abandoned.',
   },
 ];
 
@@ -43,8 +43,8 @@ export function ProblemSection() {
           </h2>
           <p className="text-[#52525B] leading-relaxed">
             Your pager goes off. Your site is down. Your team jumps on a call. Someone
-            checks Stripe’s status page — green. Someone checks
-            AWS — green. Forty-five minutes later, you find the root
+            checks Stripe’s status page :  green. Someone checks
+            AWS :  green. Forty-five minutes later, you find the root
             cause buried in a vendor’s API latency spike. Your customers don’t
             care whose fault it was. But your CFO will when you can’t prove it for
             the SLA claim.

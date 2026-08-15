@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Reliastra — External Dependency Intelligence",
+  title: "Reliastra: External Dependency Intelligence",
   description:
     "Monitor third-party APIs independently. When vendors fail, generate timestamped SLA evidence reports to claim credits and prove fault.",
   icons: { icon: "/favicon.svg" },

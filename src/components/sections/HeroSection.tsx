@@ -31,7 +31,7 @@ export function HeroSection() {
     >
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left Column — use animate (not whileInView) for above-the-fold */}
+          {/* Left Column :  use animate (not whileInView) for above-the-fold */}
           <motion.div
             className="space-y-8"
             variants={stagger}
@@ -51,7 +51,7 @@ export function HeroSection() {
               </div>
             </motion.div>
 
-            {/* Headline — 3-line structure */}
+            {/* Headline :  3-line structure */}
             <motion.h1
               className="text-[40px] sm:text-[48px] lg:text-[64px] leading-[1.1] tracking-[-0.03em] text-[#09090B]"
               variants={fadeUp}
@@ -110,7 +110,7 @@ export function HeroSection() {
             </motion.div>
           </motion.div>
 
-          {/* Right Column — Incident Correlation Card in Browser Mockup */}
+          {/* Right Column :  Incident Correlation Card in Browser Mockup */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, y: 40 }}

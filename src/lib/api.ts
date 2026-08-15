@@ -41,7 +41,7 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-// Track org context — set by AuthProvider after session load
+// Track org context :  set by AuthProvider after session load
 let currentOrgId: string | null = null;
 
 export function setOrgContext(orgId: string | null) {
@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
                 originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
               return apiClient(originalRequest);
             } catch {
-              /* refresh failed — fall through to clear tokens */
+              /* refresh failed :  fall through to clear tokens */
             }
           }
           if (typeof window !== "undefined") {

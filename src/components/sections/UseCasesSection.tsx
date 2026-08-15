@@ -35,7 +35,7 @@ const TAB_CONTENT: Record<
 > = {
   'SaaS Teams': {
     headline: 'Protect Your SLA Commitments',
-    body: 'Your customers pay for 99.9% uptime. When a vendor like PagerDuty or Stripe drops the ball, your SLA is on the line—not theirs. Reliastra gives you the independent evidence to claim vendor SLA credits and protect your margins.',
+    body: 'Your customers pay for 99.9% uptime. When a vendor like PagerDuty or Stripe drops the ball, your SLA is on the line: not theirs. Reliastra gives you the independent evidence to claim vendor SLA credits and protect your margins.',
     visual: (
       <div className="bg-[#F8F9FA] rounded-2xl p-6 border border-[#E4E4E7] space-y-4">
         <div className="flex items-center justify-between mb-2">
@@ -60,7 +60,7 @@ const TAB_CONTENT: Record<
   },
   Agencies: {
     headline: 'Keep Clients. Keep Revenue.',
-    body: 'When a vendor outage affects your client’s site, they don’t care whose fault it is—they care that it’s down. Reliastra gives you the evidence report to show exactly what happened, protecting your relationship and your invoice.',
+    body: 'When a vendor outage affects your client’s site, they don’t care whose fault it is: they care that it’s down. Reliastra gives you the evidence report to show exactly what happened, protecting your relationship and your invoice.',
     visual: (
       <div className="bg-[#F8F9FA] rounded-2xl border border-[#E4E4E7] overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E4E4E7]">
@@ -94,7 +94,7 @@ const TAB_CONTENT: Record<
   },
   DevOps: {
     headline: 'Validate What You Can’t See.',
-    body: 'You already have Datadog, Grafana, and PagerDuty. But they only see inside your infrastructure. Reliastra adds the external layer—monitoring vendors from the outside in, so you can validate what’s really happening.',
+    body: 'You already have Datadog, Grafana, and PagerDuty. But they only see inside your infrastructure. Reliastra adds the external layer: monitoring vendors from the outside in, so you can validate what’s really happening.',
     visual: (
       <div className="space-y-3">
         {/* Internal monitoring card */}

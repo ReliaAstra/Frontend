@@ -78,7 +78,7 @@ function LiveVendorPanel() {
         ]);
       }
     } catch {
-      // Silently fail — background is progressively enhanced
+      // Silently fail :  background is progressively enhanced
     } finally {
       setMounted(true);
     }
@@ -233,7 +233,7 @@ export default function AuthSplitLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      {/* Left panel — live product environment (desktop only, hidden on mobile) */}
+      {/* Left panel :  live product environment (desktop only, hidden on mobile) */}
       <div className="hidden lg:flex lg:w-[44%]">
         <LiveVendorPanel />
       </div>
@@ -260,7 +260,7 @@ export default function AuthSplitLayout({
         </div>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel :  form */}
       <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 lg:py-0">
         <AnimatePresence mode="wait">{children}</AnimatePresence>
         <div className="sr-only">{/* force AnimatePresence render */}</div>

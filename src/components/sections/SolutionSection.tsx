@@ -11,12 +11,12 @@ const BENTO_CARDS = [
     icon: Satellite,
     sublabel: 'INDEPENDENT VENDOR MONITORING',
     title: 'Track Every Critical Vendor',
-    body: 'Deploy lightweight checks from independent regions that monitor your vendors’ APIs directly—completely separate from your infrastructure. Know the moment they break, before your users do.',
+    body: 'Deploy lightweight checks from independent regions that monitor your vendors’ APIs directly. Monitoring runs on infrastructure completely separate from yours. Detect vendor failures before they affect your users.',
   },
   {
     icon: GitCompare,
     sublabel: 'CROSS-REFERENCE YOUR STACK',
-    body: 'Automatically correlate vendor degradation events with your own service metrics. When your error rates spike, Reliastra shows you whether a vendor caused it—and when.',
+    body: 'Automatically correlate vendor degradation events with your own service metrics. When your error rates spike, Reliastra evaluates whether a vendor is a likely contributor.',
     title: 'Cross-Reference Your Stack',
   },
   {

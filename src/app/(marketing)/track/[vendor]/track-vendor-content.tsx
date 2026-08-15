@@ -448,7 +448,7 @@ export function TrackVendorContent({ vendorSlug }: Props) {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-[12px] text-[#A1A1AA] font-mono text-right hidden sm:table-cell">
-                        {ep.last_check_at ? formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true }) : '—'}
+                        {ep.last_check_at ? formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true }) : 'N/A'}
                       </td>
                     </tr>
                   );

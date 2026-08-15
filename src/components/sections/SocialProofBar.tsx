@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
-/* Official brand SVGs from Simple Icons (MIT license) — viewBox 0 0 24 24 */
+/* Official brand SVGs from Simple Icons (MIT license) :  viewBox 0 0 24 24 */
 const BRANDS = [
   {
     name: 'Vercel',
@@ -47,7 +47,7 @@ export function SocialProofBar() {
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.6, ease }}
       >
-        Trusted by engineering teams at
+        Used by engineering teams at
       </motion.p>
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         {/* Desktop */}

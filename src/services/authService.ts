@@ -93,7 +93,7 @@ export const authService = {
     const savedState = sessionStorage.getItem("google_oauth_state");
 
     if (!code) throw new Error("No authorization code received from Google");
-    if (returnedState !== savedState) throw new Error("OAuth state mismatch — possible CSRF");
+    if (returnedState !== savedState) throw new Error("OAuth state mismatch :  possible CSRF");
 
     sessionStorage.removeItem("google_oauth_state");
     return await authService.exchangeGoogleCode(code);
@@ -125,7 +125,7 @@ export const authService = {
     const savedState = sessionStorage.getItem("github_oauth_state");
 
     if (!code) throw new Error("No authorization code received from GitHub");
-    if (returnedState !== savedState) throw new Error("OAuth state mismatch — possible CSRF");
+    if (returnedState !== savedState) throw new Error("OAuth state mismatch :  possible CSRF");
 
     sessionStorage.removeItem("github_oauth_state");
     return await authService.exchangeGitHubCode(code);
@@ -155,7 +155,7 @@ export const authService = {
 
   /**
    * Requests a password reset email. Always returns a generic success message
-   * (anti-enumeration — does not reveal whether the email exists). Rate limited.
+   * (anti-enumeration :  does not reveal whether the email exists). Rate limited.
    */
   async forgotPassword(email: string): Promise<{ message: string }> {
     const res = await apiClient.post<{ message: string }>("/auth/forgot-password", { email });

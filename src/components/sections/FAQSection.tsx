@@ -9,7 +9,7 @@ const ease = [0.25, 0.1, 0.25, 1] as const;
 const FAQS = [
   {
     q: 'How is Reliastra different from regular uptime monitoring?',
-    a: 'Regular uptime monitors check your own infrastructure from the outside. Reliastra monitors your vendors’ APIs from independent locations—completely separate from your stack. It doesn\'t just tell you a vendor is down; it correlates vendor degradation with your service metrics and generates evidence reports you can send directly to vendor support to claim SLA credits.',
+    a: 'Regular uptime monitors check your own infrastructure from the outside. Reliastra monitors your vendors’ APIs from independent locations: completely separate from your stack. It doesn\'t just tell you a vendor is down; it correlates vendor degradation with your service metrics and generates evidence reports you can send directly to vendor support to claim SLA credits.',
   },
   {
     q: 'What counts as an \u201Cindependent\u201D verification?',
@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: 'Which vendors do you support?',
-    a: 'Any HTTP endpoint. Reliastra works with any vendor that exposes an API—Stripe, Auth0, Twilio, Cloudflare, OpenAI, PagerDuty, AWS, and hundreds more. If it has a URL and returns a status code, we can monitor it. Setup takes about 30 seconds per vendor.',
+    a: 'Any HTTP endpoint. Reliastra works with any vendor that exposes an API: Stripe, Auth0, Twilio, Cloudflare, OpenAI, PagerDuty, AWS, and hundreds more. If it has a URL and returns a status code, we can monitor it. Setup takes about 30 seconds per vendor.',
   },
   {
     q: 'How do SLA evidence reports work?',
@@ -25,11 +25,11 @@ const FAQS = [
   },
   {
     q: 'Will this actually help me get SLA credits?',
-    a: 'Yes. We\'ve seen customers recover thousands in SLA credits they would have otherwise left on the table. The key is having independent, timestamped evidence—which is exactly what Reliastra provides. Vendors are much more likely to honor credit claims when presented with structured evidence from a third party rather than screenshots or anecdotal reports.',
+    a: 'Yes. Structured, independent evidence is the basis of successful SLA credit claims. Vendors are more likely to honor credit claims when presented with timestamped, third-party verification rather than screenshots or manual reports.',
   },
   {
     q: 'Is my data secure?',
-    a: 'Absolutely. All data is encrypted at rest (AES-256) and in transit (TLS 1.3). We\'re working toward SOC 2 Type II certification. We don\'t share your data with vendors or third parties. You own your monitoring data and evidence reports completely.',
+    a: 'All data is encrypted at rest (AES-256) and in transit (TLS 1.3). SOC 2 Type II certification is in progress. Monitoring data and evidence reports are owned by the account holder and are not shared with vendors or third parties.',
   },
 ];
 

@@ -177,7 +177,7 @@ const faqs = [
   },
   {
     q: "What happens when I reach my dependency limit?",
-    a: "You'll be notified when you approach your limit. You can upgrade your plan to add more monitored dependencies, or remove existing ones to stay within your current limit. No data is lost when you remove a dependency — historical data is retained according to your plan's retention period.",
+    a: "You'll be notified when you approach your limit. You can upgrade your plan to add more monitored dependencies, or remove existing ones to stay within your current limit. No data is lost when you remove a dependency :  historical data is retained according to your plan's retention period.",
   },
   {
     q: "Do you offer annual billing?",

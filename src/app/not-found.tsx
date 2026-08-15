@@ -194,7 +194,7 @@ function StatusBar() {
         <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E]" />
-        <span className="ml-2 text-[11px] text-[#A1A1AA] font-mono">reliastra — diagnostics</span>
+        <span className="ml-2 text-[11px] text-[#A1A1AA] font-mono">reliastra / diagnostics</span>
       </div>
 
       {/* Message line */}
@@ -292,7 +292,7 @@ export default function NotFound() {
             transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
             This route doesn't exist in our dependency graph.
-            We checked your vendors — this one's on us.
+            This is our issue, not a vendor failure.
           </motion.p>
 
           {/* Terminal-style status bar */}

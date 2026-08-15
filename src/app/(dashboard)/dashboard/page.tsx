@@ -76,7 +76,7 @@ export default function DashboardPage() {
               OPERATIONS OVERVIEW
             </h1>
             <span className="text-[11px] text-[#A1A1AA] font-normal">
-              {currentOrg?.name || "—"}
+              {currentOrg?.name || "No organization"}
             </span>
           </div>
           <p className="text-[12px] text-[#A1A1AA]">

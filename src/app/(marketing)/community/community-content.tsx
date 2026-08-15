@@ -5,29 +5,23 @@ import { MessageCircle, Github, BookOpen, FileText, Users, ExternalLink } from '
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-const testimonials = [
+const capabilities = [
   {
-    name: 'Jordan Lee',
-    role: 'SRE Lead, FinTech Startup',
-    quote: 'Reliastra caught a Cloudflare degradation 12 minutes before their own status page updated. That early warning saved us from a cascading failure across our payment pipeline.',
-    initials: 'JL',
+    title: 'Independent Detection',
+    description: 'Multi-region probes detect vendor degradation independently from internal monitoring. Detection is not dependent on the vendor\'s own status page.',
   },
   {
-    name: 'Priya Sharma',
-    role: 'CTO, B2B SaaS',
-    quote: 'We used Reliastra\'s SLA evidence report to recover $8,400 in credits from our Auth0 provider. The report was so detailed that Auth0 approved the claim without dispute.',
-    initials: 'PS',
+    title: 'SLA Evidence Generation',
+    description: 'When a vendor incident occurs, Reliastra produces a structured evidence report with timestamped observations from independent infrastructure.',
   },
   {
-    name: 'David Kim',
-    role: 'Platform Engineer, E-commerce',
-    quote: 'The correlation engine is mind-blowing. When AWS had that us-east-1 incident, Reliastra automatically mapped the blast radius across all our vendors. No more manual post-mortems.',
-    initials: 'DK',
+    title: 'Incident Correlation',
+    description: 'Vendor degradation signals are correlated with your service metrics to evaluate whether an external dependency is a likely contributor to an incident.',
   },
 ];
 
 const resources = [
-  { name: 'Documentation', description: 'Get started with Reliastra in under 5 minutes.', icon: BookOpen, href: '#' },
+  { name: 'Documentation', description: 'Set up Reliastra and configure your first monitored dependency.', icon: BookOpen, href: '#' },
   { name: 'API Reference', description: 'Full REST API docs for custom integrations.', icon: FileText, href: '#' },
   { name: 'Guides', description: 'Step-by-step tutorials for advanced use cases.', icon: ExternalLink, href: '/blog' },
 ];
@@ -45,13 +39,13 @@ export function CommunityContent() {
           >
             <div className="flex items-center justify-center gap-2 mb-4">
               <Users className="h-8 w-8 text-[#0891B2]" />
-              <span className="text-sm font-medium text-[#0891B2]">800+ engineers and counting</span>
+              <span className="text-sm font-medium text-[#0891B2]">Engineers monitoring vendor reliability</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-[#09090B] tracking-tight">
-              Join the Reliastra Community
+              Reliastra Community
             </h1>
             <p className="mt-4 text-lg text-[#52525B] max-w-2xl mx-auto">
-              Connect with engineers who are serious about vendor reliability.
+              Documentation, discussions, and vendor reliability data.
               Share strategies, get help, and shape the product roadmap.
             </p>
           </motion.div>
@@ -123,12 +117,12 @@ export function CommunityContent() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-[#09090B]">What Engineers Are Saying</h2>
+            <h2 className="text-3xl font-bold text-[#09090B]">Reliastra Capabilities</h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+            {capabilities.map((c, i) => (
               <motion.div
-                key={t.name}
+                key={c.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -136,18 +130,8 @@ export function CommunityContent() {
               >
                 <Card className="rounded-xl p-6 h-full">
                   <CardContent className="p-0">
-                    <p className="text-[#52525B] text-sm leading-relaxed italic">
-                      &ldquo;{t.quote}&rdquo;
-                    </p>
-                    <div className="mt-4 flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-[#0891B2] text-white flex items-center justify-center text-xs font-semibold">
-                        {t.initials}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#09090B]">{t.name}</p>
-                        <p className="text-xs text-[#A1A1AA]">{t.role}</p>
-                      </div>
-                    </div>
+                    <h3 className="text-base font-semibold text-[#09090B] mb-2">{c.title}</h3>
+                    <p className="text-sm text-[#52525B] leading-relaxed">{c.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -167,7 +151,7 @@ export function CommunityContent() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-[#09090B]">Resources</h2>
-            <p className="mt-2 text-[#52525B]">Everything you need to get the most out of Reliastra.</p>
+            <p className="mt-2 text-[#52525B]">Documentation and reference material for Reliastra.</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {resources.map((r, i) => {

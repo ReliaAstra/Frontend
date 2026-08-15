@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
-/* ── Animated number counter — waits for `start` signal ── */
+/* Animated number counter: waits for `start` signal */
 function AnimatedNumber({ target, suffix = '', start = false }: { target: number; suffix?: string; start?: boolean }) {
   const count = useMotionValue(0);
   const display = useTransform(count, (v) => Math.round(v));
@@ -114,7 +114,7 @@ export function IncidentCorrelationCard() {
             Checkout degradation
           </h3>
           <p className="text-[13px] font-medium text-[#A1A1AA] mt-1" style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
-            14:02 UTC — 14:25 UTC
+            14:02 UTC to 14:25 UTC
           </p>
         </motion.div>
 
@@ -211,7 +211,7 @@ export function IncidentCorrelationCard() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#0891B2] mb-2">
             Likely Contributing Dependency
           </p>
-          <p className="text-[16px] font-bold text-[#09090B]">Stripe — EU</p>
+          <p className="text-[16px] font-bold text-[#09090B]">Stripe / EU</p>
 
           <div className="mt-3 space-y-1">
             <p className="text-[13px] flex justify-between" style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>

@@ -16,7 +16,7 @@ export default function GuaranteePage() {
             <section>
               <h2 className="text-lg font-semibold text-[#09090B] mb-3">Our Evolution</h2>
               <p>
-                When we first launched Reliastra, we offered a &ldquo;Detection Guarantee&rdquo; — a promise that we
+                When we first launched Reliastra, we offered a &ldquo;Detection Guarantee&rdquo; :  a promise that we
                 would detect vendor outages faster than the vendor&apos;s own status page. While this resonated with
                 engineers, we realized our real value went far beyond detection speed.
               </p>
@@ -52,7 +52,7 @@ export default function GuaranteePage() {
               <p>
                 Our SLA evidence reports are generated from independently collected data and include: incident
                 timeline, latency metrics, error rates, geographic impact analysis, and a methodology description.
-                These reports are designed to be directly usable in vendor communications and dispute resolution.
+                These reports are structured for use in vendor communications and dispute resolution.
               </p>
               <p className="mt-3">
                 Available on Pro and Business plans. Business plan subscribers also receive automated report

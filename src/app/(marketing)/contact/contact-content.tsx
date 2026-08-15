@@ -41,7 +41,7 @@ export function ContactContent() {
         body: JSON.stringify(data),
       });
       if (res.ok) {
-        toast.success('Message sent! We\'ll get back to you within 4 hours.');
+        toast.success('Message sent. Expect a response within 4 hours.');
         form.reset();
       } else {
         const body = await res.json();
@@ -64,7 +64,7 @@ export function ContactContent() {
           >
             <h1 className="text-4xl md:text-5xl font-bold text-[#09090B] tracking-tight">Contact Us</h1>
             <p className="mt-4 text-lg text-[#52525B]">
-              Have a question, feature request, or just want to say hello? We reply within 4 hours.
+              Questions, feature requests, or partnership inquiries. Responses within 4 hours during business hours.
             </p>
           </motion.div>
         </div>
@@ -131,7 +131,7 @@ export function ContactContent() {
                       <FormItem>
                         <FormLabel>Message *</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="How can we help?" rows={5} className="rounded-lg" {...field} />
+                          <Textarea placeholder="Describe your inquiry." rows={5} className="rounded-lg" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

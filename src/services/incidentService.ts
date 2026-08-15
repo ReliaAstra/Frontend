@@ -33,7 +33,7 @@ export interface IncidentDetail extends Incident {
 }
 
 // Timeline events derived from incident data + correlations
-// (no dedicated backend timeline endpoint — built from incident fields)
+// (no dedicated backend timeline endpoint :  built from incident fields)
 export interface TimelineEvent {
   id: string;
   type: "status_change" | "correlation" | "evidence_generated" | "resolved" | "acknowledged" | "note";

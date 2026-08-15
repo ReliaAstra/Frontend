@@ -55,7 +55,7 @@ export function InvestorsContent() {
               <h1 className="text-4xl md:text-5xl font-bold text-[#09090B] tracking-tight">Investment Opportunity</h1>
               <p className="mt-4 text-lg text-[#52525B] leading-relaxed">
                 Reliastra is the first independent intelligence layer for external dependencies.
-                We help engineering teams monitor, correlate, and hold vendors accountable for reliability — a $4.2B market with no dominant player.
+                We help engineering teams monitor, correlate, and hold vendors accountable for reliability :  a $4.2B market with no dominant player.
               </p>
             </motion.div>
 
@@ -95,7 +95,7 @@ export function InvestorsContent() {
             <h2 className="text-3xl font-bold text-[#09090B] mb-4">Our Vision</h2>
             <div className="max-w-3xl">
               <p className="text-[#52525B] leading-relaxed">
-                Every modern application is built on a web of external dependencies — APIs, SaaS platforms,
+                Every modern application is built on a web of external dependencies :  APIs, SaaS platforms,
                 cloud services. When one of these fails, the downstream impact is massive, but the
                 responsibility is unclear and the evidence is fragmented.
               </p>
@@ -208,7 +208,7 @@ export function InvestorsContent() {
             transition={{ duration: 0.5 }}
             className="max-w-lg mx-auto"
           >
-            <h2 className="text-3xl font-bold text-[#09090B] mb-2">Get in Touch</h2>
+            <h2 className="text-3xl font-bold text-[#09090B] mb-2">Contact</h2>
             <p className="text-[#52525B] mb-8">
               Interested in learning more? We respond to investor inquiries within 24 hours.
             </p>
@@ -227,7 +227,7 @@ export function InvestorsContent() {
               </div>
               <div>
                 <label htmlFor="inv-message" className="block text-sm font-medium text-[#09090B] mb-1.5">Message</label>
-                <Textarea id="inv-message" value={form.message} onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))} placeholder="Tell us about your interest..." rows={4} className="rounded-lg" />
+                <Textarea id="inv-message" value={form.message} onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))} placeholder="Describe your interest in Reliastra." rows={4} className="rounded-lg" />
               </div>
               <Button type="submit" disabled={submitting} className="w-full bg-[#0891B2] hover:bg-[#0E7490] text-white rounded-lg">
                 {submitting ? 'Sending...' : 'Submit Inquiry'}

@@ -98,7 +98,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
       {/* Raw Key Display (one-time) */}
       {rawKey && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 mb-4">
-          <p className="text-sm font-medium text-amber-600 mb-2">Save this key now — it won&apos;t be shown again</p>
+          <p className="text-sm font-medium text-amber-600 mb-2">Save this key now :  it won&apos;t be shown again</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 rounded-lg bg-[#F8F9FA] px-3 py-2 text-xs text-[#09090B] font-mono break-all">
               {showRaw ? rawKey : "\u2022".repeat(48)}

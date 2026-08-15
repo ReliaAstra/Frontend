@@ -56,7 +56,7 @@ export function ComparisonTable() {
           </h2>
           <p className="text-[#52525B] leading-relaxed">
             Existing monitoring tools can tell you something is wrong. Only Reliastra
-            can prove it was your vendor—and give you the evidence to claim your SLA
+            can prove it was your vendor: and give you the evidence to claim your SLA
             credits.
           </p>
         </motion.div>

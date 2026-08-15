@@ -17,7 +17,7 @@ const values = [
   {
     icon: Eye,
     title: 'Transparency First',
-    description: 'We believe vendor reliability data should be independently verified and openly accessible. No spin, no delays, no conflicts of interest.',
+    description: 'Vendor reliability data should be independently verified and openly accessible. No spin, no delays, no conflicts of interest.',
   },
   {
     icon: Shield,
@@ -53,8 +53,8 @@ export function AboutContent() {
                 </p>
                 <p>
                   Today, Reliastra provides independent monitoring, automated incident correlation, and SLA evidence generation for
-                  engineering teams of all sizes. We are building the definitive intelligence layer for external dependencies — because
-                  every team deserves ground truth about the services they depend on.
+                  engineering teams. We are building the definitive intelligence layer for external dependencies :  because
+                  engineering teams need ground truth about the services they depend on.
                 </p>
               </div>
             </motion.div>
@@ -75,7 +75,7 @@ export function AboutContent() {
             <h2 className="text-3xl font-bold text-[#09090B]">Our Mission</h2>
             <p className="mt-4 text-lg text-[#52525B] leading-relaxed">
               To give every engineering team independent, real-time intelligence about the reliability of their external
-              dependencies — and the automated evidence to hold vendors accountable.
+              dependencies :  and the automated evidence to hold vendors accountable.
             </p>
           </motion.div>
         </div>
@@ -92,7 +92,7 @@ export function AboutContent() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-[#09090B]">The Team</h2>
-            <p className="mt-2 text-[#52525B]">Built by engineers who lived the problem.</p>
+            <p className="mt-2 text-[#52525B]">Engineering team.</p>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {team.map((member, i) => (

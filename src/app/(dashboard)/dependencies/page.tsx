@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Search, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, Search, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { DependencyGrid } from "@/components/dashboard/DependencyGrid";
 import { dependencyService, type Dependency, type CreateDependencyRequest } from "@/services/dependencyService";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,9 @@ export default function DependenciesPage() {
     check_interval_seconds: 60,
     expected_status_codes: [200],
   });
+  const [creating, setCreating] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchDeps = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -60,33 +63,43 @@ export default function DependenciesPage() {
       toast.error("Name and endpoint URL are required.");
       return;
     }
+    setCreating(true);
     try {
       await dependencyService.create(form);
       setAddOpen(false);
       setForm({ name: "", endpoint_url: "", check_interval_seconds: 60, expected_status_codes: [200] });
-      toast.success("Dependency added successfully.");
+      toast.success("Dependency created.");
       fetchDeps();
     } catch {
-      toast.error("Failed to add dependency. Check that the URL is valid.");
+      toast.error("Dependency could not be created.");
+    } finally {
+      setCreating(false);
     }
   };
 
   const handleToggle = async (id: string, active: boolean) => {
+    setTogglingId(id);
     try {
       await dependencyService.update(id, { is_active: active });
       setDependencies(dependencies.map(d => (d.id === id ? { ...d, is_active: active } : d)));
+      toast.success(active ? "Dependency activated." : "Dependency paused.");
     } catch {
-      toast.error("Failed to update dependency.");
+      toast.error("Could not update dependency.");
+    } finally {
+      setTogglingId(null);
     }
   };
 
   const handleDelete = async (id: string) => {
+    setDeletingId(id);
     try {
       await dependencyService.delete(id);
       setDependencies(dependencies.filter(d => d.id !== id));
       toast.success("Dependency removed.");
     } catch {
-      toast.error("Failed to remove dependency.");
+      toast.error("Dependency could not be removed.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -158,8 +171,15 @@ export default function DependenciesPage() {
                     />
                   </div>
                 </div>
-                <Button onClick={handleAdd} className="w-full bg-[#0891B2] hover:bg-[#0E7490] text-white">
-                  Add Dependency
+                <Button onClick={handleAdd} disabled={creating} className="w-full bg-[#0891B2] hover:bg-[#0E7490] text-white">
+                  {creating ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Adding dependency...
+                    </span>
+                  ) : (
+                    "Add Dependency"
+                  )}
                 </Button>
               </div>
             </DialogContent>
@@ -202,7 +222,7 @@ export default function DependenciesPage() {
           </p>
         </div>
       ) : (
-        <DependencyGrid dependencies={dependencies} onToggle={handleToggle} onDelete={handleDelete} />
+        <DependencyGrid dependencies={dependencies} onToggle={handleToggle} onDelete={handleDelete} togglingId={togglingId} deletingId={deletingId} />
       )}
     </div>
   );

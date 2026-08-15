@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Trash2, UserPlus } from "lucide-react";
+import { MoreHorizontal, Trash2, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +39,8 @@ export function MemberTable({ members: initialMembers }: MemberTableProps) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [localMembers, setLocalMembers] = useState(initialMembers);
   const [inviting, setInviting] = useState(false);
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleInvite = async () => {
     if (!inviteEmail || !currentOrg) return;
@@ -58,23 +60,29 @@ export function MemberTable({ members: initialMembers }: MemberTableProps) {
 
   const handleRoleChange = async (memberId: string, role: string) => {
     if (!currentOrg) return;
+    setUpdatingRoleId(memberId);
     try {
       const updated = await orgService.updateMemberRole(currentOrg.id, memberId, role);
       setLocalMembers(localMembers.map((m) => (m.id === memberId ? updated : m)));
-      toast.success(`Role updated to ${role}`);
+      toast.success(`Role updated to ${role}.`);
     } catch {
-      toast.error("Failed to update role.");
+      toast.error("Role could not be updated.");
+    } finally {
+      setUpdatingRoleId(null);
     }
   };
 
   const handleRemove = async (memberId: string) => {
     if (!currentOrg) return;
+    setRemovingId(memberId);
     try {
       await orgService.removeMember(currentOrg.id, memberId);
       setLocalMembers(localMembers.filter((m) => m.id !== memberId));
-      toast.success("Member removed");
+      toast.success("Member removed.");
     } catch {
-      toast.error("Failed to remove member.");
+      toast.error("Member could not be removed.");
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -105,7 +113,14 @@ export function MemberTable({ members: initialMembers }: MemberTableProps) {
                 <p className="text-[10px] text-[#A1A1AA] mt-1">The user must already have a Reliastra account.</p>
               </div>
               <Button onClick={handleInvite} disabled={inviting} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-                {inviting ? "Sending..." : "Send Invitation"}
+                {inviting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Sending invitation...
+                  </span>
+                ) : (
+                  "Send Invitation"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -155,8 +170,8 @@ export function MemberTable({ members: initialMembers }: MemberTableProps) {
                     {member.role !== "owner" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="h-8 w-8 rounded-lg hover:bg-[#F8F9FA] flex items-center justify-center text-[#A1A1AA] hover:text-[#09090B]">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <button className="h-8 w-8 rounded-lg hover:bg-[#F8F9FA] flex items-center justify-center text-[#A1A1AA] hover:text-[#09090B] disabled:opacity-50" disabled={updatingRoleId === member.id || removingId === member.id}>
+                            {(updatingRoleId === member.id || removingId === member.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-white border-[#E4E4E7]">

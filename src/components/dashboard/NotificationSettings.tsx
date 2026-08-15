@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Webhook, Mail, Bell, Hash } from "lucide-react";
+import { Plus, Trash2, Webhook, Mail, Bell, Hash, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -46,6 +46,8 @@ export function NotificationSettings({ channels: initialChannels }: Notification
   const [type, setType] = useState<ChannelType>("slack");
   const [configValue, setConfigValue] = useState("");
   const [adding, setAdding] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleAdd = async () => {
     if (!configValue) return;
@@ -69,22 +71,28 @@ export function NotificationSettings({ channels: initialChannels }: Notification
   };
 
   const handleToggle = async (id: string, active: boolean) => {
+    setTogglingId(id);
     try {
       const updated = await notificationService.update(id, { is_active: active });
       setLocalChannels(localChannels.map((c) => (c.id === id ? updated : c)));
-      toast.success(active ? "Channel enabled" : "Channel disabled");
+      toast.success(active ? "Channel enabled." : "Channel disabled.");
     } catch {
-      toast.error("Failed to update channel.");
+      toast.error("Could not update channel.");
+    } finally {
+      setTogglingId(null);
     }
   };
 
   const handleDelete = async (id: string) => {
+    setDeletingId(id);
     try {
       await notificationService.delete(id);
       setLocalChannels(localChannels.filter((c) => c.id !== id));
-      toast.success("Channel removed");
+      toast.success("Channel removed.");
     } catch {
-      toast.error("Failed to remove channel.");
+      toast.error("Could not remove channel.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -154,9 +162,17 @@ export function NotificationSettings({ channels: initialChannels }: Notification
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Switch checked={channel.is_active} onCheckedChange={(checked) => handleToggle(channel.id, checked)} />
-                  <button onClick={() => handleDelete(channel.id)} className="text-[#A1A1AA] hover:text-red-600 transition-colors">
-                    <Trash2 className="h-4 w-4" />
+                  <Switch
+                    checked={channel.is_active}
+                    onCheckedChange={(checked) => handleToggle(channel.id, checked)}
+                    disabled={togglingId === channel.id || deletingId === channel.id}
+                  />
+                  <button
+                    onClick={() => handleDelete(channel.id)}
+                    disabled={deletingId === channel.id}
+                    className="text-[#A1A1AA] hover:text-red-600 transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === channel.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </button>
                 </div>
               </div>

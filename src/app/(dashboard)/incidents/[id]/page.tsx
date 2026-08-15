@@ -17,6 +17,7 @@ export default function IncidentDetailPage() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [signals, setSignals] = useState<CorrelatedSignal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   useEffect(() => {
     incidentService.getById(id).then((inc) => {
@@ -30,12 +31,15 @@ export default function IncidentDetailPage() {
   }, [id]);
 
   const handleStatusUpdate = async (status: "open" | "resolved" | "false_positive") => {
+    setStatusUpdating(true);
     try {
       await incidentService.update(id, { status });
       if (incident) setIncident({ ...incident, status });
-      toast.success(`Incident marked as ${status.replace("_", " ")}`);
+      toast.success(`Incident marked as ${status.replace("_", " ")}.`);
     } catch {
-      toast.error("Failed to update incident status.");
+      toast.error("Incident could not be updated.");
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -76,6 +80,7 @@ export default function IncidentDetailPage() {
         timeline={timeline}
         signals={signals}
         onStatusUpdate={handleStatusUpdate}
+        statusUpdating={statusUpdating}
       />
     </div>
   );

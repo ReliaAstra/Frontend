@@ -3,7 +3,7 @@
 import { SeverityBadge } from "./SeverityBadge";
 import { IncidentTimeline } from "./IncidentTimeline";
 import { format } from "date-fns";
-import { Link2, AlertTriangle } from "lucide-react";
+import { Link2, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { IncidentDetail as IncidentDetailType, TimelineEvent, CorrelatedSignal } from "@/services/incidentService";
 
@@ -12,12 +12,13 @@ interface IncidentDetailProps {
   timeline: TimelineEvent[];
   signals: CorrelatedSignal[];
   onStatusUpdate?: (status: "open" | "resolved" | "false_positive") => void;
+  statusUpdating?: boolean;
 }
 
 const statusSteps = ["open", "resolved"] as const;
 const statusLabels: Record<string, string> = { open: "Open", resolved: "Resolved", false_positive: "False Positive" };
 
-export function IncidentDetail({ incident, timeline, signals, onStatusUpdate }: IncidentDetailProps) {
+export function IncidentDetail({ incident, timeline, signals, onStatusUpdate, statusUpdating }: IncidentDetailProps) {
   const currentStep = statusSteps.indexOf(incident.status as "open" | "resolved");
 
   const duration = incident.resolved_at
@@ -86,17 +87,33 @@ export function IncidentDetail({ incident, timeline, signals, onStatusUpdate }: 
             <Button
               size="sm"
               onClick={() => onStatusUpdate("resolved")}
+              disabled={statusUpdating}
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
             >
-              Mark Resolved
+              {statusUpdating ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Updating...
+                </span>
+              ) : (
+                "Mark Resolved"
+              )}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => onStatusUpdate("false_positive")}
+              disabled={statusUpdating}
               className="text-xs border-[#E4E4E7] text-[#52525B]"
             >
-              Mark False Positive
+              {statusUpdating ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Updating...
+                </span>
+              ) : (
+                "Mark False Positive"
+              )}
             </Button>
           </div>
         )}

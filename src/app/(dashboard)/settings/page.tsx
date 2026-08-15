@@ -13,8 +13,9 @@ import { billingService, type BillingPlanResponse } from "@/services/billingServ
 import { apiClient, BackendError } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const tabs = ["profile", "team", "api-keys", "notifications", "billing"] as const;
 const tabLabels: Record<string, string> = { profile: "Profile", team: "Team", "api-keys": "API Keys", notifications: "Notifications", billing: "Billing" };
@@ -26,9 +27,17 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [members, setMembers] = useState<OrgMemberResponse[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeyResponse[]>([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [apiKeysError, setApiKeysError] = useState<string | null>(null);
   const [channels, setChannels] = useState<AlertConfig[]>([]);
+  const [channelsLoading, setChannelsLoading] = useState(false);
+  const [channelsError, setChannelsError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BillingPlanResponse | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -38,31 +47,59 @@ export default function SettingsPage() {
   }, [user]);
 
   useEffect(() => {
-    if (activeTab === "team") orgService.listMembers().then(setMembers).catch(() => {});
+    if (activeTab === "team") {
+      setMembersLoading(true);
+      setMembersError(null);
+      orgService.listMembers()
+        .then(setMembers)
+        .catch(() => setMembersError("Unable to load team members."))
+        .finally(() => setMembersLoading(false));
+    }
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "api-keys") apiKeyService.list().then(setApiKeys).catch(() => {});
+    if (activeTab === "api-keys") {
+      setApiKeysLoading(true);
+      setApiKeysError(null);
+      apiKeyService.list()
+        .then(setApiKeys)
+        .catch(() => setApiKeysError("Unable to load API keys."))
+        .finally(() => setApiKeysLoading(false));
+    }
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "notifications") notificationService.list().then(setChannels).catch(() => {});
+    if (activeTab === "notifications") {
+      setChannelsLoading(true);
+      setChannelsError(null);
+      notificationService.list()
+        .then(setChannels)
+        .catch(() => setChannelsError("Unable to load notification channels."))
+        .finally(() => setChannelsLoading(false));
+    }
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "billing") billingService.getPlan().then(setPlan).catch(() => {});
+    if (activeTab === "billing") {
+      setBillingLoading(true);
+      setBillingError(null);
+      billingService.getPlan()
+        .then(setPlan)
+        .catch(() => setBillingError("Unable to load billing information."))
+        .finally(() => setBillingLoading(false));
+    }
   }, [activeTab]);
 
   const handleProfileUpdate = async () => {
     setSaving(true);
     try {
       await apiClient.patch("/users/me", { full_name: name, email });
-      toast.success("Profile updated");
+      toast.success("Profile updated.");
     } catch (err) {
       if (err instanceof BackendError) {
         toast.error(err.message);
       } else {
-        toast.error("Failed to update profile.");
+        toast.error("Unable to update profile.");
       }
     } finally {
       setSaving(false);
@@ -113,18 +150,113 @@ export default function SettingsPage() {
               <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white border-[#E4E4E7] text-[#09090B]" />
             </div>
             <Button onClick={handleProfileUpdate} disabled={saving} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-              {saving ? "Saving..." : "Update Profile"}
+              {saving ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                "Update Profile"
+              )}
             </Button>
           </div>
         )}
 
-        {activeTab === "team" && <MemberTable members={members} />}
+        {activeTab === "team" && (
+          <div>
+            {membersLoading ? (
+              <Skeleton className="h-[200px] rounded-lg bg-white" />
+            ) : membersError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-700">{membersError}</p>
+                </div>
+                <button onClick={() => {
+                  setMembersLoading(true);
+                  setMembersError(null);
+                  orgService.listMembers().then(setMembers).catch(() => setMembersError("Unable to load team members.")).finally(() => setMembersLoading(false));
+                }} className="text-xs font-medium text-red-600 hover:text-red-800">
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <MemberTable members={members} />
+            )}
+          </div>
+        )}
 
-        {activeTab === "api-keys" && <ApiKeyManager keys={apiKeys} />}
+        {activeTab === "api-keys" && (
+          <div>
+            {apiKeysLoading ? (
+              <Skeleton className="h-[200px] rounded-lg bg-white" />
+            ) : apiKeysError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-700">{apiKeysError}</p>
+                </div>
+                <button onClick={() => {
+                  setApiKeysLoading(true);
+                  setApiKeysError(null);
+                  apiKeyService.list().then(setApiKeys).catch(() => setApiKeysError("Unable to load API keys.")).finally(() => setApiKeysLoading(false));
+                }} className="text-xs font-medium text-red-600 hover:text-red-800">
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <ApiKeyManager keys={apiKeys} />
+            )}
+          </div>
+        )}
 
-        {activeTab === "notifications" && <NotificationSettings channels={channels} />}
+        {activeTab === "notifications" && (
+          <div>
+            {channelsLoading ? (
+              <Skeleton className="h-[200px] rounded-lg bg-white" />
+            ) : channelsError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-700">{channelsError}</p>
+                </div>
+                <button onClick={() => {
+                  setChannelsLoading(true);
+                  setChannelsError(null);
+                  notificationService.list().then(setChannels).catch(() => setChannelsError("Unable to load notification channels.")).finally(() => setChannelsLoading(false));
+                }} className="text-xs font-medium text-red-600 hover:text-red-800">
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <NotificationSettings channels={channels} />
+            )}
+          </div>
+        )}
 
-        {activeTab === "billing" && (plan ? <BillingCard plan={plan} /> : <Skeleton className="h-[400px] rounded-lg bg-white" />)}
+        {activeTab === "billing" && (
+          <div>
+            {billingLoading ? (
+              <Skeleton className="h-[400px] rounded-lg bg-white" />
+            ) : billingError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-700">{billingError}</p>
+                </div>
+                <button onClick={() => {
+                  setBillingLoading(true);
+                  setBillingError(null);
+                  billingService.getPlan().then(setPlan).catch(() => setBillingError("Unable to load billing information.")).finally(() => setBillingLoading(false));
+                }} className="text-xs font-medium text-red-600 hover:text-red-800">
+                  Retry
+                </button>
+              </div>
+            ) : plan ? (
+              <BillingCard plan={plan} />
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -32,27 +32,60 @@ function GitHubIcon() {
 }
 
 // ── OAuth Buttons ───────────────────────────────────────────────────────
-function OAuthButtons({ loading, action }: { loading: boolean; action: "Sign up" | "Continue" }) {
+function OAuthButtons({ loading, action, oauthError, onClearOAuthError }: { loading: boolean; action: "Sign up" | "Continue"; oauthError: string | null; onClearOAuthError: () => void }) {
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    onClearOAuthError();
+    try {
+      await authService.initiateGoogleLogin();
+    } catch {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGitHub = async () => {
+    setGithubLoading(true);
+    onClearOAuthError();
+    try {
+      await authService.initiateGitHubLogin();
+    } catch {
+      setGithubLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-2.5">
       <button
         type="button"
-        onClick={() => authService.initiateGoogleLogin()}
-        disabled={loading}
+        onClick={handleGoogle}
+        disabled={loading || googleLoading}
         className="flex h-[42px] w-full items-center justify-center gap-2.5 rounded-lg border border-[#E4E4E7] bg-white text-[13px] font-medium text-[#09090B] transition-colors hover:bg-[#F8F9FA] disabled:opacity-50"
       >
-        <GoogleIcon />
-        {action} with Google
+        {googleLoading ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <GoogleIcon />}
+        {googleLoading ? `Connecting to Google...` : `${action} with Google`}
       </button>
       <button
         type="button"
-        onClick={() => authService.initiateGitHubLogin()}
-        disabled={loading}
+        onClick={handleGitHub}
+        disabled={loading || githubLoading}
         className="flex h-[42px] w-full items-center justify-center gap-2.5 rounded-lg border border-[#E4E4E7] bg-white text-[13px] font-medium text-[#09090B] transition-colors hover:bg-[#F8F9FA] disabled:opacity-50"
       >
-        <GitHubIcon />
-        {action} with GitHub
+        {githubLoading ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <GitHubIcon />}
+        {githubLoading ? `Connecting to GitHub...` : `${action} with GitHub`}
       </button>
+      {oauthError && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
+        >
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
+          <p className="text-[12px] leading-snug text-red-700">{oauthError}</p>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -96,6 +129,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [oauthError, setOAuthError] = useState<string | null>(null);
 
   // Sync with auth context errors
   if (loginError && !error) setError(loginError);
@@ -112,8 +146,19 @@ function LoginForm() {
     setLoading(true);
     try {
       await login(email, password);
-    } catch {
-      // Error handled by auth context
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : null;
+      if (msg?.includes("not verified") || msg?.includes("EMAIL_NOT_VERIFIED")) {
+        setError("Your email has not been verified.");
+      } else if (msg?.includes("invalid credentials") || msg?.includes("INVALID_CREDENTIALS")) {
+        setError("Incorrect email or password.");
+      } else if (msg?.includes("rate limit") || msg?.includes("RATE_LIMIT") || msg?.includes("too many")) {
+        setError("Too many sign-in attempts. Please wait before trying again.");
+      } else if (msg?.includes("network") || msg?.includes("Network") || !msg) {
+        setError("Unable to reach Reliastra. Check your connection and try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -132,10 +177,18 @@ function LoginForm() {
         </p>
       </div>
 
-      <OAuthButtons loading={isSubmitting} action="Continue" />
+      <OAuthButtons loading={isSubmitting} action="Continue" oauthError={oauthError} onClearOAuthError={() => setOAuthError(null)} />
       <Divider label="or continue with email" />
 
       {error && <ErrorAlert message={error} />}
+      {error?.includes("not been verified") && (
+        <Link
+          href="/register"
+          className="block mb-4 text-center text-[12px] font-medium text-[#0891B2] transition-colors hover:text-[#0E7490]"
+        >
+          Resend verification
+        </Link>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>

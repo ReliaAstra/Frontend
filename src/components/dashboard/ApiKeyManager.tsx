@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Plus, Trash2, Eye, EyeOff, Check } from "lucide-react";
+import { Copy, Plus, Trash2, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,6 +27,7 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
   const [showRaw, setShowRaw] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!keyName) return;
@@ -46,12 +47,15 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
   };
 
   const handleRevoke = async (id: string) => {
+    setRevokingId(id);
     try {
       await apiKeyService.revoke(id);
       setLocalKeys(localKeys.filter((k) => k.id !== id));
-      toast.success("API key revoked");
+      toast.success("API key revoked.");
     } catch {
-      toast.error("Failed to revoke API key.");
+      toast.error("API key could not be revoked.");
+    } finally {
+      setRevokingId(null);
     }
   };
 
@@ -88,7 +92,14 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
               />
             </div>
             <Button onClick={handleCreate} disabled={creating} className="w-full bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-              {creating ? "Creating..." : "Create Key"}
+              {creating ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Creating...
+                </span>
+              ) : (
+                "Create Key"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -164,10 +175,15 @@ export function ApiKeyManager({ keys: initialKeys }: ApiKeyManagerProps) {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleRevoke(key.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+                      disabled={revokingId === key.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Revoke
+                      {revokingId === key.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                      {revokingId === key.id ? "Revoking..." : "Revoke"}
                     </button>
                   </td>
                 </tr>

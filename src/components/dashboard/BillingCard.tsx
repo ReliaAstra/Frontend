@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Zap } from "lucide-react";
+import { useState } from "react";
+import { Check, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { billingService } from "@/services/billingService";
 import type { BillingPlanResponse } from "@/services/billingService";
@@ -20,6 +21,7 @@ const planDetails: Record<string, { label: string; price: string }> = {
 
 export function BillingCard({ plan }: BillingCardProps) {
   const details = planDetails[plan.plan] || { label: plan.plan, price: "Custom" };
+  const [upgrading, setUpgrading] = useState(false);
 
   const handleUpgrade = async () => {
     if (plan.plan === "agency") {
@@ -31,11 +33,13 @@ export function BillingCard({ plan }: BillingCardProps) {
       toast.info("You are on the highest available plan.");
       return;
     }
+    setUpgrading(true);
     try {
       const res = await billingService.initializePayment(targetPlan);
       window.location.href = res.authorization_url;
     } catch {
-      toast.error("Failed to initialize payment. Please try again.");
+      setUpgrading(false);
+      toast.error("Could not start checkout. Please try again.");
     }
   };
 
@@ -52,8 +56,15 @@ export function BillingCard({ plan }: BillingCardProps) {
           </div>
         </div>
         {plan.plan !== "professional" && plan.plan !== "agency" && (
-          <Button onClick={handleUpgrade} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
-            Upgrade
+          <Button onClick={handleUpgrade} disabled={upgrading} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
+            {upgrading ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Starting checkout...
+              </span>
+            ) : (
+              "Upgrade"
+            )}
           </Button>
         )}
       </div>

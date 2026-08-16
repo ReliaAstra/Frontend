@@ -1,0 +1,502 @@
+     1→     1→     1→'use client';
+     2→     2→     2→
+     3→     3→     3→import { useState, useEffect, useCallback, useMemo } from 'react';
+     4→     4→     4→import { motion } from 'framer-motion';
+     5→     5→     5→import {
+     6→     6→     6→  Bell, ExternalLink, CheckCircle2, AlertTriangle, Shield,
+     7→     7→     7→  TrendingUp, RefreshCw, AlertCircle, ArrowRight,
+     8→     8→     8→} from 'lucide-react';
+     9→     9→     9→import { Button } from '@/components/ui/button';
+    10→    10→    10→import { Input } from '@/components/ui/input';
+    11→    11→    11→import { Skeleton } from '@/components/ui/skeleton';
+    12→    12→    12→import { cn } from '@/lib/utils';
+    13→    13→    13→import { toast } from 'sonner';
+    14→    14→    14→import {
+    15→    15→    15→  vendorService,
+    16→    16→    16→  type VendorDetailResponse,
+    17→    17→    17→  type VendorHistoryResponse,
+    18→    18→    18→  type VendorMetricsResponse,
+    19→    19→    19→  type VendorIncidentsResponse,
+    20→    20→    20→  type VendorIncident,
+    21→    21→    21→} from '@/services/vendorService';
+    22→    22→    22→import { formatDistanceToNow, format } from 'date-fns';
+    23→    23→    23→import Link from 'next/link';
+    24→    24→    24→
+    25→    25→    25→const statusConfig: Record<string, { label: string; dotColor: string; textColor: string; bg: string; borderColor: string }> = {
+    26→    26→    26→  up: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700', bg: 'bg-emerald-50', borderColor: 'border-emerald-200' },
+    27→    27→    27→  operational: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700', bg: 'bg-emerald-50', borderColor: 'border-emerald-200' },
+    28→    28→    28→  degraded: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', borderColor: 'border-amber-200' },
+    29→    29→    29→  degraded_performance: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', borderColor: 'border-amber-200' },
+    30→    30→    30→  down: { label: 'Down', dotColor: 'bg-red-500', textColor: 'text-red-700', bg: 'bg-red-50', borderColor: 'border-red-200' },
+    31→    31→    31→  partial_outage: { label: 'Partial Outage', dotColor: 'bg-orange-500', textColor: 'text-orange-700', bg: 'bg-orange-50', borderColor: 'border-orange-200' },
+    32→    32→    32→  major_outage: { label: 'Major Outage', dotColor: 'bg-red-500', textColor: 'text-red-700', bg: 'bg-red-50', borderColor: 'border-red-200' },
+    33→    33→    33→  unknown: { label: 'Unknown', dotColor: 'bg-gray-400', textColor: 'text-gray-600', bg: 'bg-gray-50', borderColor: 'border-gray-200' },
+    34→    34→    34→};
+    35→    35→    35→
+    36→    36→    36→const severityConfig: Record<string, { label: string; color: string }> = {
+    37→    37→    37→  critical: { label: 'Critical', color: 'text-red-700 bg-red-50 border-red-200' },
+    38→    38→    38→  major: { label: 'Major', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+    39→    39→    39→  high: { label: 'High', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+    40→    40→    40→  minor: { label: 'Minor', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    41→    41→    41→  medium: { label: 'Medium', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    42→    42→    42→  low: { label: 'Low', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+    43→    43→    43→};
+    44→    44→    44→
+    45→    45→    45→interface Props {
+    46→    46→    46→  vendorSlug: string;
+    47→    47→    47→}
+    48→    48→    48→
+    49→    49→    49→export function TrackVendorContent({ vendorSlug }: Props) {
+    50→    50→    50→  const [email, setEmail] = useState('');
+    51→    51→    51→  const [subscribing, setSubscribing] = useState(false);
+    52→    52→    52→
+    53→    53→    53→  const [detail, setDetail] = useState<VendorDetailResponse | null>(null);
+    54→    54→    54→  const [history, setHistory] = useState<VendorHistoryResponse | null>(null);
+    55→    55→    55→  const [metrics, setMetrics] = useState<VendorMetricsResponse | null>(null);
+    56→    56→    56→  const [incidents, setIncidents] = useState<VendorIncidentsResponse | null>(null);
+    57→    57→    57→  const [loading, setLoading] = useState(true);
+    58→    58→    58→  const [fetchError, setFetchError] = useState<string | null>(null);
+    59→    59→    59→  const [lastFetch, setLastFetch] = useState<string | null>(null);
+    60→    60→    60→  const [refreshing, setRefreshing] = useState(false);
+    61→    61→    61→
+    62→    62→    62→  const vendorLabel = detail?.display_name || vendorSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    63→    63→    63→  const vendorName = detail?.vendor_name || vendorSlug;
+    64→    64→    64→
+    65→    65→    65→  const fetchData = useCallback(async (isRefresh = false) => {
+    66→    66→    66→    if (isRefresh) setRefreshing(true);
+    67→    67→    67→    else setLoading(true);
+    68→    68→    68→    setFetchError(null);
+    69→    69→    69→    try {
+    70→    70→    70→      const [d, h, m, i] = await Promise.all([
+    71→    71→    71→        vendorService.getVendorDetail(vendorSlug),
+    72→    72→    72→        vendorService.getVendorHistory(vendorSlug),
+    73→    73→    73→        vendorService.getVendorMetrics(vendorSlug),
+    74→    74→    74→        vendorService.getVendorIncidents(vendorSlug, 50),
+    75→    75→    75→      ]);
+    76→    76→    76→      setDetail(d);
+    77→    77→    77→      setHistory(h);
+    78→    78→    78→      setMetrics(m);
+    79→    79→    79→      setIncidents(i);
+    80→    80→    80→      setLastFetch(new Date().toISOString());
+    81→    81→    81→    } catch {
+    82→    82→    82→      setFetchError('Unable to load vendor intelligence data. The measurement service may be unavailable.');
+    83→    83→    83→    } finally {
+    84→    84→    84→      setLoading(false);
+    85→    85→    85→      setRefreshing(false);
+    86→    86→    86→    }
+    87→    87→    87→  }, [vendorSlug]);
+    88→    88→    88→
+    89→    89→    89→  useEffect(() => {
+    90→    90→    90→    fetchData();
+    91→    91→    91→    // Auto-refresh every 60s
+    92→    92→    92→    const interval = setInterval(() => fetchData(true), 60000);
+    93→    93→    93→    return () => clearInterval(interval);
+    94→    94→    94→  }, [fetchData]);
+    95→    95→    95→
+    96→    96→    96→  // Process metrics for chart
+    97→    97→    97→  const chartData = useMemo(() => {
+    98→    98→    98→    if (!metrics?.metrics) return [];
+    99→    99→    99→    return Object.entries(metrics.metrics)
+   100→   100→   100→      .sort(([a], [b]) => a.localeCompare(b))
+   101→   101→   101→      .map(([, w]) => ({
+   102→   102→   102→        hour: format(new Date(w.window), 'HH:mm'),
+   103→   103→   103→        window: w.window,
+   104→   104→   104→        latency: Math.round(w.avg_latency_ms),
+   105→   105→   105→        p95: Math.round(w.p95_latency_ms),
+   106→   106→   106→        uptime: w.uptime_percentage,
+   107→   107→   107→        observations: w.total_observations,
+   108→   108→   108→      }));
+   109→   109→   109→  }, [metrics]);
+   110→   110→   110→
+   111→   111→   111→  const maxLatency = chartData.length > 0 ? Math.max(...chartData.map(d => d.latency), ...chartData.map(d => d.p95), 1) : 1;
+   112→   112→   112→
+   113→   113→   113→  const overallStatus = detail?.recent_status || 'unknown';
+   114→   114→   114→  const statusStyle = statusConfig[overallStatus] || statusConfig.unknown;
+   115→   115→   115→
+   116→   116→   116→  const uptimeValue = history?.uptime_percentage_24h ?? null;
+   117→   117→   117→  const avgLatency = history?.avg_latency_ms_24h ?? null;
+   118→   118→   118→  const totalChecks = history?.recent_checks_count ?? null;
+   119→   119→   119→  const latestP95 = chartData.length > 0 ? chartData[chartData.length - 1].p95 : null;
+   120→   120→   120→  const latestObservations = chartData.length > 0 ? chartData[chartData.length - 1].observations : null;
+   121→   121→   121→
+   122→   122→   122→  const isStale = detail?.last_check_at && (Date.now() - new Date(detail.last_check_at).getTime()) > 300000; // 5 min
+   123→   123→   123→
+   124→   124→   124→  const handleSubscribe = async () => {
+   125→   125→   125→    if (!email.includes('@')) {
+   126→   126→   126→      toast.error('Please enter a valid email address.');
+   127→   127→   127→      return;
+   128→   128→   128→    }
+   129→   129→   129→    setSubscribing(true);
+   130→   130→   130→    try {
+   131→   131→   131→      const res = await fetch('/api/newsletter/subscribe', {
+   132→   132→   132→        method: 'POST',
+   133→   133→   133→        headers: { 'Content-Type': 'application/json' },
+   134→   134→   134→        body: JSON.stringify({ email, vendor: vendorSlug }),
+   135→   135→   135→      });
+   136→   136→   136→      if (res.ok) {
+   137→   137→   137→        toast.success(`Subscribed to ${vendorLabel} alerts.`);
+   138→   138→   138→        setEmail('');
+   139→   139→   139→      } else {
+   140→   140→   140→        toast.error('Subscription failed. Please try again.');
+   141→   141→   141→      }
+   142→   142→   142→    } catch {
+   143→   143→   143→      toast.error('Network error.');
+   144→   144→   144→    } finally {
+   145→   145→   145→      setSubscribing(false);
+   146→   146→   146→    }
+   147→   147→   147→  };
+   148→   148→   148→
+   149→   149→   149→  const formatDuration = (seconds: number | null) => {
+   150→   150→   150→    if (seconds === null) return 'Ongoing';
+   151→   151→   151→    if (seconds < 60) return `${Math.round(seconds)}s`;
+   152→   152→   152→    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+   153→   153→   153→    const h = Math.floor(seconds / 3600);
+   154→   154→   154→    const m = Math.floor((seconds % 3600) / 60);
+   155→   155→   155→    return `${h}h ${m}m`;
+   156→   156→   156→  };
+   157→   157→   157→
+   158→   158→   158→  // --- RENDER ---
+   159→   159→   159→
+   160→   160→   160→  // Loading shell
+   161→   161→   161→  if (loading) {
+   162→   162→   162→    return (
+   163→   163→   163→      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+   164→   164→   164→        <Skeleton className="h-6 w-48 mb-4" />
+   165→   165→   165→        <Skeleton className="h-10 w-80 mb-2" />
+   166→   166→   166→        <Skeleton className="h-5 w-96 mb-8" />
+   167→   167→   167→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+   168→   168→   168→          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+   169→   169→   169→        </div>
+   170→   170→   170→        <Skeleton className="h-64 rounded-lg mb-8" />
+   171→   171→   171→        <Skeleton className="h-48 rounded-lg" />
+   172→   172→   172→      </div>
+   173→   173→   173→    );
+   174→   174→   174→  }
+   175→   175→   175→
+   176→   176→   176→  // Error state
+   177→   177→   177→  if (fetchError) {
+   178→   178→   178→    return (
+   179→   179→   179→      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+   180→   180→   180→        <Link href="/track" className="text-sm text-[#0891B2] hover:text-[#0E7490] transition-colors mb-6 inline-block">
+   181→   181→   181→          &larr; All Vendors
+   182→   182→   182→        </Link>
+   183→   183→   183→        <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center mt-4">
+   184→   184→   184→          <AlertCircle className="h-8 w-8 text-[#A1A1AA] mx-auto mb-3" />
+   185→   185→   185→          <p className="text-sm font-medium text-[#09090B]">{fetchError}</p>
+   186→   186→   186→          <button
+   187→   187→   187→            onClick={() => fetchData()}
+   188→   188→   188→            className="mt-4 text-xs font-medium text-[#0891B2] hover:text-[#0E7490] transition-colors"
+   189→   189→   189→          >
+   190→   190→   190→            Retry
+   191→   191→   191→          </button>
+   192→   192→   192→        </div>
+   193→   193→   193→      </div>
+   194→   194→   194→    );
+   195→   195→   195→  }
+   196→   196→   196→
+   197→   197→   197→  return (
+   198→   198→   198→    <div className="max-w-6xl mx-auto px-4 md:px-8">
+   199→   199→   199→      {/* ── HEADER ── */}
+   200→   200→   200→      <section className="pt-10 pb-8">
+   201→   201→   201→        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+   202→   202→   202→          {/* Breadcrumb */}
+   203→   203→   203→          <div className="flex items-center gap-2 mb-6">
+   204→   204→   204→            <Link href="/track" className="text-[13px] text-[#A1A1AA] hover:text-[#0891B2] transition-colors">
+   205→   205→   205→              Vendors
+   206→   206→   206→            </Link>
+   207→   207→   207→            <span className="text-[#E4E4E7]">/</span>
+   208→   208→   208→            <span className="text-[13px] text-[#52525B] font-medium">{vendorLabel}</span>
+   209→   209→   209→          </div>
+   210→   210→   210→
+   211→   211→   211→          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+   212→   212→   212→            <div>
+   213→   213→   213→              {/* Vendor name + status */}
+   214→   214→   214→              <div className="flex items-center gap-4 mb-3">
+   215→   215→   215→                <h1 className="text-[28px] font-semibold text-[#09090B] tracking-[-0.02em]">
+   216→   216→   216→                  {vendorLabel}
+   217→   217→   217→                </h1>
+   218→   218→   218→                <span className={cn(
+   219→   219→   219→                  'inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] px-2.5 py-1 rounded-md border',
+   220→   220→   220→                  statusStyle.bg, statusStyle.textColor, statusStyle.borderColor
+   221→   221→   221→                )}>
+   222→   222→   222→                  <span className={cn('h-1.5 w-1.5 rounded-full', statusStyle.dotColor,
+   223→   223→   223→                    (overallStatus === 'degraded' || overallStatus === 'degraded_performance' || overallStatus === 'partial_outage') && 'animate-pulse'
+   224→   224→   224→                  )} />
+   225→   225→   225→                  {statusStyle.label}
+   226→   226→   226→                </span>
+   227→   227→   227→              </div>
+   228→   228→   228→
+   229→   229→   229→              <p className="text-sm text-[#52525B] max-w-xl leading-relaxed">
+   230→   230→   230→                {detail?.category ? `${detail.category} · ` : ''}Vendor intelligence measured continuously by Reliastra.
+   231→   231→   231→                Data collected independently from {vendorLabel}&apos;s own status reporting.
+   232→   232→   232→              </p>
+   233→   233→   233→            </div>
+   234→   234→   234→
+   235→   235→   235→            {/* Refresh */}
+   236→   236→   236→            <div className="flex items-center gap-3 shrink-0">
+   237→   237→   237→              {lastFetch && (
+   238→   238→   238→                <span className="text-[11px] font-mono text-[#A1A1AA]">
+   239→   239→   239→                  {format(new Date(lastFetch), 'HH:mm:ss')} UTC
+   240→   240→   240→                </span>
+   241→   241→   241→              )}
+   242→   242→   242→              <button
+   243→   243→   243→                onClick={() => fetchData(true)}
+   244→   244→   244→                disabled={refreshing}
+   245→   245→   245→                className="p-2 rounded-md border border-[#E4E4E7] hover:bg-[#F8F9FA] transition-colors text-[#52525B] disabled:opacity-50"
+   246→   246→   246→                aria-label="Refresh data"
+   247→   247→   247→              >
+   248→   248→   248→                <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
+   249→   249→   249→              </button>
+   250→   250→   250→            </div>
+   251→   251→   251→          </div>
+   252→   252→   252→
+   253→   253→   253→          {/* Live measurement bar */}
+   254→   254→   254→          <div className="mt-5 px-4 py-3 rounded-lg bg-[#F8F9FA] border border-[#F0F0F0]">
+   255→   255→   255→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px]">
+   256→   256→   256→              <div className="flex items-center gap-2">
+   257→   257→   257→                <span className={cn(
+   258→   258→   258→                  'h-1.5 w-1.5 rounded-full',
+   259→   259→   259→                  isStale ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+   260→   260→   260→                )} />
+   261→   261→   261→                {isStale ? (
+   262→   262→   262→                  <span className="text-amber-700 font-medium">
+   263→   263→   263→                    Measurement delayed &middot; Last observation {detail?.last_check_at ? formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true }) : 'unknown'}
+   264→   264→   264→                  </span>
+   265→   265→   265→                ) : (
+   266→   266→   266→                  <span className="text-emerald-700 font-medium">
+   267→   267→   267→                    Measured {detail?.last_check_at ? formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true }) : 'recently'}
+   268→   268→   268→                  </span>
+   269→   269→   269→                )}
+   270→   270→   270→              </div>
+   271→   271→   271→              {detail?.endpoints && (
+   272→   272→   272→                <span className="text-[#A1A1AA]">
+   273→   273→   273→                  {detail.endpoints.length} endpoint{detail.endpoints.length !== 1 ? 's' : ''} monitored
+   274→   274→   274→                </span>
+   275→   275→   275→              )}
+   276→   276→   276→              {totalChecks !== null && (
+   277→   277→   277→                <span className="text-[#A1A1AA]">
+   278→   278→   278→                  {totalChecks.toLocaleString()} observations (24h)
+   279→   279→   279→                </span>
+   280→   280→   280→              )}
+   281→   281→   281→            </div>
+   282→   282→   282→          </div>
+   283→   283→   283→        </motion.div>
+   284→   284→   284→      </section>
+   285→   285→   285→
+   286→   286→   286→      <div className="border-t border-[#E4E4E7]" />
+   287→   287→   287→
+   288→   288→   288→      {/* ── RELIABILITY SUMMARY ── */}
+   289→   289→   289→      <section className="py-8">
+   290→   290→   290→        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   291→   291→   291→          Reliability
+   292→   292→   292→        </p>
+   293→   293→   293→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   294→   294→   294→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   295→   295→   295→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   296→   296→   296→              24h uptime
+   297→   297→   297→            </span>
+   298→   298→   298→            {uptimeValue !== null ? (
+   299→   299→   299→              <p className={cn(
+   300→   300→   300→                'text-[22px] font-semibold font-mono tracking-tight',
+   301→   301→   301→                uptimeValue >= 99.95 ? 'text-emerald-600' : uptimeValue >= 99 ? 'text-amber-600' : 'text-red-600'
+   302→   302→   302→              )}>
+   303→   303→   303→                {uptimeValue.toFixed(2)}%
+   304→   304→   304→              </p>
+   305→   305→   305→            ) : (
+   306→   306→   306→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   307→   307→   307→            )}
+   308→   308→   308→          </div>
+   309→   309→   309→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   310→   310→   310→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   311→   311→   311→              Median latency
+   312→   312→   312→            </span>
+   313→   313→   313→            {avgLatency !== null ? (
+   314→   314→   314→              <p className={cn(
+   315→   315→   315→                'text-[22px] font-semibold font-mono tracking-tight',
+   316→   316→   316→                avgLatency > 500 ? 'text-red-600' : avgLatency > 200 ? 'text-amber-600' : 'text-[#09090B]'
+   317→   317→   317→              )}>
+   318→   318→   318→                {Math.round(avgLatency)}<span className="text-[13px] font-normal text-[#A1A1AA] ml-1">ms</span>
+   319→   319→   319→              </p>
+   320→   320→   320→            ) : (
+   321→   321→   321→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   322→   322→   322→            )}
+   323→   323→   323→          </div>
+   324→   324→   324→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   325→   325→   325→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   326→   326→   326→              P95 latency
+   327→   327→   327→            </span>
+   328→   328→   328→            {latestP95 !== null ? (
+   329→   329→   329→              <p className={cn(
+   330→   330→   330→                'text-[22px] font-semibold font-mono tracking-tight',
+   331→   331→   331→                latestP95 > 500 ? 'text-red-600' : latestP95 > 300 ? 'text-amber-600' : 'text-[#09090B]'
+   332→   332→   332→              )}>
+   333→   333→   333→                {latestP95}<span className="text-[13px] font-normal text-[#A1A1AA] ml-1">ms</span>
+   334→   334→   334→              </p>
+   335→   335→   335→            ) : (
+   336→   336→   336→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   337→   337→   337→            )}
+   338→   338→   338→          </div>
+   339→   339→   339→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   340→   340→   340→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   341→   341→   341→              Observations
+   342→   342→   342→            </span>
+   343→   343→   343→            {totalChecks !== null ? (
+   344→   344→   344→              <p className="text-[22px] font-semibold font-mono tracking-tight text-[#09090B]">
+   345→   345→   345→                {totalChecks.toLocaleString()}
+   346→   346→   346→              </p>
+   347→   347→   347→            ) : (
+   348→   348→   348→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   349→   349→   349→            )}
+   350→   350→   350→          </div>
+   351→   351→   351→        </div>
+   352→   352→   352→      </section>
+   353→   353→   353→
+   354→   354→   354→      {/* ── LATENCY CHART ── */}
+   355→   355→   355→      <section className="pb-8">
+   356→   356→   356→        <div className="flex items-center justify-between mb-4">
+   357→   357→   357→          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA]">
+   358→   358→   358→            Response Latency
+   359→   359→   359→          </p>
+   360→   360→   360→          <div className="flex items-center gap-4 text-[11px] text-[#A1A1AA]">
+   361→   361→   361→            <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]" /> Median</div>
+   362→   362→   362→            <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]/25" /> P95</div>
+   363→   363→   363→          </div>
+   364→   364→   364→        </div>
+   365→   365→   365→        {chartData.length > 0 ? (
+   366→   366→   366→          <div className="rounded-lg border border-[#E4E4E7] p-5 bg-white">
+   367→   367→   367→            <div className="flex items-end gap-[2px] h-48">
+   368→   368→   368→              {chartData.map((d, idx) => {
+   369→   369→   369→                const avgH = (d.latency / maxLatency) * 100;
+   370→   370→   370→                const p95H = (d.p95 / maxLatency) * 100;
+   371→   371→   371→                return (
+   372→   372→   372→                  <div key={idx} className="flex-1 flex flex-col items-center group relative min-w-0">
+   373→   373→   373→                    {/* Tooltip */}
+   374→   374→   374→                    <div className="absolute -top-10 bg-[#09090B] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 font-mono">
+   375→   375→   375→                      Avg: {d.latency}ms / P95: {d.p95}ms
+   376→   376→   376→                    </div>
+   377→   377→   377→                    <div className="w-full flex gap-[1px] items-end">
+   378→   378→   378→                      <div
+   379→   379→   379→                        className="flex-1 rounded-t-sm bg-[#0891B2]/20 transition-all min-h-[1px]"
+   380→   380→   380→                        style={{ height: `${Math.max(p95H, 1)}%` }}
+   381→   381→   381→                      />
+   382→   382→   382→                      <div
+   383→   383→   383→                        className={cn(
+   384→   384→   384→                          'flex-1 rounded-t-sm transition-all min-h-[1px]',
+   385→   385→   385→                          d.latency > 500 ? 'bg-red-400' : d.latency > 300 ? 'bg-amber-400' : 'bg-[#0891B2]'
+   386→   386→   386→                        )}
+   387→   387→   387→                        style={{ height: `${Math.max(avgH, 1)}%` }}
+   388→   388→   388→                      />
+   389→   389→   389→                    </div>
+   390→   390→   390→                  </div>
+   391→   391→   391→                );
+   392→   392→   392→              })}
+   393→   393→   393→            </div>
+   394→   394→   394→            <div className="flex justify-between mt-2 text-[10px] text-[#A1A1AA] font-mono">
+   395→   395→   395→              {chartData.filter((_, i) => i % Math.max(Math.floor(chartData.length / 8), 1) === 0).map(d => (
+   396→   396→   396→                <span key={d.hour}>{d.hour}</span>
+   397→   397→   397→              ))}
+   398→   398→   398→            </div>
+   399→   399→   399→          </div>
+   400→   400→   400→        ) : (
+   401→   401→   401→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+   402→   402→   402→            <p className="text-sm text-[#52525B]">No latency data available yet.</p>
+   403→   403→   403→            <p className="text-xs text-[#A1A1AA] mt-1">
+   404→   404→   404→              Reliastra has not collected enough observations to display latency trends.
+   405→   405→   405→            </p>
+   406→   406→   406→          </div>
+   407→   407→   407→        )}
+   408→   408→   408→      </section>
+   409→   409→   409→
+   410→   410→   410→      {/* ── MONITORED ENDPOINTS ── */}
+   411→   411→   411→      {detail?.endpoints && detail.endpoints.length > 0 && (
+   412→   412→   412→        <section className="pb-8">
+   413→   413→   413→          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   414→   414→   414→            Monitored Endpoints
+   415→   415→   415→          </p>
+   416→   416→   416→          <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
+   417→   417→   417→            <table className="w-full text-sm">
+   418→   418→   418→              <thead>
+   419→   419→   419→                <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+   420→   420→   420→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Endpoint</th>
+   421→   421→   421→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Regions</th>
+   422→   422→   422→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Status</th>
+   423→   423→   423→                  <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden sm:table-cell">Last Check</th>
+   424→   424→   424→                </tr>
+   425→   425→   425→              </thead>
+   426→   426→   426→              <tbody>
+   427→   427→   427→                {detail.endpoints.map(ep => {
+   428→   428→   428→                  const epStatus = statusConfig[ep.health_status] || statusConfig.unknown;
+   429→   429→   429→                  return (
+   430→   430→   430→                    <tr key={ep.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors">
+   431→   431→   431→                      <td className="py-3 px-4 font-mono text-[12px] text-[#09090B] max-w-[300px] truncate">{ep.endpoint_url}</td>
+   432→   432→   432→                      <td className="py-3 px-4">
+   433→   433→   433→                        <div className="flex flex-wrap gap-1">
+   434→   434→   434→                          {ep.regions.map(r => (
+   435→   435→   435→                            <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F8F9FA] text-[#52525B] border border-[#F0F0F0]">
+   436→   436→   436→                              {r}
+   437→   437→   437→                            </span>
+   438→   438→   438→                          ))}
+   439→   439→   439→                        </div>
+   440→   440→   440→                      </td>
+   441→   441→   441→                      <td className="py-3 px-4">
+   442→   442→   442→                        <span className={cn(
+   443→   443→   443→                          'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-md border',
+   444→   444→   444→                          epStatus.bg, epStatus.textColor, epStatus.borderColor
+   445→   445→   445→                        )}>
+   446→   446→   446→                          <span className={cn('h-1.5 w-1.5 rounded-full', epStatus.dotColor)} />
+   447→   447→   447→                          {epStatus.label}
+   448→   448→   448→                        </span>
+   449→   449→   449→                      </td>
+   450→   450→   450→                      <td className="py-3 px-4 text-[12px] text-[#A1A1AA] font-mono text-right hidden sm:table-cell">
+   451→   451→   451→                        {ep.last_check_at ? formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true }) : 'N/A'}
+   452→   452→   452→                      </td>
+   453→   453→   453→                    </tr>
+   454→   454→   454→                  );
+   455→   455→   455→                })}
+   456→   456→   456→              </tbody>
+   457→   457→   457→            </table>
+   458→   458→   458→          </div>
+   459→   459→   459→        </section>
+   460→   460→   460→      )}
+   461→   461→   461→
+   462→   462→   462→      {/* ── INCIDENT HISTORY ── */}
+   463→   463→   463→      <section className="pb-8">
+   464→   464→   464→        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   465→   465→   465→          Incident History
+   466→   466→   466→        </p>
+   467→   467→   467→        {incidents && incidents.incidents.length > 0 ? (
+   468→   468→   468→          <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
+   469→   469→   469→            <table className="w-full text-sm">
+   470→   470→   470→              <thead>
+   471→   471→   471→                <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+   472→   472→   472→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Service</th>
+   473→   473→   473→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Severity</th>
+   474→   474→   474→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Status</th>
+   475→   475→   475→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden md:table-cell">Duration</th>
+   476→   476→   476→                  <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden sm:table-cell">Started</th>
+   477→   477→   477→                </tr>
+   478→   478→   478→              </thead>
+   479→   479→   479→              <tbody>
+   480→   480→   480→                {incidents.incidents.map((inc: VendorIncident) => {
+   481→   481→   481→                  const sev = severityConfig[inc.severity] || severityConfig.medium;
+   482→   482→   482→                  const isResolved = inc.status === 'resolved';
+   483→   483→   483→                  return (
+   484→   484→   484→                    <tr key={inc.incident_id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors">
+   485→   485→   485→                      <td className="py-3 px-4">
+   486→   486→   486→                        <div className="flex items-center gap-2">
+   487→   487→   487→                          <span className="text-[#09090B] font-medium">{inc.dependency_name}</span>
+   488→   488→   488→                        </div>
+   489→   489→   489→                      </td>
+   490→   490→   490→                      <td className="py-3 px-4">
+   491→   491→   491→                        <span className={cn('inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium', sev.color)}>
+   492→   492→   492→                          {sev.label}
+   493→   493→   493→                        </span>
+   494→   494→   494→                      </td>
+   495→   495→   495→                      <td className="py-3 px-4">
+   496→   496→   496→                        <div className="flex items-center gap-1.5">
+   497→   497→   497→                          <span className={cn('h-1.5 w-1.5 rounded-full', isResolved ? 'bg-emerald-500' : 'bg-amber-500')} />
+   498→   498→   498→                          <span className={cn('text-[12px] font-medium', isResolved ? 'text-emerald-700' : 'text-amber-700')}>
+   499→   499→   499→                            {isResolved ? 'Resolved' : inc.status}
+   500→   500→   500→                          </span>
+
+[showing lines 1-500 of 581; use offset=501 with limit to continue reading]

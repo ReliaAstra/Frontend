@@ -1,0 +1,1002 @@
+     1→   501→                "$ref": "#/components/schemas/UserUpdateRequest"
+     2→   502→              }
+     3→   503→            }
+     4→   504→          },
+     5→   505→          "required": true
+     6→   506→        },
+     7→   507→        "responses": {
+     8→   508→          "200": {
+     9→   509→            "description": "Successful Response",
+    10→   510→            "content": {
+    11→   511→              "application/json": {
+    12→   512→                "schema": {
+    13→   513→                  "$ref": "#/components/schemas/UserResponse"
+    14→   514→                }
+    15→   515→              }
+    16→   516→            }
+    17→   517→          },
+    18→   518→          "422": {
+    19→   519→            "description": "Validation Error",
+    20→   520→            "content": {
+    21→   521→              "application/json": {
+    22→   522→                "schema": {
+    23→   523→                  "$ref": "#/components/schemas/HTTPValidationError"
+    24→   524→                }
+    25→   525→              }
+    26→   526→            }
+    27→   527→          }
+    28→   528→        },
+    29→   529→        "security": [
+    30→   530→          {
+    31→   531→            "HTTPBearer": []
+    32→   532→          }
+    33→   533→        ]
+    34→   534→      }
+    35→   535→    },
+    36→   536→    "/v1/orgs": {
+    37→   537→      "get": {
+    38→   538→        "tags": [
+    39→   539→          "Organizations"
+    40→   540→        ],
+    41→   541→        "summary": "List My Organizations",
+    42→   542→        "operationId": "list_my_organizations_v1_orgs_get",
+    43→   543→        "responses": {
+    44→   544→          "200": {
+    45→   545→            "description": "Successful Response",
+    46→   546→            "content": {
+    47→   547→              "application/json": {
+    48→   548→                "schema": {
+    49→   549→                  "items": {
+    50→   550→                    "$ref": "#/components/schemas/OrganizationResponse"
+    51→   551→                  },
+    52→   552→                  "type": "array",
+    53→   553→                  "title": "Response List My Organizations V1 Orgs Get"
+    54→   554→                }
+    55→   555→              }
+    56→   556→            }
+    57→   557→          }
+    58→   558→        },
+    59→   559→        "security": [
+    60→   560→          {
+    61→   561→            "HTTPBearer": []
+    62→   562→          }
+    63→   563→        ]
+    64→   564→      },
+    65→   565→      "post": {
+    66→   566→        "tags": [
+    67→   567→          "Organizations"
+    68→   568→        ],
+    69→   569→        "summary": "Create Organization",
+    70→   570→        "operationId": "create_organization_v1_orgs_post",
+    71→   571→        "requestBody": {
+    72→   572→          "content": {
+    73→   573→            "application/json": {
+    74→   574→              "schema": {
+    75→   575→                "$ref": "#/components/schemas/OrganizationCreateRequest"
+    76→   576→              }
+    77→   577→            }
+    78→   578→          },
+    79→   579→          "required": true
+    80→   580→        },
+    81→   581→        "responses": {
+    82→   582→          "201": {
+    83→   583→            "description": "Successful Response",
+    84→   584→            "content": {
+    85→   585→              "application/json": {
+    86→   586→                "schema": {
+    87→   587→                  "$ref": "#/components/schemas/OrganizationResponse"
+    88→   588→                }
+    89→   589→              }
+    90→   590→            }
+    91→   591→          },
+    92→   592→          "422": {
+    93→   593→            "description": "Validation Error",
+    94→   594→            "content": {
+    95→   595→              "application/json": {
+    96→   596→                "schema": {
+    97→   597→                  "$ref": "#/components/schemas/HTTPValidationError"
+    98→   598→                }
+    99→   599→              }
+   100→   600→            }
+   101→   601→          }
+   102→   602→        },
+   103→   603→        "security": [
+   104→   604→          {
+   105→   605→            "HTTPBearer": []
+   106→   606→          }
+   107→   607→        ]
+   108→   608→      }
+   109→   609→    },
+   110→   610→    "/v1/orgs/{org_id}": {
+   111→   611→      "get": {
+   112→   612→        "tags": [
+   113→   613→          "Organizations"
+   114→   614→        ],
+   115→   615→        "summary": "Get Organization",
+   116→   616→        "operationId": "get_organization_v1_orgs__org_id__get",
+   117→   617→        "security": [
+   118→   618→          {
+   119→   619→            "HTTPBearer": []
+   120→   620→          }
+   121→   621→        ],
+   122→   622→        "parameters": [
+   123→   623→          {
+   124→   624→            "name": "org_id",
+   125→   625→            "in": "path",
+   126→   626→            "required": true,
+   127→   627→            "schema": {
+   128→   628→              "type": "string",
+   129→   629→              "format": "uuid",
+   130→   630→              "title": "Org Id"
+   131→   631→            }
+   132→   632→          }
+   133→   633→        ],
+   134→   634→        "responses": {
+   135→   635→          "200": {
+   136→   636→            "description": "Successful Response",
+   137→   637→            "content": {
+   138→   638→              "application/json": {
+   139→   639→                "schema": {
+   140→   640→                  "$ref": "#/components/schemas/OrganizationResponse"
+   141→   641→                }
+   142→   642→              }
+   143→   643→            }
+   144→   644→          },
+   145→   645→          "422": {
+   146→   646→            "description": "Validation Error",
+   147→   647→            "content": {
+   148→   648→              "application/json": {
+   149→   649→                "schema": {
+   150→   650→                  "$ref": "#/components/schemas/HTTPValidationError"
+   151→   651→                }
+   152→   652→              }
+   153→   653→            }
+   154→   654→          }
+   155→   655→        }
+   156→   656→      },
+   157→   657→      "patch": {
+   158→   658→        "tags": [
+   159→   659→          "Organizations"
+   160→   660→        ],
+   161→   661→        "summary": "Update Organization",
+   162→   662→        "operationId": "update_organization_v1_orgs__org_id__patch",
+   163→   663→        "security": [
+   164→   664→          {
+   165→   665→            "HTTPBearer": []
+   166→   666→          }
+   167→   667→        ],
+   168→   668→        "parameters": [
+   169→   669→          {
+   170→   670→            "name": "org_id",
+   171→   671→            "in": "path",
+   172→   672→            "required": true,
+   173→   673→            "schema": {
+   174→   674→              "type": "string",
+   175→   675→              "format": "uuid",
+   176→   676→              "title": "Org Id"
+   177→   677→            }
+   178→   678→          }
+   179→   679→        ],
+   180→   680→        "requestBody": {
+   181→   681→          "required": true,
+   182→   682→          "content": {
+   183→   683→            "application/json": {
+   184→   684→              "schema": {
+   185→   685→                "$ref": "#/components/schemas/OrganizationUpdateRequest"
+   186→   686→              }
+   187→   687→            }
+   188→   688→          }
+   189→   689→        },
+   190→   690→        "responses": {
+   191→   691→          "200": {
+   192→   692→            "description": "Successful Response",
+   193→   693→            "content": {
+   194→   694→              "application/json": {
+   195→   695→                "schema": {
+   196→   696→                  "$ref": "#/components/schemas/OrganizationResponse"
+   197→   697→                }
+   198→   698→              }
+   199→   699→            }
+   200→   700→          },
+   201→   701→          "422": {
+   202→   702→            "description": "Validation Error",
+   203→   703→            "content": {
+   204→   704→              "application/json": {
+   205→   705→                "schema": {
+   206→   706→                  "$ref": "#/components/schemas/HTTPValidationError"
+   207→   707→                }
+   208→   708→              }
+   209→   709→            }
+   210→   710→          }
+   211→   711→        }
+   212→   712→      }
+   213→   713→    },
+   214→   714→    "/v1/orgs/{org_id}/members": {
+   215→   715→      "get": {
+   216→   716→        "tags": [
+   217→   717→          "Organizations"
+   218→   718→        ],
+   219→   719→        "summary": "List Organization Members",
+   220→   720→        "operationId": "list_organization_members_v1_orgs__org_id__members_get",
+   221→   721→        "security": [
+   222→   722→          {
+   223→   723→            "HTTPBearer": []
+   224→   724→          }
+   225→   725→        ],
+   226→   726→        "parameters": [
+   227→   727→          {
+   228→   728→            "name": "org_id",
+   229→   729→            "in": "path",
+   230→   730→            "required": true,
+   231→   731→            "schema": {
+   232→   732→              "type": "string",
+   233→   733→              "format": "uuid",
+   234→   734→              "title": "Org Id"
+   235→   735→            }
+   236→   736→          }
+   237→   737→        ],
+   238→   738→        "responses": {
+   239→   739→          "200": {
+   240→   740→            "description": "Successful Response",
+   241→   741→            "content": {
+   242→   742→              "application/json": {
+   243→   743→                "schema": {
+   244→   744→                  "type": "array",
+   245→   745→                  "items": {
+   246→   746→                    "$ref": "#/components/schemas/OrganizationMemberResponse"
+   247→   747→                  },
+   248→   748→                  "title": "Response List Organization Members V1 Orgs  Org Id  Members Get"
+   249→   749→                }
+   250→   750→              }
+   251→   751→            }
+   252→   752→          },
+   253→   753→          "422": {
+   254→   754→            "description": "Validation Error",
+   255→   755→            "content": {
+   256→   756→              "application/json": {
+   257→   757→                "schema": {
+   258→   758→                  "$ref": "#/components/schemas/HTTPValidationError"
+   259→   759→                }
+   260→   760→              }
+   261→   761→            }
+   262→   762→          }
+   263→   763→        }
+   264→   764→      },
+   265→   765→      "post": {
+   266→   766→        "tags": [
+   267→   767→          "Organizations"
+   268→   768→        ],
+   269→   769→        "summary": "Invite Organization Member",
+   270→   770→        "operationId": "invite_organization_member_v1_orgs__org_id__members_post",
+   271→   771→        "security": [
+   272→   772→          {
+   273→   773→            "HTTPBearer": []
+   274→   774→          }
+   275→   775→        ],
+   276→   776→        "parameters": [
+   277→   777→          {
+   278→   778→            "name": "org_id",
+   279→   779→            "in": "path",
+   280→   780→            "required": true,
+   281→   781→            "schema": {
+   282→   782→              "type": "string",
+   283→   783→              "format": "uuid",
+   284→   784→              "title": "Org Id"
+   285→   785→            }
+   286→   786→          }
+   287→   787→        ],
+   288→   788→        "requestBody": {
+   289→   789→          "required": true,
+   290→   790→          "content": {
+   291→   791→            "application/json": {
+   292→   792→              "schema": {
+   293→   793→                "$ref": "#/components/schemas/OrganizationMemberInviteRequest"
+   294→   794→              }
+   295→   795→            }
+   296→   796→          }
+   297→   797→        },
+   298→   798→        "responses": {
+   299→   799→          "201": {
+   300→   800→            "description": "Successful Response",
+   301→   801→            "content": {
+   302→   802→              "application/json": {
+   303→   803→                "schema": {
+   304→   804→                  "$ref": "#/components/schemas/OrganizationMemberResponse"
+   305→   805→                }
+   306→   806→              }
+   307→   807→            }
+   308→   808→          },
+   309→   809→          "422": {
+   310→   810→            "description": "Validation Error",
+   311→   811→            "content": {
+   312→   812→              "application/json": {
+   313→   813→                "schema": {
+   314→   814→                  "$ref": "#/components/schemas/HTTPValidationError"
+   315→   815→                }
+   316→   816→              }
+   317→   817→            }
+   318→   818→          }
+   319→   819→        }
+   320→   820→      }
+   321→   821→    },
+   322→   822→    "/v1/orgs/{org_id}/members/{member_id}": {
+   323→   823→      "patch": {
+   324→   824→        "tags": [
+   325→   825→          "Organizations"
+   326→   826→        ],
+   327→   827→        "summary": "Change Organization Member Role",
+   328→   828→        "operationId": "change_organization_member_role_v1_orgs__org_id__members__member_id__patch",
+   329→   829→        "security": [
+   330→   830→          {
+   331→   831→            "HTTPBearer": []
+   332→   832→          }
+   333→   833→        ],
+   334→   834→        "parameters": [
+   335→   835→          {
+   336→   836→            "name": "org_id",
+   337→   837→            "in": "path",
+   338→   838→            "required": true,
+   339→   839→            "schema": {
+   340→   840→              "type": "string",
+   341→   841→              "format": "uuid",
+   342→   842→              "title": "Org Id"
+   343→   843→            }
+   344→   844→          },
+   345→   845→          {
+   346→   846→            "name": "member_id",
+   347→   847→            "in": "path",
+   348→   848→            "required": true,
+   349→   849→            "schema": {
+   350→   850→              "type": "string",
+   351→   851→              "format": "uuid",
+   352→   852→              "title": "Member Id"
+   353→   853→            }
+   354→   854→          }
+   355→   855→        ],
+   356→   856→        "requestBody": {
+   357→   857→          "required": true,
+   358→   858→          "content": {
+   359→   859→            "application/json": {
+   360→   860→              "schema": {
+   361→   861→                "$ref": "#/components/schemas/OrganizationMemberRoleUpdateRequest"
+   362→   862→              }
+   363→   863→            }
+   364→   864→          }
+   365→   865→        },
+   366→   866→        "responses": {
+   367→   867→          "200": {
+   368→   868→            "description": "Successful Response",
+   369→   869→            "content": {
+   370→   870→              "application/json": {
+   371→   871→                "schema": {
+   372→   872→                  "$ref": "#/components/schemas/OrganizationMemberResponse"
+   373→   873→                }
+   374→   874→              }
+   375→   875→            }
+   376→   876→          },
+   377→   877→          "422": {
+   378→   878→            "description": "Validation Error",
+   379→   879→            "content": {
+   380→   880→              "application/json": {
+   381→   881→                "schema": {
+   382→   882→                  "$ref": "#/components/schemas/HTTPValidationError"
+   383→   883→                }
+   384→   884→              }
+   385→   885→            }
+   386→   886→          }
+   387→   887→        }
+   388→   888→      },
+   389→   889→      "delete": {
+   390→   890→        "tags": [
+   391→   891→          "Organizations"
+   392→   892→        ],
+   393→   893→        "summary": "Remove Organization Member",
+   394→   894→        "operationId": "remove_organization_member_v1_orgs__org_id__members__member_id__delete",
+   395→   895→        "security": [
+   396→   896→          {
+   397→   897→            "HTTPBearer": []
+   398→   898→          }
+   399→   899→        ],
+   400→   900→        "parameters": [
+   401→   901→          {
+   402→   902→            "name": "org_id",
+   403→   903→            "in": "path",
+   404→   904→            "required": true,
+   405→   905→            "schema": {
+   406→   906→              "type": "string",
+   407→   907→              "format": "uuid",
+   408→   908→              "title": "Org Id"
+   409→   909→            }
+   410→   910→          },
+   411→   911→          {
+   412→   912→            "name": "member_id",
+   413→   913→            "in": "path",
+   414→   914→            "required": true,
+   415→   915→            "schema": {
+   416→   916→              "type": "string",
+   417→   917→              "format": "uuid",
+   418→   918→              "title": "Member Id"
+   419→   919→            }
+   420→   920→          }
+   421→   921→        ],
+   422→   922→        "responses": {
+   423→   923→          "204": {
+   424→   924→            "description": "Successful Response"
+   425→   925→          },
+   426→   926→          "422": {
+   427→   927→            "description": "Validation Error",
+   428→   928→            "content": {
+   429→   929→              "application/json": {
+   430→   930→                "schema": {
+   431→   931→                  "$ref": "#/components/schemas/HTTPValidationError"
+   432→   932→                }
+   433→   933→              }
+   434→   934→            }
+   435→   935→          }
+   436→   936→        }
+   437→   937→      }
+   438→   938→    },
+   439→   939→    "/v1/orgs/{org_id}/dependencies": {
+   440→   940→      "get": {
+   441→   941→        "tags": [
+   442→   942→          "Dependencies"
+   443→   943→        ],
+   444→   944→        "summary": "List Dependencies",
+   445→   945→        "operationId": "list_dependencies_v1_orgs__org_id__dependencies_get",
+   446→   946→        "security": [
+   447→   947→          {
+   448→   948→            "HTTPBearer": []
+   449→   949→          }
+   450→   950→        ],
+   451→   951→        "parameters": [
+   452→   952→          {
+   453→   953→            "name": "org_id",
+   454→   954→            "in": "path",
+   455→   955→            "required": true,
+   456→   956→            "schema": {
+   457→   957→              "type": "string",
+   458→   958→              "format": "uuid",
+   459→   959→              "title": "Org Id"
+   460→   960→            }
+   461→   961→          },
+   462→   962→          {
+   463→   963→            "name": "limit",
+   464→   964→            "in": "query",
+   465→   965→            "required": false,
+   466→   966→            "schema": {
+   467→   967→              "type": "integer",
+   468→   968→              "maximum": 100,
+   469→   969→              "minimum": 1,
+   470→   970→              "default": 50,
+   471→   971→              "title": "Limit"
+   472→   972→            }
+   473→   973→          }
+   474→   974→        ],
+   475→   975→        "responses": {
+   476→   976→          "200": {
+   477→   977→            "description": "Successful Response",
+   478→   978→            "content": {
+   479→   979→              "application/json": {
+   480→   980→                "schema": {
+   481→   981→                  "type": "array",
+   482→   982→                  "items": {
+   483→   983→                    "$ref": "#/components/schemas/DependencyResponse"
+   484→   984→                  },
+   485→   985→                  "title": "Response List Dependencies V1 Orgs  Org Id  Dependencies Get"
+   486→   986→                }
+   487→   987→              }
+   488→   988→            }
+   489→   989→          },
+   490→   990→          "422": {
+   491→   991→            "description": "Validation Error",
+   492→   992→            "content": {
+   493→   993→              "application/json": {
+   494→   994→                "schema": {
+   495→   995→                  "$ref": "#/components/schemas/HTTPValidationError"
+   496→   996→                }
+   497→   997→              }
+   498→   998→            }
+   499→   999→          }
+   500→  1000→        }
+   501→  1001→      },
+   502→  1002→      "post": {
+   503→  1003→        "tags": [
+   504→  1004→          "Dependencies"
+   505→  1005→        ],
+   506→  1006→        "summary": "Create Dependency",
+   507→  1007→        "operationId": "create_dependency_v1_orgs__org_id__dependencies_post",
+   508→  1008→        "security": [
+   509→  1009→          {
+   510→  1010→            "HTTPBearer": []
+   511→  1011→          }
+   512→  1012→        ],
+   513→  1013→        "parameters": [
+   514→  1014→          {
+   515→  1015→            "name": "org_id",
+   516→  1016→            "in": "path",
+   517→  1017→            "required": true,
+   518→  1018→            "schema": {
+   519→  1019→              "type": "string",
+   520→  1020→              "format": "uuid",
+   521→  1021→              "title": "Org Id"
+   522→  1022→            }
+   523→  1023→          }
+   524→  1024→        ],
+   525→  1025→        "requestBody": {
+   526→  1026→          "required": true,
+   527→  1027→          "content": {
+   528→  1028→            "application/json": {
+   529→  1029→              "schema": {
+   530→  1030→                "$ref": "#/components/schemas/DependencyCreateRequest"
+   531→  1031→              }
+   532→  1032→            }
+   533→  1033→          }
+   534→  1034→        },
+   535→  1035→        "responses": {
+   536→  1036→          "201": {
+   537→  1037→            "description": "Successful Response",
+   538→  1038→            "content": {
+   539→  1039→              "application/json": {
+   540→  1040→                "schema": {
+   541→  1041→                  "$ref": "#/components/schemas/DependencyResponse"
+   542→  1042→                }
+   543→  1043→              }
+   544→  1044→            }
+   545→  1045→          },
+   546→  1046→          "422": {
+   547→  1047→            "description": "Validation Error",
+   548→  1048→            "content": {
+   549→  1049→              "application/json": {
+   550→  1050→                "schema": {
+   551→  1051→                  "$ref": "#/components/schemas/HTTPValidationError"
+   552→  1052→                }
+   553→  1053→              }
+   554→  1054→            }
+   555→  1055→          }
+   556→  1056→        }
+   557→  1057→      }
+   558→  1058→    },
+   559→  1059→    "/v1/orgs/{org_id}/dependencies/{dep_id}": {
+   560→  1060→      "get": {
+   561→  1061→        "tags": [
+   562→  1062→          "Dependencies"
+   563→  1063→        ],
+   564→  1064→        "summary": "Get Dependency",
+   565→  1065→        "operationId": "get_dependency_v1_orgs__org_id__dependencies__dep_id__get",
+   566→  1066→        "security": [
+   567→  1067→          {
+   568→  1068→            "HTTPBearer": []
+   569→  1069→          }
+   570→  1070→        ],
+   571→  1071→        "parameters": [
+   572→  1072→          {
+   573→  1073→            "name": "org_id",
+   574→  1074→            "in": "path",
+   575→  1075→            "required": true,
+   576→  1076→            "schema": {
+   577→  1077→              "type": "string",
+   578→  1078→              "format": "uuid",
+   579→  1079→              "title": "Org Id"
+   580→  1080→            }
+   581→  1081→          },
+   582→  1082→          {
+   583→  1083→            "name": "dep_id",
+   584→  1084→            "in": "path",
+   585→  1085→            "required": true,
+   586→  1086→            "schema": {
+   587→  1087→              "type": "string",
+   588→  1088→              "format": "uuid",
+   589→  1089→              "title": "Dep Id"
+   590→  1090→            }
+   591→  1091→          }
+   592→  1092→        ],
+   593→  1093→        "responses": {
+   594→  1094→          "200": {
+   595→  1095→            "description": "Successful Response",
+   596→  1096→            "content": {
+   597→  1097→              "application/json": {
+   598→  1098→                "schema": {
+   599→  1099→                  "$ref": "#/components/schemas/DependencyResponse"
+   600→  1100→                }
+   601→  1101→              }
+   602→  1102→            }
+   603→  1103→          },
+   604→  1104→          "422": {
+   605→  1105→            "description": "Validation Error",
+   606→  1106→            "content": {
+   607→  1107→              "application/json": {
+   608→  1108→                "schema": {
+   609→  1109→                  "$ref": "#/components/schemas/HTTPValidationError"
+   610→  1110→                }
+   611→  1111→              }
+   612→  1112→            }
+   613→  1113→          }
+   614→  1114→        }
+   615→  1115→      },
+   616→  1116→      "patch": {
+   617→  1117→        "tags": [
+   618→  1118→          "Dependencies"
+   619→  1119→        ],
+   620→  1120→        "summary": "Update Dependency",
+   621→  1121→        "operationId": "update_dependency_v1_orgs__org_id__dependencies__dep_id__patch",
+   622→  1122→        "security": [
+   623→  1123→          {
+   624→  1124→            "HTTPBearer": []
+   625→  1125→          }
+   626→  1126→        ],
+   627→  1127→        "parameters": [
+   628→  1128→          {
+   629→  1129→            "name": "org_id",
+   630→  1130→            "in": "path",
+   631→  1131→            "required": true,
+   632→  1132→            "schema": {
+   633→  1133→              "type": "string",
+   634→  1134→              "format": "uuid",
+   635→  1135→              "title": "Org Id"
+   636→  1136→            }
+   637→  1137→          },
+   638→  1138→          {
+   639→  1139→            "name": "dep_id",
+   640→  1140→            "in": "path",
+   641→  1141→            "required": true,
+   642→  1142→            "schema": {
+   643→  1143→              "type": "string",
+   644→  1144→              "format": "uuid",
+   645→  1145→              "title": "Dep Id"
+   646→  1146→            }
+   647→  1147→          }
+   648→  1148→        ],
+   649→  1149→        "requestBody": {
+   650→  1150→          "required": true,
+   651→  1151→          "content": {
+   652→  1152→            "application/json": {
+   653→  1153→              "schema": {
+   654→  1154→                "$ref": "#/components/schemas/DependencyUpdateRequest"
+   655→  1155→              }
+   656→  1156→            }
+   657→  1157→          }
+   658→  1158→        },
+   659→  1159→        "responses": {
+   660→  1160→          "200": {
+   661→  1161→            "description": "Successful Response",
+   662→  1162→            "content": {
+   663→  1163→              "application/json": {
+   664→  1164→                "schema": {
+   665→  1165→                  "$ref": "#/components/schemas/DependencyResponse"
+   666→  1166→                }
+   667→  1167→              }
+   668→  1168→            }
+   669→  1169→          },
+   670→  1170→          "422": {
+   671→  1171→            "description": "Validation Error",
+   672→  1172→            "content": {
+   673→  1173→              "application/json": {
+   674→  1174→                "schema": {
+   675→  1175→                  "$ref": "#/components/schemas/HTTPValidationError"
+   676→  1176→                }
+   677→  1177→              }
+   678→  1178→            }
+   679→  1179→          }
+   680→  1180→        }
+   681→  1181→      },
+   682→  1182→      "delete": {
+   683→  1183→        "tags": [
+   684→  1184→          "Dependencies"
+   685→  1185→        ],
+   686→  1186→        "summary": "Delete Dependency",
+   687→  1187→        "operationId": "delete_dependency_v1_orgs__org_id__dependencies__dep_id__delete",
+   688→  1188→        "security": [
+   689→  1189→          {
+   690→  1190→            "HTTPBearer": []
+   691→  1191→          }
+   692→  1192→        ],
+   693→  1193→        "parameters": [
+   694→  1194→          {
+   695→  1195→            "name": "org_id",
+   696→  1196→            "in": "path",
+   697→  1197→            "required": true,
+   698→  1198→            "schema": {
+   699→  1199→              "type": "string",
+   700→  1200→              "format": "uuid",
+   701→  1201→              "title": "Org Id"
+   702→  1202→            }
+   703→  1203→          },
+   704→  1204→          {
+   705→  1205→            "name": "dep_id",
+   706→  1206→            "in": "path",
+   707→  1207→            "required": true,
+   708→  1208→            "schema": {
+   709→  1209→              "type": "string",
+   710→  1210→              "format": "uuid",
+   711→  1211→              "title": "Dep Id"
+   712→  1212→            }
+   713→  1213→          }
+   714→  1214→        ],
+   715→  1215→        "responses": {
+   716→  1216→          "204": {
+   717→  1217→            "description": "Successful Response"
+   718→  1218→          },
+   719→  1219→          "422": {
+   720→  1220→            "description": "Validation Error",
+   721→  1221→            "content": {
+   722→  1222→              "application/json": {
+   723→  1223→                "schema": {
+   724→  1224→                  "$ref": "#/components/schemas/HTTPValidationError"
+   725→  1225→                }
+   726→  1226→              }
+   727→  1227→            }
+   728→  1228→          }
+   729→  1229→        }
+   730→  1230→      }
+   731→  1231→    },
+   732→  1232→    "/v1/orgs/{org_id}/dependencies/{dep_id}/results": {
+   733→  1233→      "get": {
+   734→  1234→        "tags": [
+   735→  1235→          "Dependencies"
+   736→  1236→        ],
+   737→  1237→        "summary": "Get Dependency Check Results",
+   738→  1238→        "operationId": "get_dependency_check_results_v1_orgs__org_id__dependencies__dep_id__results_get",
+   739→  1239→        "security": [
+   740→  1240→          {
+   741→  1241→            "HTTPBearer": []
+   742→  1242→          }
+   743→  1243→        ],
+   744→  1244→        "parameters": [
+   745→  1245→          {
+   746→  1246→            "name": "org_id",
+   747→  1247→            "in": "path",
+   748→  1248→            "required": true,
+   749→  1249→            "schema": {
+   750→  1250→              "type": "string",
+   751→  1251→              "format": "uuid",
+   752→  1252→              "title": "Org Id"
+   753→  1253→            }
+   754→  1254→          },
+   755→  1255→          {
+   756→  1256→            "name": "dep_id",
+   757→  1257→            "in": "path",
+   758→  1258→            "required": true,
+   759→  1259→            "schema": {
+   760→  1260→              "type": "string",
+   761→  1261→              "format": "uuid",
+   762→  1262→              "title": "Dep Id"
+   763→  1263→            }
+   764→  1264→          },
+   765→  1265→          {
+   766→  1266→            "name": "limit",
+   767→  1267→            "in": "query",
+   768→  1268→            "required": false,
+   769→  1269→            "schema": {
+   770→  1270→              "type": "integer",
+   771→  1271→              "maximum": 100,
+   772→  1272→              "minimum": 1,
+   773→  1273→              "default": 50,
+   774→  1274→              "title": "Limit"
+   775→  1275→            }
+   776→  1276→          }
+   777→  1277→        ],
+   778→  1278→        "responses": {
+   779→  1279→          "200": {
+   780→  1280→            "description": "Successful Response",
+   781→  1281→            "content": {
+   782→  1282→              "application/json": {
+   783→  1283→                "schema": {
+   784→  1284→                  "type": "array",
+   785→  1285→                  "items": {
+   786→  1286→                    "$ref": "#/components/schemas/CheckResultResponse"
+   787→  1287→                  },
+   788→  1288→                  "title": "Response Get Dependency Check Results V1 Orgs  Org Id  Dependencies  Dep Id  Results Get"
+   789→  1289→                }
+   790→  1290→              }
+   791→  1291→            }
+   792→  1292→          },
+   793→  1293→          "422": {
+   794→  1294→            "description": "Validation Error",
+   795→  1295→            "content": {
+   796→  1296→              "application/json": {
+   797→  1297→                "schema": {
+   798→  1298→                  "$ref": "#/components/schemas/HTTPValidationError"
+   799→  1299→                }
+   800→  1300→              }
+   801→  1301→            }
+   802→  1302→          }
+   803→  1303→        }
+   804→  1304→      }
+   805→  1305→    },
+   806→  1306→    "/v1/orgs/{org_id}/dependencies/{dep_id}/history": {
+   807→  1307→      "get": {
+   808→  1308→        "tags": [
+   809→  1309→          "Dependencies"
+   810→  1310→        ],
+   811→  1311→        "summary": "Get Dependency History",
+   812→  1312→        "operationId": "get_dependency_history_v1_orgs__org_id__dependencies__dep_id__history_get",
+   813→  1313→        "security": [
+   814→  1314→          {
+   815→  1315→            "HTTPBearer": []
+   816→  1316→          }
+   817→  1317→        ],
+   818→  1318→        "parameters": [
+   819→  1319→          {
+   820→  1320→            "name": "org_id",
+   821→  1321→            "in": "path",
+   822→  1322→            "required": true,
+   823→  1323→            "schema": {
+   824→  1324→              "type": "string",
+   825→  1325→              "format": "uuid",
+   826→  1326→              "title": "Org Id"
+   827→  1327→            }
+   828→  1328→          },
+   829→  1329→          {
+   830→  1330→            "name": "dep_id",
+   831→  1331→            "in": "path",
+   832→  1332→            "required": true,
+   833→  1333→            "schema": {
+   834→  1334→              "type": "string",
+   835→  1335→              "format": "uuid",
+   836→  1336→              "title": "Dep Id"
+   837→  1337→            }
+   838→  1338→          }
+   839→  1339→        ],
+   840→  1340→        "responses": {
+   841→  1341→          "200": {
+   842→  1342→            "description": "Successful Response",
+   843→  1343→            "content": {
+   844→  1344→              "application/json": {
+   845→  1345→                "schema": {
+   846→  1346→                  "$ref": "#/components/schemas/DependencyHistoryResponse"
+   847→  1347→                }
+   848→  1348→              }
+   849→  1349→            }
+   850→  1350→          },
+   851→  1351→          "422": {
+   852→  1352→            "description": "Validation Error",
+   853→  1353→            "content": {
+   854→  1354→              "application/json": {
+   855→  1355→                "schema": {
+   856→  1356→                  "$ref": "#/components/schemas/HTTPValidationError"
+   857→  1357→                }
+   858→  1358→              }
+   859→  1359→            }
+   860→  1360→          }
+   861→  1361→        }
+   862→  1362→      }
+   863→  1363→    },
+   864→  1364→    "/v1/orgs/{org_id}/checks/recent": {
+   865→  1365→      "get": {
+   866→  1366→        "tags": [
+   867→  1367→          "Checks"
+   868→  1368→        ],
+   869→  1369→        "summary": "List Recent Check Results",
+   870→  1370→        "operationId": "list_recent_check_results_v1_orgs__org_id__checks_recent_get",
+   871→  1371→        "security": [
+   872→  1372→          {
+   873→  1373→            "HTTPBearer": []
+   874→  1374→          }
+   875→  1375→        ],
+   876→  1376→        "parameters": [
+   877→  1377→          {
+   878→  1378→            "name": "org_id",
+   879→  1379→            "in": "path",
+   880→  1380→            "required": true,
+   881→  1381→            "schema": {
+   882→  1382→              "type": "string",
+   883→  1383→              "format": "uuid",
+   884→  1384→              "title": "Org Id"
+   885→  1385→            }
+   886→  1386→          },
+   887→  1387→          {
+   888→  1388→            "name": "limit",
+   889→  1389→            "in": "query",
+   890→  1390→            "required": false,
+   891→  1391→            "schema": {
+   892→  1392→              "type": "integer",
+   893→  1393→              "maximum": 100,
+   894→  1394→              "minimum": 1,
+   895→  1395→              "default": 50,
+   896→  1396→              "title": "Limit"
+   897→  1397→            }
+   898→  1398→          }
+   899→  1399→        ],
+   900→  1400→        "responses": {
+   901→  1401→          "200": {
+   902→  1402→            "description": "Successful Response",
+   903→  1403→            "content": {
+   904→  1404→              "application/json": {
+   905→  1405→                "schema": {
+   906→  1406→                  "type": "array",
+   907→  1407→                  "items": {
+   908→  1408→                    "$ref": "#/components/schemas/CheckResultResponse"
+   909→  1409→                  },
+   910→  1410→                  "title": "Response List Recent Check Results V1 Orgs  Org Id  Checks Recent Get"
+   911→  1411→                }
+   912→  1412→              }
+   913→  1413→            }
+   914→  1414→          },
+   915→  1415→          "422": {
+   916→  1416→            "description": "Validation Error",
+   917→  1417→            "content": {
+   918→  1418→              "application/json": {
+   919→  1419→                "schema": {
+   920→  1420→                  "$ref": "#/components/schemas/HTTPValidationError"
+   921→  1421→                }
+   922→  1422→              }
+   923→  1423→            }
+   924→  1424→          }
+   925→  1425→        }
+   926→  1426→      }
+   927→  1427→    },
+   928→  1428→    "/v1/orgs/{org_id}/incidents": {
+   929→  1429→      "get": {
+   930→  1430→        "tags": [
+   931→  1431→          "Incidents"
+   932→  1432→        ],
+   933→  1433→        "summary": "List Incidents",
+   934→  1434→        "operationId": "list_incidents_v1_orgs__org_id__incidents_get",
+   935→  1435→        "security": [
+   936→  1436→          {
+   937→  1437→            "HTTPBearer": []
+   938→  1438→          }
+   939→  1439→        ],
+   940→  1440→        "parameters": [
+   941→  1441→          {
+   942→  1442→            "name": "org_id",
+   943→  1443→            "in": "path",
+   944→  1444→            "required": true,
+   945→  1445→            "schema": {
+   946→  1446→              "type": "string",
+   947→  1447→              "format": "uuid",
+   948→  1448→              "title": "Org Id"
+   949→  1449→            }
+   950→  1450→          },
+   951→  1451→          {
+   952→  1452→            "name": "limit",
+   953→  1453→            "in": "query",
+   954→  1454→            "required": false,
+   955→  1455→            "schema": {
+   956→  1456→              "type": "integer",
+   957→  1457→              "maximum": 100,
+   958→  1458→              "minimum": 1,
+   959→  1459→              "default": 50,
+   960→  1460→              "title": "Limit"
+   961→  1461→            }
+   962→  1462→          },
+   963→  1463→          {
+   964→  1464→            "name": "status",
+   965→  1465→            "in": "query",
+   966→  1466→            "required": false,
+   967→  1467→            "schema": {
+   968→  1468→              "anyOf": [
+   969→  1469→                {
+   970→  1470→                  "$ref": "#/components/schemas/IncidentStatus"
+   971→  1471→                },
+   972→  1472→                {
+   973→  1473→                  "type": "null"
+   974→  1474→                }
+   975→  1475→              ],
+   976→  1476→              "title": "Status"
+   977→  1477→            }
+   978→  1478→          },
+   979→  1479→          {
+   980→  1480→            "name": "severity",
+   981→  1481→            "in": "query",
+   982→  1482→            "required": false,
+   983→  1483→            "schema": {
+   984→  1484→              "anyOf": [
+   985→  1485→                {
+   986→  1486→                  "$ref": "#/components/schemas/IncidentSeverity"
+   987→  1487→                },
+   988→  1488→                {
+   989→  1489→                  "type": "null"
+   990→  1490→                }
+   991→  1491→              ],
+   992→  1492→              "title": "Severity"
+   993→  1493→            }
+   994→  1494→          }
+   995→  1495→        ],
+   996→  1496→        "responses": {
+   997→  1497→          "200": {
+   998→  1498→            "description": "Successful Response",
+   999→  1499→            "content": {
+  1000→  1500→              "application/json": {
+  1001→
+  1002→[showing lines 501-1500 of 7349; use offset=1501 with limit to continue reading]

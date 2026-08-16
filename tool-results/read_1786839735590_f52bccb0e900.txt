@@ -1,0 +1,1002 @@
+  3501→        "responses": {
+  3502→          "201": {
+  3503→            "description": "Successful Response",
+  3504→            "content": {
+  3505→              "application/json": {
+  3506→                "schema": {
+  3507→                  "$ref": "#/components/schemas/ClientResponse"
+  3508→                }
+  3509→              }
+  3510→            }
+  3511→          },
+  3512→          "422": {
+  3513→            "description": "Validation Error",
+  3514→            "content": {
+  3515→              "application/json": {
+  3516→                "schema": {
+  3517→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3518→                }
+  3519→              }
+  3520→            }
+  3521→          }
+  3522→        }
+  3523→      }
+  3524→    },
+  3525→    "/v1/orgs/{org_id}/clients/{client_id}/applications": {
+  3526→      "get": {
+  3527→        "tags": [
+  3528→          "Agency"
+  3529→        ],
+  3530→        "summary": "List Applications",
+  3531→        "operationId": "list_applications_v1_orgs__org_id__clients__client_id__applications_get",
+  3532→        "security": [
+  3533→          {
+  3534→            "HTTPBearer": []
+  3535→          }
+  3536→        ],
+  3537→        "parameters": [
+  3538→          {
+  3539→            "name": "org_id",
+  3540→            "in": "path",
+  3541→            "required": true,
+  3542→            "schema": {
+  3543→              "type": "string",
+  3544→              "format": "uuid",
+  3545→              "title": "Org Id"
+  3546→            }
+  3547→          },
+  3548→          {
+  3549→            "name": "client_id",
+  3550→            "in": "path",
+  3551→            "required": true,
+  3552→            "schema": {
+  3553→              "type": "string",
+  3554→              "format": "uuid",
+  3555→              "title": "Client Id"
+  3556→            }
+  3557→          }
+  3558→        ],
+  3559→        "responses": {
+  3560→          "200": {
+  3561→            "description": "Successful Response",
+  3562→            "content": {
+  3563→              "application/json": {
+  3564→                "schema": {
+  3565→                  "type": "array",
+  3566→                  "items": {
+  3567→                    "$ref": "#/components/schemas/ApplicationResponse"
+  3568→                  },
+  3569→                  "title": "Response List Applications V1 Orgs  Org Id  Clients  Client Id  Applications Get"
+  3570→                }
+  3571→              }
+  3572→            }
+  3573→          },
+  3574→          "422": {
+  3575→            "description": "Validation Error",
+  3576→            "content": {
+  3577→              "application/json": {
+  3578→                "schema": {
+  3579→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3580→                }
+  3581→              }
+  3582→            }
+  3583→          }
+  3584→        }
+  3585→      },
+  3586→      "post": {
+  3587→        "tags": [
+  3588→          "Agency"
+  3589→        ],
+  3590→        "summary": "Create Application",
+  3591→        "operationId": "create_application_v1_orgs__org_id__clients__client_id__applications_post",
+  3592→        "security": [
+  3593→          {
+  3594→            "HTTPBearer": []
+  3595→          }
+  3596→        ],
+  3597→        "parameters": [
+  3598→          {
+  3599→            "name": "org_id",
+  3600→            "in": "path",
+  3601→            "required": true,
+  3602→            "schema": {
+  3603→              "type": "string",
+  3604→              "format": "uuid",
+  3605→              "title": "Org Id"
+  3606→            }
+  3607→          },
+  3608→          {
+  3609→            "name": "client_id",
+  3610→            "in": "path",
+  3611→            "required": true,
+  3612→            "schema": {
+  3613→              "type": "string",
+  3614→              "format": "uuid",
+  3615→              "title": "Client Id"
+  3616→            }
+  3617→          }
+  3618→        ],
+  3619→        "requestBody": {
+  3620→          "required": true,
+  3621→          "content": {
+  3622→            "application/json": {
+  3623→              "schema": {
+  3624→                "$ref": "#/components/schemas/ApplicationCreateRequest"
+  3625→              }
+  3626→            }
+  3627→          }
+  3628→        },
+  3629→        "responses": {
+  3630→          "201": {
+  3631→            "description": "Successful Response",
+  3632→            "content": {
+  3633→              "application/json": {
+  3634→                "schema": {
+  3635→                  "$ref": "#/components/schemas/ApplicationResponse"
+  3636→                }
+  3637→              }
+  3638→            }
+  3639→          },
+  3640→          "422": {
+  3641→            "description": "Validation Error",
+  3642→            "content": {
+  3643→              "application/json": {
+  3644→                "schema": {
+  3645→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3646→                }
+  3647→              }
+  3648→            }
+  3649→          }
+  3650→        }
+  3651→      }
+  3652→    },
+  3653→    "/v1/orgs/{org_id}/ai-providers": {
+  3654→      "get": {
+  3655→        "tags": [
+  3656→          "AI Providers"
+  3657→        ],
+  3658→        "summary": "List Ai Providers",
+  3659→        "operationId": "list_ai_providers_v1_orgs__org_id__ai_providers_get",
+  3660→        "security": [
+  3661→          {
+  3662→            "HTTPBearer": []
+  3663→          }
+  3664→        ],
+  3665→        "parameters": [
+  3666→          {
+  3667→            "name": "org_id",
+  3668→            "in": "path",
+  3669→            "required": true,
+  3670→            "schema": {
+  3671→              "type": "string",
+  3672→              "format": "uuid",
+  3673→              "title": "Org Id"
+  3674→            }
+  3675→          }
+  3676→        ],
+  3677→        "responses": {
+  3678→          "200": {
+  3679→            "description": "Successful Response",
+  3680→            "content": {
+  3681→              "application/json": {
+  3682→                "schema": {
+  3683→                  "type": "array",
+  3684→                  "items": {
+  3685→                    "$ref": "#/components/schemas/AIProviderResponse"
+  3686→                  },
+  3687→                  "title": "Response List Ai Providers V1 Orgs  Org Id  Ai Providers Get"
+  3688→                }
+  3689→              }
+  3690→            }
+  3691→          },
+  3692→          "422": {
+  3693→            "description": "Validation Error",
+  3694→            "content": {
+  3695→              "application/json": {
+  3696→                "schema": {
+  3697→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3698→                }
+  3699→              }
+  3700→            }
+  3701→          }
+  3702→        }
+  3703→      },
+  3704→      "post": {
+  3705→        "tags": [
+  3706→          "AI Providers"
+  3707→        ],
+  3708→        "summary": "Create Ai Provider",
+  3709→        "operationId": "create_ai_provider_v1_orgs__org_id__ai_providers_post",
+  3710→        "security": [
+  3711→          {
+  3712→            "HTTPBearer": []
+  3713→          }
+  3714→        ],
+  3715→        "parameters": [
+  3716→          {
+  3717→            "name": "org_id",
+  3718→            "in": "path",
+  3719→            "required": true,
+  3720→            "schema": {
+  3721→              "type": "string",
+  3722→              "format": "uuid",
+  3723→              "title": "Org Id"
+  3724→            }
+  3725→          }
+  3726→        ],
+  3727→        "requestBody": {
+  3728→          "required": true,
+  3729→          "content": {
+  3730→            "application/json": {
+  3731→              "schema": {
+  3732→                "$ref": "#/components/schemas/AIProviderCreateRequest"
+  3733→              }
+  3734→            }
+  3735→          }
+  3736→        },
+  3737→        "responses": {
+  3738→          "201": {
+  3739→            "description": "Successful Response",
+  3740→            "content": {
+  3741→              "application/json": {
+  3742→                "schema": {
+  3743→                  "$ref": "#/components/schemas/AIProviderResponse"
+  3744→                }
+  3745→              }
+  3746→            }
+  3747→          },
+  3748→          "422": {
+  3749→            "description": "Validation Error",
+  3750→            "content": {
+  3751→              "application/json": {
+  3752→                "schema": {
+  3753→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3754→                }
+  3755→              }
+  3756→            }
+  3757→          }
+  3758→        }
+  3759→      }
+  3760→    },
+  3761→    "/v1/orgs/{org_id}/ai-providers/{provider_id}": {
+  3762→      "patch": {
+  3763→        "tags": [
+  3764→          "AI Providers"
+  3765→        ],
+  3766→        "summary": "Update Ai Provider",
+  3767→        "operationId": "update_ai_provider_v1_orgs__org_id__ai_providers__provider_id__patch",
+  3768→        "security": [
+  3769→          {
+  3770→            "HTTPBearer": []
+  3771→          }
+  3772→        ],
+  3773→        "parameters": [
+  3774→          {
+  3775→            "name": "org_id",
+  3776→            "in": "path",
+  3777→            "required": true,
+  3778→            "schema": {
+  3779→              "type": "string",
+  3780→              "format": "uuid",
+  3781→              "title": "Org Id"
+  3782→            }
+  3783→          },
+  3784→          {
+  3785→            "name": "provider_id",
+  3786→            "in": "path",
+  3787→            "required": true,
+  3788→            "schema": {
+  3789→              "type": "string",
+  3790→              "format": "uuid",
+  3791→              "title": "Provider Id"
+  3792→            }
+  3793→          }
+  3794→        ],
+  3795→        "requestBody": {
+  3796→          "required": true,
+  3797→          "content": {
+  3798→            "application/json": {
+  3799→              "schema": {
+  3800→                "$ref": "#/components/schemas/AIProviderUpdateRequest"
+  3801→              }
+  3802→            }
+  3803→          }
+  3804→        },
+  3805→        "responses": {
+  3806→          "200": {
+  3807→            "description": "Successful Response",
+  3808→            "content": {
+  3809→              "application/json": {
+  3810→                "schema": {
+  3811→                  "$ref": "#/components/schemas/AIProviderResponse"
+  3812→                }
+  3813→              }
+  3814→            }
+  3815→          },
+  3816→          "422": {
+  3817→            "description": "Validation Error",
+  3818→            "content": {
+  3819→              "application/json": {
+  3820→                "schema": {
+  3821→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3822→                }
+  3823→              }
+  3824→            }
+  3825→          }
+  3826→        }
+  3827→      },
+  3828→      "delete": {
+  3829→        "tags": [
+  3830→          "AI Providers"
+  3831→        ],
+  3832→        "summary": "Delete Ai Provider",
+  3833→        "operationId": "delete_ai_provider_v1_orgs__org_id__ai_providers__provider_id__delete",
+  3834→        "security": [
+  3835→          {
+  3836→            "HTTPBearer": []
+  3837→          }
+  3838→        ],
+  3839→        "parameters": [
+  3840→          {
+  3841→            "name": "org_id",
+  3842→            "in": "path",
+  3843→            "required": true,
+  3844→            "schema": {
+  3845→              "type": "string",
+  3846→              "format": "uuid",
+  3847→              "title": "Org Id"
+  3848→            }
+  3849→          },
+  3850→          {
+  3851→            "name": "provider_id",
+  3852→            "in": "path",
+  3853→            "required": true,
+  3854→            "schema": {
+  3855→              "type": "string",
+  3856→              "format": "uuid",
+  3857→              "title": "Provider Id"
+  3858→            }
+  3859→          }
+  3860→        ],
+  3861→        "responses": {
+  3862→          "204": {
+  3863→            "description": "Successful Response"
+  3864→          },
+  3865→          "422": {
+  3866→            "description": "Validation Error",
+  3867→            "content": {
+  3868→              "application/json": {
+  3869→                "schema": {
+  3870→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3871→                }
+  3872→              }
+  3873→            }
+  3874→          }
+  3875→        }
+  3876→      }
+  3877→    },
+  3878→    "/v1/verify/{verification_id}": {
+  3879→      "get": {
+  3880→        "tags": [
+  3881→          "Verification"
+  3882→        ],
+  3883→        "summary": "Verify Evidence",
+  3884→        "operationId": "verify_evidence_v1_verify__verification_id__get",
+  3885→        "parameters": [
+  3886→          {
+  3887→            "name": "verification_id",
+  3888→            "in": "path",
+  3889→            "required": true,
+  3890→            "schema": {
+  3891→              "type": "string",
+  3892→              "minLength": 1,
+  3893→              "maxLength": 64,
+  3894→              "pattern": "^[A-Za-z0-9_-]+$",
+  3895→              "title": "Verification Id"
+  3896→            }
+  3897→          }
+  3898→        ],
+  3899→        "responses": {
+  3900→          "200": {
+  3901→            "description": "Successful Response",
+  3902→            "content": {
+  3903→              "application/json": {
+  3904→                "schema": {
+  3905→                  "type": "object",
+  3906→                  "additionalProperties": true,
+  3907→                  "title": "Response Verify Evidence V1 Verify  Verification Id  Get"
+  3908→                }
+  3909→              }
+  3910→            }
+  3911→          },
+  3912→          "422": {
+  3913→            "description": "Validation Error",
+  3914→            "content": {
+  3915→              "application/json": {
+  3916→                "schema": {
+  3917→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3918→                }
+  3919→              }
+  3920→            }
+  3921→          }
+  3922→        }
+  3923→      }
+  3924→    },
+  3925→    "/health": {
+  3926→      "get": {
+  3927→        "tags": [
+  3928→          "Health"
+  3929→        ],
+  3930→        "summary": "Health Check",
+  3931→        "operationId": "health_check_health_get",
+  3932→        "responses": {
+  3933→          "200": {
+  3934→            "description": "Successful Response",
+  3935→            "content": {
+  3936→              "application/json": {
+  3937→                "schema": {
+  3938→                  "additionalProperties": true,
+  3939→                  "type": "object",
+  3940→                  "title": "Response Health Check Health Get"
+  3941→                }
+  3942→              }
+  3943→            }
+  3944→          }
+  3945→        }
+  3946→      }
+  3947→    }
+  3948→  },
+  3949→  "components": {
+  3950→    "schemas": {
+  3951→      "AIProviderCreateRequest": {
+  3952→        "properties": {
+  3953→          "name": {
+  3954→            "type": "string",
+  3955→            "maxLength": 100,
+  3956→            "minLength": 1,
+  3957→            "title": "Name"
+  3958→          },
+  3959→          "provider_type": {
+  3960→            "type": "string",
+  3961→            "enum": [
+  3962→              "openai_compatible",
+  3963→              "anthropic",
+  3964→              "google"
+  3965→            ],
+  3966→            "title": "Provider Type"
+  3967→          },
+  3968→          "endpoint_url": {
+  3969→            "type": "string",
+  3970→            "maxLength": 500,
+  3971→            "minLength": 1,
+  3972→            "title": "Endpoint Url"
+  3973→          },
+  3974→          "api_key": {
+  3975→            "anyOf": [
+  3976→              {
+  3977→                "type": "string",
+  3978→                "format": "password",
+  3979→                "writeOnly": true
+  3980→              },
+  3981→              {
+  3982→                "type": "null"
+  3983→              }
+  3984→            ],
+  3985→            "title": "Api Key"
+  3986→          },
+  3987→          "model_name": {
+  3988→            "type": "string",
+  3989→            "maxLength": 100,
+  3990→            "minLength": 1,
+  3991→            "title": "Model Name"
+  3992→          },
+  3993→          "is_default": {
+  3994→            "type": "boolean",
+  3995→            "title": "Is Default",
+  3996→            "default": false
+  3997→          },
+  3998→          "max_tokens": {
+  3999→            "type": "integer",
+  4000→            "maximum": 100000.0,
+  4001→            "minimum": 1.0,
+  4002→            "title": "Max Tokens",
+  4003→            "default": 4096
+  4004→          },
+  4005→          "temperature": {
+  4006→            "type": "number",
+  4007→            "maximum": 2.0,
+  4008→            "minimum": 0.0,
+  4009→            "title": "Temperature",
+  4010→            "default": 0.3
+  4011→          },
+  4012→          "enabled": {
+  4013→            "type": "boolean",
+  4014→            "title": "Enabled",
+  4015→            "default": true
+  4016→          }
+  4017→        },
+  4018→        "type": "object",
+  4019→        "required": [
+  4020→          "name",
+  4021→          "provider_type",
+  4022→          "endpoint_url",
+  4023→          "model_name"
+  4024→        ],
+  4025→        "title": "AIProviderCreateRequest"
+  4026→      },
+  4027→      "AIProviderResponse": {
+  4028→        "properties": {
+  4029→          "id": {
+  4030→            "type": "string",
+  4031→            "format": "uuid",
+  4032→            "title": "Id"
+  4033→          },
+  4034→          "organization_id": {
+  4035→            "type": "string",
+  4036→            "format": "uuid",
+  4037→            "title": "Organization Id"
+  4038→          },
+  4039→          "name": {
+  4040→            "type": "string",
+  4041→            "title": "Name"
+  4042→          },
+  4043→          "provider_type": {
+  4044→            "type": "string",
+  4045→            "title": "Provider Type"
+  4046→          },
+  4047→          "endpoint_url": {
+  4048→            "type": "string",
+  4049→            "title": "Endpoint Url"
+  4050→          },
+  4051→          "model_name": {
+  4052→            "type": "string",
+  4053→            "title": "Model Name"
+  4054→          },
+  4055→          "is_default": {
+  4056→            "type": "boolean",
+  4057→            "title": "Is Default"
+  4058→          },
+  4059→          "max_tokens": {
+  4060→            "type": "integer",
+  4061→            "title": "Max Tokens"
+  4062→          },
+  4063→          "temperature": {
+  4064→            "type": "number",
+  4065→            "title": "Temperature"
+  4066→          },
+  4067→          "enabled": {
+  4068→            "type": "boolean",
+  4069→            "title": "Enabled"
+  4070→          },
+  4071→          "has_api_key": {
+  4072→            "type": "boolean",
+  4073→            "title": "Has Api Key",
+  4074→            "default": false
+  4075→          },
+  4076→          "created_at": {
+  4077→            "type": "string",
+  4078→            "format": "date-time",
+  4079→            "title": "Created At"
+  4080→          },
+  4081→          "updated_at": {
+  4082→            "type": "string",
+  4083→            "format": "date-time",
+  4084→            "title": "Updated At"
+  4085→          }
+  4086→        },
+  4087→        "type": "object",
+  4088→        "required": [
+  4089→          "id",
+  4090→          "organization_id",
+  4091→          "name",
+  4092→          "provider_type",
+  4093→          "endpoint_url",
+  4094→          "model_name",
+  4095→          "is_default",
+  4096→          "max_tokens",
+  4097→          "temperature",
+  4098→          "enabled",
+  4099→          "created_at",
+  4100→          "updated_at"
+  4101→        ],
+  4102→        "title": "AIProviderResponse"
+  4103→      },
+  4104→      "AIProviderUpdateRequest": {
+  4105→        "properties": {
+  4106→          "name": {
+  4107→            "anyOf": [
+  4108→              {
+  4109→                "type": "string",
+  4110→                "maxLength": 100,
+  4111→                "minLength": 1
+  4112→              },
+  4113→              {
+  4114→                "type": "null"
+  4115→              }
+  4116→            ],
+  4117→            "title": "Name"
+  4118→          },
+  4119→          "provider_type": {
+  4120→            "anyOf": [
+  4121→              {
+  4122→                "type": "string",
+  4123→                "enum": [
+  4124→                  "openai_compatible",
+  4125→                  "anthropic",
+  4126→                  "google"
+  4127→                ]
+  4128→              },
+  4129→              {
+  4130→                "type": "null"
+  4131→              }
+  4132→            ],
+  4133→            "title": "Provider Type"
+  4134→          },
+  4135→          "endpoint_url": {
+  4136→            "anyOf": [
+  4137→              {
+  4138→                "type": "string",
+  4139→                "maxLength": 500
+  4140→              },
+  4141→              {
+  4142→                "type": "null"
+  4143→              }
+  4144→            ],
+  4145→            "title": "Endpoint Url"
+  4146→          },
+  4147→          "api_key": {
+  4148→            "anyOf": [
+  4149→              {
+  4150→                "type": "string",
+  4151→                "format": "password",
+  4152→                "writeOnly": true
+  4153→              },
+  4154→              {
+  4155→                "type": "null"
+  4156→              }
+  4157→            ],
+  4158→            "title": "Api Key"
+  4159→          },
+  4160→          "model_name": {
+  4161→            "anyOf": [
+  4162→              {
+  4163→                "type": "string",
+  4164→                "maxLength": 100,
+  4165→                "minLength": 1
+  4166→              },
+  4167→              {
+  4168→                "type": "null"
+  4169→              }
+  4170→            ],
+  4171→            "title": "Model Name"
+  4172→          },
+  4173→          "is_default": {
+  4174→            "anyOf": [
+  4175→              {
+  4176→                "type": "boolean"
+  4177→              },
+  4178→              {
+  4179→                "type": "null"
+  4180→              }
+  4181→            ],
+  4182→            "title": "Is Default"
+  4183→          },
+  4184→          "max_tokens": {
+  4185→            "anyOf": [
+  4186→              {
+  4187→                "type": "integer",
+  4188→                "maximum": 100000.0,
+  4189→                "minimum": 1.0
+  4190→              },
+  4191→              {
+  4192→                "type": "null"
+  4193→              }
+  4194→            ],
+  4195→            "title": "Max Tokens"
+  4196→          },
+  4197→          "temperature": {
+  4198→            "anyOf": [
+  4199→              {
+  4200→                "type": "number",
+  4201→                "maximum": 2.0,
+  4202→                "minimum": 0.0
+  4203→              },
+  4204→              {
+  4205→                "type": "null"
+  4206→              }
+  4207→            ],
+  4208→            "title": "Temperature"
+  4209→          },
+  4210→          "enabled": {
+  4211→            "anyOf": [
+  4212→              {
+  4213→                "type": "boolean"
+  4214→              },
+  4215→              {
+  4216→                "type": "null"
+  4217→              }
+  4218→            ],
+  4219→            "title": "Enabled"
+  4220→          }
+  4221→        },
+  4222→        "type": "object",
+  4223→        "title": "AIProviderUpdateRequest"
+  4224→      },
+  4225→      "AlertConfigCreateRequest": {
+  4226→        "properties": {
+  4227→          "channel_type": {
+  4228→            "$ref": "#/components/schemas/ChannelType"
+  4229→          },
+  4230→          "config": {
+  4231→            "additionalProperties": true,
+  4232→            "type": "object",
+  4233→            "title": "Config"
+  4234→          },
+  4235→          "is_active": {
+  4236→            "type": "boolean",
+  4237→            "title": "Is Active",
+  4238→            "default": true
+  4239→          }
+  4240→        },
+  4241→        "type": "object",
+  4242→        "required": [
+  4243→          "channel_type",
+  4244→          "config"
+  4245→        ],
+  4246→        "title": "AlertConfigCreateRequest"
+  4247→      },
+  4248→      "AlertConfigResponse": {
+  4249→        "properties": {
+  4250→          "id": {
+  4251→            "type": "string",
+  4252→            "format": "uuid",
+  4253→            "title": "Id"
+  4254→          },
+  4255→          "org_id": {
+  4256→            "type": "string",
+  4257→            "format": "uuid",
+  4258→            "title": "Org Id"
+  4259→          },
+  4260→          "channel_type": {
+  4261→            "type": "string",
+  4262→            "title": "Channel Type"
+  4263→          },
+  4264→          "is_active": {
+  4265→            "type": "boolean",
+  4266→            "title": "Is Active"
+  4267→          },
+  4268→          "created_at": {
+  4269→            "type": "string",
+  4270→            "format": "date-time",
+  4271→            "title": "Created At"
+  4272→          },
+  4273→          "updated_at": {
+  4274→            "type": "string",
+  4275→            "format": "date-time",
+  4276→            "title": "Updated At"
+  4277→          }
+  4278→        },
+  4279→        "type": "object",
+  4280→        "required": [
+  4281→          "id",
+  4282→          "org_id",
+  4283→          "channel_type",
+  4284→          "is_active",
+  4285→          "created_at",
+  4286→          "updated_at"
+  4287→        ],
+  4288→        "title": "AlertConfigResponse"
+  4289→      },
+  4290→      "AlertConfigUpdateRequest": {
+  4291→        "properties": {
+  4292→          "channel_type": {
+  4293→            "anyOf": [
+  4294→              {
+  4295→                "$ref": "#/components/schemas/ChannelType"
+  4296→              },
+  4297→              {
+  4298→                "type": "null"
+  4299→              }
+  4300→            ]
+  4301→          },
+  4302→          "config": {
+  4303→            "anyOf": [
+  4304→              {
+  4305→                "additionalProperties": true,
+  4306→                "type": "object"
+  4307→              },
+  4308→              {
+  4309→                "type": "null"
+  4310→              }
+  4311→            ],
+  4312→            "title": "Config"
+  4313→          },
+  4314→          "is_active": {
+  4315→            "anyOf": [
+  4316→              {
+  4317→                "type": "boolean"
+  4318→              },
+  4319→              {
+  4320→                "type": "null"
+  4321→              }
+  4322→            ],
+  4323→            "title": "Is Active"
+  4324→          }
+  4325→        },
+  4326→        "type": "object",
+  4327→        "title": "AlertConfigUpdateRequest"
+  4328→      },
+  4329→      "AlertTestRequest": {
+  4330→        "properties": {
+  4331→          "config_id": {
+  4332→            "type": "string",
+  4333→            "format": "uuid",
+  4334→            "title": "Config Id"
+  4335→          }
+  4336→        },
+  4337→        "type": "object",
+  4338→        "required": [
+  4339→          "config_id"
+  4340→        ],
+  4341→        "title": "AlertTestRequest"
+  4342→      },
+  4343→      "AlertTestResponse": {
+  4344→        "properties": {
+  4345→          "success": {
+  4346→            "type": "boolean",
+  4347→            "title": "Success"
+  4348→          },
+  4349→          "message": {
+  4350→            "type": "string",
+  4351→            "title": "Message"
+  4352→          }
+  4353→        },
+  4354→        "type": "object",
+  4355→        "required": [
+  4356→          "success",
+  4357→          "message"
+  4358→        ],
+  4359→        "title": "AlertTestResponse"
+  4360→      },
+  4361→      "ApiKeyCreateRequest": {
+  4362→        "properties": {
+  4363→          "name": {
+  4364→            "type": "string",
+  4365→            "title": "Name"
+  4366→          },
+  4367→          "scopes": {
+  4368→            "items": {
+  4369→              "type": "string"
+  4370→            },
+  4371→            "type": "array",
+  4372→            "title": "Scopes",
+  4373→            "default": [
+  4374→              "read:checks",
+  4375→              "write:dependencies",
+  4376→              "read:incidents",
+  4377→              "read:evidence"
+  4378→            ]
+  4379→          },
+  4380→          "expires_at": {
+  4381→            "anyOf": [
+  4382→              {
+  4383→                "type": "string",
+  4384→                "format": "date-time"
+  4385→              },
+  4386→              {
+  4387→                "type": "null"
+  4388→              }
+  4389→            ],
+  4390→            "title": "Expires At"
+  4391→          }
+  4392→        },
+  4393→        "type": "object",
+  4394→        "required": [
+  4395→          "name"
+  4396→        ],
+  4397→        "title": "ApiKeyCreateRequest"
+  4398→      },
+  4399→      "ApiKeyCreateResponse": {
+  4400→        "properties": {
+  4401→          "id": {
+  4402→            "type": "string",
+  4403→            "format": "uuid",
+  4404→            "title": "Id"
+  4405→          },
+  4406→          "org_id": {
+  4407→            "type": "string",
+  4408→            "format": "uuid",
+  4409→            "title": "Org Id"
+  4410→          },
+  4411→          "name": {
+  4412→            "type": "string",
+  4413→            "title": "Name"
+  4414→          },
+  4415→          "prefix": {
+  4416→            "type": "string",
+  4417→            "title": "Prefix"
+  4418→          },
+  4419→          "scopes": {
+  4420→            "items": {
+  4421→              "type": "string"
+  4422→            },
+  4423→            "type": "array",
+  4424→            "title": "Scopes"
+  4425→          },
+  4426→          "last_used_at": {
+  4427→            "anyOf": [
+  4428→              {
+  4429→                "type": "string",
+  4430→                "format": "date-time"
+  4431→              },
+  4432→              {
+  4433→                "type": "null"
+  4434→              }
+  4435→            ],
+  4436→            "title": "Last Used At"
+  4437→          },
+  4438→          "expires_at": {
+  4439→            "anyOf": [
+  4440→              {
+  4441→                "type": "string",
+  4442→                "format": "date-time"
+  4443→              },
+  4444→              {
+  4445→                "type": "null"
+  4446→              }
+  4447→            ],
+  4448→            "title": "Expires At"
+  4449→          },
+  4450→          "created_at": {
+  4451→            "type": "string",
+  4452→            "format": "date-time",
+  4453→            "title": "Created At"
+  4454→          },
+  4455→          "full_key": {
+  4456→            "type": "string",
+  4457→            "title": "Full Key"
+  4458→          }
+  4459→        },
+  4460→        "type": "object",
+  4461→        "required": [
+  4462→          "id",
+  4463→          "org_id",
+  4464→          "name",
+  4465→          "prefix",
+  4466→          "scopes",
+  4467→          "created_at",
+  4468→          "full_key"
+  4469→        ],
+  4470→        "title": "ApiKeyCreateResponse"
+  4471→      },
+  4472→      "ApiKeyResponse": {
+  4473→        "properties": {
+  4474→          "id": {
+  4475→            "type": "string",
+  4476→            "format": "uuid",
+  4477→            "title": "Id"
+  4478→          },
+  4479→          "org_id": {
+  4480→            "type": "string",
+  4481→            "format": "uuid",
+  4482→            "title": "Org Id"
+  4483→          },
+  4484→          "name": {
+  4485→            "type": "string",
+  4486→            "title": "Name"
+  4487→          },
+  4488→          "prefix": {
+  4489→            "type": "string",
+  4490→            "title": "Prefix"
+  4491→          },
+  4492→          "scopes": {
+  4493→            "items": {
+  4494→              "type": "string"
+  4495→            },
+  4496→            "type": "array",
+  4497→            "title": "Scopes"
+  4498→          },
+  4499→          "last_used_at": {
+  4500→            "anyOf": [
+
+[showing lines 3501-4500 of 7349; use offset=4501 with limit to continue reading]

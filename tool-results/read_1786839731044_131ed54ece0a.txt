@@ -1,0 +1,1002 @@
+  1501→                "schema": {
+  1502→                  "type": "array",
+  1503→                  "items": {
+  1504→                    "$ref": "#/components/schemas/IncidentResponse"
+  1505→                  },
+  1506→                  "title": "Response List Incidents V1 Orgs  Org Id  Incidents Get"
+  1507→                }
+  1508→              }
+  1509→            }
+  1510→          },
+  1511→          "422": {
+  1512→            "description": "Validation Error",
+  1513→            "content": {
+  1514→              "application/json": {
+  1515→                "schema": {
+  1516→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1517→                }
+  1518→              }
+  1519→            }
+  1520→          }
+  1521→        }
+  1522→      }
+  1523→    },
+  1524→    "/v1/orgs/{org_id}/incidents/{inc_id}": {
+  1525→      "get": {
+  1526→        "tags": [
+  1527→          "Incidents"
+  1528→        ],
+  1529→        "summary": "Get Incident",
+  1530→        "operationId": "get_incident_v1_orgs__org_id__incidents__inc_id__get",
+  1531→        "security": [
+  1532→          {
+  1533→            "HTTPBearer": []
+  1534→          }
+  1535→        ],
+  1536→        "parameters": [
+  1537→          {
+  1538→            "name": "org_id",
+  1539→            "in": "path",
+  1540→            "required": true,
+  1541→            "schema": {
+  1542→              "type": "string",
+  1543→              "format": "uuid",
+  1544→              "title": "Org Id"
+  1545→            }
+  1546→          },
+  1547→          {
+  1548→            "name": "inc_id",
+  1549→            "in": "path",
+  1550→            "required": true,
+  1551→            "schema": {
+  1552→              "type": "string",
+  1553→              "format": "uuid",
+  1554→              "title": "Inc Id"
+  1555→            }
+  1556→          }
+  1557→        ],
+  1558→        "responses": {
+  1559→          "200": {
+  1560→            "description": "Successful Response",
+  1561→            "content": {
+  1562→              "application/json": {
+  1563→                "schema": {
+  1564→                  "$ref": "#/components/schemas/IncidentDetailResponse"
+  1565→                }
+  1566→              }
+  1567→            }
+  1568→          },
+  1569→          "422": {
+  1570→            "description": "Validation Error",
+  1571→            "content": {
+  1572→              "application/json": {
+  1573→                "schema": {
+  1574→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1575→                }
+  1576→              }
+  1577→            }
+  1578→          }
+  1579→        }
+  1580→      },
+  1581→      "patch": {
+  1582→        "tags": [
+  1583→          "Incidents"
+  1584→        ],
+  1585→        "summary": "Update Incident",
+  1586→        "operationId": "update_incident_v1_orgs__org_id__incidents__inc_id__patch",
+  1587→        "security": [
+  1588→          {
+  1589→            "HTTPBearer": []
+  1590→          }
+  1591→        ],
+  1592→        "parameters": [
+  1593→          {
+  1594→            "name": "org_id",
+  1595→            "in": "path",
+  1596→            "required": true,
+  1597→            "schema": {
+  1598→              "type": "string",
+  1599→              "format": "uuid",
+  1600→              "title": "Org Id"
+  1601→            }
+  1602→          },
+  1603→          {
+  1604→            "name": "inc_id",
+  1605→            "in": "path",
+  1606→            "required": true,
+  1607→            "schema": {
+  1608→              "type": "string",
+  1609→              "format": "uuid",
+  1610→              "title": "Inc Id"
+  1611→            }
+  1612→          }
+  1613→        ],
+  1614→        "requestBody": {
+  1615→          "required": true,
+  1616→          "content": {
+  1617→            "application/json": {
+  1618→              "schema": {
+  1619→                "$ref": "#/components/schemas/IncidentUpdateRequest"
+  1620→              }
+  1621→            }
+  1622→          }
+  1623→        },
+  1624→        "responses": {
+  1625→          "200": {
+  1626→            "description": "Successful Response",
+  1627→            "content": {
+  1628→              "application/json": {
+  1629→                "schema": {
+  1630→                  "$ref": "#/components/schemas/IncidentResponse"
+  1631→                }
+  1632→              }
+  1633→            }
+  1634→          },
+  1635→          "422": {
+  1636→            "description": "Validation Error",
+  1637→            "content": {
+  1638→              "application/json": {
+  1639→                "schema": {
+  1640→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1641→                }
+  1642→              }
+  1643→            }
+  1644→          }
+  1645→        }
+  1646→      }
+  1647→    },
+  1648→    "/v1/orgs/{org_id}/incidents/{inc_id}/correlate": {
+  1649→      "post": {
+  1650→        "tags": [
+  1651→          "Incidents"
+  1652→        ],
+  1653→        "summary": "Correlate Incident",
+  1654→        "operationId": "correlate_incident_v1_orgs__org_id__incidents__inc_id__correlate_post",
+  1655→        "security": [
+  1656→          {
+  1657→            "HTTPBearer": []
+  1658→          }
+  1659→        ],
+  1660→        "parameters": [
+  1661→          {
+  1662→            "name": "org_id",
+  1663→            "in": "path",
+  1664→            "required": true,
+  1665→            "schema": {
+  1666→              "type": "string",
+  1667→              "format": "uuid",
+  1668→              "title": "Org Id"
+  1669→            }
+  1670→          },
+  1671→          {
+  1672→            "name": "inc_id",
+  1673→            "in": "path",
+  1674→            "required": true,
+  1675→            "schema": {
+  1676→              "type": "string",
+  1677→              "format": "uuid",
+  1678→              "title": "Inc Id"
+  1679→            }
+  1680→          }
+  1681→        ],
+  1682→        "requestBody": {
+  1683→          "required": true,
+  1684→          "content": {
+  1685→            "application/json": {
+  1686→              "schema": {
+  1687→                "$ref": "#/components/schemas/IncidentCorrelateRequest"
+  1688→              }
+  1689→            }
+  1690→          }
+  1691→        },
+  1692→        "responses": {
+  1693→          "201": {
+  1694→            "description": "Successful Response",
+  1695→            "content": {
+  1696→              "application/json": {
+  1697→                "schema": {
+  1698→                  "$ref": "#/components/schemas/IncidentCorrelationResponse"
+  1699→                }
+  1700→              }
+  1701→            }
+  1702→          },
+  1703→          "422": {
+  1704→            "description": "Validation Error",
+  1705→            "content": {
+  1706→              "application/json": {
+  1707→                "schema": {
+  1708→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1709→                }
+  1710→              }
+  1711→            }
+  1712→          }
+  1713→        }
+  1714→      }
+  1715→    },
+  1716→    "/v1/orgs/{org_id}/incidents/{inc_id}/evidence": {
+  1717→      "get": {
+  1718→        "tags": [
+  1719→          "Incidents"
+  1720→        ],
+  1721→        "summary": "Get Incident Evidence",
+  1722→        "operationId": "get_incident_evidence_v1_orgs__org_id__incidents__inc_id__evidence_get",
+  1723→        "security": [
+  1724→          {
+  1725→            "HTTPBearer": []
+  1726→          }
+  1727→        ],
+  1728→        "parameters": [
+  1729→          {
+  1730→            "name": "org_id",
+  1731→            "in": "path",
+  1732→            "required": true,
+  1733→            "schema": {
+  1734→              "type": "string",
+  1735→              "format": "uuid",
+  1736→              "title": "Org Id"
+  1737→            }
+  1738→          },
+  1739→          {
+  1740→            "name": "inc_id",
+  1741→            "in": "path",
+  1742→            "required": true,
+  1743→            "schema": {
+  1744→              "type": "string",
+  1745→              "format": "uuid",
+  1746→              "title": "Inc Id"
+  1747→            }
+  1748→          }
+  1749→        ],
+  1750→        "responses": {
+  1751→          "200": {
+  1752→            "description": "Successful Response",
+  1753→            "content": {
+  1754→              "application/json": {
+  1755→                "schema": {
+  1756→                  "$ref": "#/components/schemas/EvidenceReportResponse"
+  1757→                }
+  1758→              }
+  1759→            }
+  1760→          },
+  1761→          "422": {
+  1762→            "description": "Validation Error",
+  1763→            "content": {
+  1764→              "application/json": {
+  1765→                "schema": {
+  1766→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1767→                }
+  1768→              }
+  1769→            }
+  1770→          }
+  1771→        }
+  1772→      }
+  1773→    },
+  1774→    "/v1/orgs/{org_id}/evidence": {
+  1775→      "get": {
+  1776→        "tags": [
+  1777→          "Evidence"
+  1778→        ],
+  1779→        "summary": "List Evidence Reports",
+  1780→        "operationId": "list_evidence_reports_v1_orgs__org_id__evidence_get",
+  1781→        "security": [
+  1782→          {
+  1783→            "HTTPBearer": []
+  1784→          }
+  1785→        ],
+  1786→        "parameters": [
+  1787→          {
+  1788→            "name": "org_id",
+  1789→            "in": "path",
+  1790→            "required": true,
+  1791→            "schema": {
+  1792→              "type": "string",
+  1793→              "format": "uuid",
+  1794→              "title": "Org Id"
+  1795→            }
+  1796→          },
+  1797→          {
+  1798→            "name": "limit",
+  1799→            "in": "query",
+  1800→            "required": false,
+  1801→            "schema": {
+  1802→              "type": "integer",
+  1803→              "maximum": 100,
+  1804→              "minimum": 1,
+  1805→              "default": 50,
+  1806→              "title": "Limit"
+  1807→            }
+  1808→          }
+  1809→        ],
+  1810→        "responses": {
+  1811→          "200": {
+  1812→            "description": "Successful Response",
+  1813→            "content": {
+  1814→              "application/json": {
+  1815→                "schema": {
+  1816→                  "type": "array",
+  1817→                  "items": {
+  1818→                    "$ref": "#/components/schemas/EvidenceReportResponse"
+  1819→                  },
+  1820→                  "title": "Response List Evidence Reports V1 Orgs  Org Id  Evidence Get"
+  1821→                }
+  1822→              }
+  1823→            }
+  1824→          },
+  1825→          "422": {
+  1826→            "description": "Validation Error",
+  1827→            "content": {
+  1828→              "application/json": {
+  1829→                "schema": {
+  1830→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1831→                }
+  1832→              }
+  1833→            }
+  1834→          }
+  1835→        }
+  1836→      }
+  1837→    },
+  1838→    "/v1/orgs/{org_id}/evidence/{report_id}": {
+  1839→      "get": {
+  1840→        "tags": [
+  1841→          "Evidence"
+  1842→        ],
+  1843→        "summary": "Get Evidence Report",
+  1844→        "operationId": "get_evidence_report_v1_orgs__org_id__evidence__report_id__get",
+  1845→        "security": [
+  1846→          {
+  1847→            "HTTPBearer": []
+  1848→          }
+  1849→        ],
+  1850→        "parameters": [
+  1851→          {
+  1852→            "name": "org_id",
+  1853→            "in": "path",
+  1854→            "required": true,
+  1855→            "schema": {
+  1856→              "type": "string",
+  1857→              "format": "uuid",
+  1858→              "title": "Org Id"
+  1859→            }
+  1860→          },
+  1861→          {
+  1862→            "name": "report_id",
+  1863→            "in": "path",
+  1864→            "required": true,
+  1865→            "schema": {
+  1866→              "type": "string",
+  1867→              "format": "uuid",
+  1868→              "title": "Report Id"
+  1869→            }
+  1870→          }
+  1871→        ],
+  1872→        "responses": {
+  1873→          "200": {
+  1874→            "description": "Successful Response",
+  1875→            "content": {
+  1876→              "application/json": {
+  1877→                "schema": {
+  1878→                  "$ref": "#/components/schemas/EvidenceReportDownloadResponse"
+  1879→                }
+  1880→              }
+  1881→            }
+  1882→          },
+  1883→          "422": {
+  1884→            "description": "Validation Error",
+  1885→            "content": {
+  1886→              "application/json": {
+  1887→                "schema": {
+  1888→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1889→                }
+  1890→              }
+  1891→            }
+  1892→          }
+  1893→        }
+  1894→      }
+  1895→    },
+  1896→    "/v1/orgs/{org_id}/evidence/{report_id}/regenerate": {
+  1897→      "post": {
+  1898→        "tags": [
+  1899→          "Evidence"
+  1900→        ],
+  1901→        "summary": "Regenerate Evidence Report",
+  1902→        "operationId": "regenerate_evidence_report_v1_orgs__org_id__evidence__report_id__regenerate_post",
+  1903→        "security": [
+  1904→          {
+  1905→            "HTTPBearer": []
+  1906→          }
+  1907→        ],
+  1908→        "parameters": [
+  1909→          {
+  1910→            "name": "org_id",
+  1911→            "in": "path",
+  1912→            "required": true,
+  1913→            "schema": {
+  1914→              "type": "string",
+  1915→              "format": "uuid",
+  1916→              "title": "Org Id"
+  1917→            }
+  1918→          },
+  1919→          {
+  1920→            "name": "report_id",
+  1921→            "in": "path",
+  1922→            "required": true,
+  1923→            "schema": {
+  1924→              "type": "string",
+  1925→              "format": "uuid",
+  1926→              "title": "Report Id"
+  1927→            }
+  1928→          }
+  1929→        ],
+  1930→        "responses": {
+  1931→          "201": {
+  1932→            "description": "Successful Response",
+  1933→            "content": {
+  1934→              "application/json": {
+  1935→                "schema": {
+  1936→                  "$ref": "#/components/schemas/EvidenceReportResponse"
+  1937→                }
+  1938→              }
+  1939→            }
+  1940→          },
+  1941→          "422": {
+  1942→            "description": "Validation Error",
+  1943→            "content": {
+  1944→              "application/json": {
+  1945→                "schema": {
+  1946→                  "$ref": "#/components/schemas/HTTPValidationError"
+  1947→                }
+  1948→              }
+  1949→            }
+  1950→          }
+  1951→        }
+  1952→      }
+  1953→    },
+  1954→    "/v1/public/vendors": {
+  1955→      "get": {
+  1956→        "tags": [
+  1957→          "Public Vendors"
+  1958→        ],
+  1959→        "summary": "List Public Vendors",
+  1960→        "operationId": "list_public_vendors_v1_public_vendors_get",
+  1961→        "responses": {
+  1962→          "200": {
+  1963→            "description": "Successful Response",
+  1964→            "content": {
+  1965→              "application/json": {
+  1966→                "schema": {
+  1967→                  "items": {
+  1968→                    "$ref": "#/components/schemas/VendorResponse"
+  1969→                  },
+  1970→                  "type": "array",
+  1971→                  "title": "Response List Public Vendors V1 Public Vendors Get"
+  1972→                }
+  1973→              }
+  1974→            }
+  1975→          }
+  1976→        }
+  1977→      }
+  1978→    },
+  1979→    "/v1/public/vendors/{vendor_name}": {
+  1980→      "get": {
+  1981→        "tags": [
+  1982→          "Public Vendors"
+  1983→        ],
+  1984→        "summary": "Get Public Vendor",
+  1985→        "operationId": "get_public_vendor_v1_public_vendors__vendor_name__get",
+  1986→        "parameters": [
+  1987→          {
+  1988→            "name": "vendor_name",
+  1989→            "in": "path",
+  1990→            "required": true,
+  1991→            "schema": {
+  1992→              "type": "string",
+  1993→              "title": "Vendor Name"
+  1994→            }
+  1995→          }
+  1996→        ],
+  1997→        "responses": {
+  1998→          "200": {
+  1999→            "description": "Successful Response",
+  2000→            "content": {
+  2001→              "application/json": {
+  2002→                "schema": {
+  2003→                  "$ref": "#/components/schemas/VendorDetailResponse"
+  2004→                }
+  2005→              }
+  2006→            }
+  2007→          },
+  2008→          "422": {
+  2009→            "description": "Validation Error",
+  2010→            "content": {
+  2011→              "application/json": {
+  2012→                "schema": {
+  2013→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2014→                }
+  2015→              }
+  2016→            }
+  2017→          }
+  2018→        }
+  2019→      }
+  2020→    },
+  2021→    "/v1/public/vendors/{vendor_name}/history": {
+  2022→      "get": {
+  2023→        "tags": [
+  2024→          "Public Vendors"
+  2025→        ],
+  2026→        "summary": "Get Public Vendor History",
+  2027→        "operationId": "get_public_vendor_history_v1_public_vendors__vendor_name__history_get",
+  2028→        "parameters": [
+  2029→          {
+  2030→            "name": "vendor_name",
+  2031→            "in": "path",
+  2032→            "required": true,
+  2033→            "schema": {
+  2034→              "type": "string",
+  2035→              "title": "Vendor Name"
+  2036→            }
+  2037→          }
+  2038→        ],
+  2039→        "responses": {
+  2040→          "200": {
+  2041→            "description": "Successful Response",
+  2042→            "content": {
+  2043→              "application/json": {
+  2044→                "schema": {
+  2045→                  "$ref": "#/components/schemas/VendorHistoryResponse"
+  2046→                }
+  2047→              }
+  2048→            }
+  2049→          },
+  2050→          "422": {
+  2051→            "description": "Validation Error",
+  2052→            "content": {
+  2053→              "application/json": {
+  2054→                "schema": {
+  2055→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2056→                }
+  2057→              }
+  2058→            }
+  2059→          }
+  2060→        }
+  2061→      }
+  2062→    },
+  2063→    "/v1/public/vendors/{vendor_name}/metrics": {
+  2064→      "get": {
+  2065→        "tags": [
+  2066→          "Public Vendors"
+  2067→        ],
+  2068→        "summary": "Get Vendor Metrics",
+  2069→        "operationId": "get_vendor_metrics_v1_public_vendors__vendor_name__metrics_get",
+  2070→        "parameters": [
+  2071→          {
+  2072→            "name": "vendor_name",
+  2073→            "in": "path",
+  2074→            "required": true,
+  2075→            "schema": {
+  2076→              "type": "string",
+  2077→              "title": "Vendor Name"
+  2078→            }
+  2079→          },
+  2080→          {
+  2081→            "name": "window",
+  2082→            "in": "query",
+  2083→            "required": false,
+  2084→            "schema": {
+  2085→              "anyOf": [
+  2086→                {
+  2087→                  "type": "string"
+  2088→                },
+  2089→                {
+  2090→                  "type": "null"
+  2091→                }
+  2092→              ],
+  2093→              "title": "Window"
+  2094→            }
+  2095→          }
+  2096→        ],
+  2097→        "responses": {
+  2098→          "200": {
+  2099→            "description": "Successful Response",
+  2100→            "content": {
+  2101→              "application/json": {
+  2102→                "schema": {
+  2103→                  "$ref": "#/components/schemas/VendorMetricsResponse"
+  2104→                }
+  2105→              }
+  2106→            }
+  2107→          },
+  2108→          "422": {
+  2109→            "description": "Validation Error",
+  2110→            "content": {
+  2111→              "application/json": {
+  2112→                "schema": {
+  2113→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2114→                }
+  2115→              }
+  2116→            }
+  2117→          }
+  2118→        }
+  2119→      }
+  2120→    },
+  2121→    "/v1/public/vendors/{vendor_name}/timeline": {
+  2122→      "get": {
+  2123→        "tags": [
+  2124→          "Public Vendors"
+  2125→        ],
+  2126→        "summary": "Get Vendor Timeline",
+  2127→        "operationId": "get_vendor_timeline_v1_public_vendors__vendor_name__timeline_get",
+  2128→        "parameters": [
+  2129→          {
+  2130→            "name": "vendor_name",
+  2131→            "in": "path",
+  2132→            "required": true,
+  2133→            "schema": {
+  2134→              "type": "string",
+  2135→              "title": "Vendor Name"
+  2136→            }
+  2137→          },
+  2138→          {
+  2139→            "name": "window",
+  2140→            "in": "query",
+  2141→            "required": false,
+  2142→            "schema": {
+  2143→              "type": "string",
+  2144→              "default": "24h",
+  2145→              "title": "Window"
+  2146→            }
+  2147→          },
+  2148→          {
+  2149→            "name": "resolution",
+  2150→            "in": "query",
+  2151→            "required": false,
+  2152→            "schema": {
+  2153→              "type": "string",
+  2154→              "default": "auto",
+  2155→              "title": "Resolution"
+  2156→            }
+  2157→          },
+  2158→          {
+  2159→            "name": "region",
+  2160→            "in": "query",
+  2161→            "required": false,
+  2162→            "schema": {
+  2163→              "anyOf": [
+  2164→                {
+  2165→                  "type": "string"
+  2166→                },
+  2167→                {
+  2168→                  "type": "null"
+  2169→                }
+  2170→              ],
+  2171→              "title": "Region"
+  2172→            }
+  2173→          }
+  2174→        ],
+  2175→        "responses": {
+  2176→          "200": {
+  2177→            "description": "Successful Response",
+  2178→            "content": {
+  2179→              "application/json": {
+  2180→                "schema": {
+  2181→                  "$ref": "#/components/schemas/VendorTimelineResponse"
+  2182→                }
+  2183→              }
+  2184→            }
+  2185→          },
+  2186→          "422": {
+  2187→            "description": "Validation Error",
+  2188→            "content": {
+  2189→              "application/json": {
+  2190→                "schema": {
+  2191→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2192→                }
+  2193→              }
+  2194→            }
+  2195→          }
+  2196→        }
+  2197→      }
+  2198→    },
+  2199→    "/v1/public/vendors/{vendor_name}/incidents": {
+  2200→      "get": {
+  2201→        "tags": [
+  2202→          "Public Vendors"
+  2203→        ],
+  2204→        "summary": "Get Vendor Incidents",
+  2205→        "operationId": "get_vendor_incidents_v1_public_vendors__vendor_name__incidents_get",
+  2206→        "parameters": [
+  2207→          {
+  2208→            "name": "vendor_name",
+  2209→            "in": "path",
+  2210→            "required": true,
+  2211→            "schema": {
+  2212→              "type": "string",
+  2213→              "title": "Vendor Name"
+  2214→            }
+  2215→          },
+  2216→          {
+  2217→            "name": "limit",
+  2218→            "in": "query",
+  2219→            "required": false,
+  2220→            "schema": {
+  2221→              "type": "integer",
+  2222→              "maximum": 100,
+  2223→              "minimum": 1,
+  2224→              "default": 50,
+  2225→              "title": "Limit"
+  2226→            }
+  2227→          }
+  2228→        ],
+  2229→        "responses": {
+  2230→          "200": {
+  2231→            "description": "Successful Response",
+  2232→            "content": {
+  2233→              "application/json": {
+  2234→                "schema": {
+  2235→                  "$ref": "#/components/schemas/VendorIncidentsResponse"
+  2236→                }
+  2237→              }
+  2238→            }
+  2239→          },
+  2240→          "422": {
+  2241→            "description": "Validation Error",
+  2242→            "content": {
+  2243→              "application/json": {
+  2244→                "schema": {
+  2245→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2246→                }
+  2247→              }
+  2248→            }
+  2249→          }
+  2250→        }
+  2251→      }
+  2252→    },
+  2253→    "/v1/orgs/{org_id}/notifications/configs": {
+  2254→      "get": {
+  2255→        "tags": [
+  2256→          "Notifications"
+  2257→        ],
+  2258→        "summary": "List Alert Configs",
+  2259→        "operationId": "list_alert_configs_v1_orgs__org_id__notifications_configs_get",
+  2260→        "security": [
+  2261→          {
+  2262→            "HTTPBearer": []
+  2263→          }
+  2264→        ],
+  2265→        "parameters": [
+  2266→          {
+  2267→            "name": "org_id",
+  2268→            "in": "path",
+  2269→            "required": true,
+  2270→            "schema": {
+  2271→              "type": "string",
+  2272→              "format": "uuid",
+  2273→              "title": "Org Id"
+  2274→            }
+  2275→          }
+  2276→        ],
+  2277→        "responses": {
+  2278→          "200": {
+  2279→            "description": "Successful Response",
+  2280→            "content": {
+  2281→              "application/json": {
+  2282→                "schema": {
+  2283→                  "type": "array",
+  2284→                  "items": {
+  2285→                    "$ref": "#/components/schemas/AlertConfigResponse"
+  2286→                  },
+  2287→                  "title": "Response List Alert Configs V1 Orgs  Org Id  Notifications Configs Get"
+  2288→                }
+  2289→              }
+  2290→            }
+  2291→          },
+  2292→          "422": {
+  2293→            "description": "Validation Error",
+  2294→            "content": {
+  2295→              "application/json": {
+  2296→                "schema": {
+  2297→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2298→                }
+  2299→              }
+  2300→            }
+  2301→          }
+  2302→        }
+  2303→      },
+  2304→      "post": {
+  2305→        "tags": [
+  2306→          "Notifications"
+  2307→        ],
+  2308→        "summary": "Create Alert Config",
+  2309→        "operationId": "create_alert_config_v1_orgs__org_id__notifications_configs_post",
+  2310→        "security": [
+  2311→          {
+  2312→            "HTTPBearer": []
+  2313→          }
+  2314→        ],
+  2315→        "parameters": [
+  2316→          {
+  2317→            "name": "org_id",
+  2318→            "in": "path",
+  2319→            "required": true,
+  2320→            "schema": {
+  2321→              "type": "string",
+  2322→              "format": "uuid",
+  2323→              "title": "Org Id"
+  2324→            }
+  2325→          }
+  2326→        ],
+  2327→        "requestBody": {
+  2328→          "required": true,
+  2329→          "content": {
+  2330→            "application/json": {
+  2331→              "schema": {
+  2332→                "$ref": "#/components/schemas/AlertConfigCreateRequest"
+  2333→              }
+  2334→            }
+  2335→          }
+  2336→        },
+  2337→        "responses": {
+  2338→          "201": {
+  2339→            "description": "Successful Response",
+  2340→            "content": {
+  2341→              "application/json": {
+  2342→                "schema": {
+  2343→                  "$ref": "#/components/schemas/AlertConfigResponse"
+  2344→                }
+  2345→              }
+  2346→            }
+  2347→          },
+  2348→          "422": {
+  2349→            "description": "Validation Error",
+  2350→            "content": {
+  2351→              "application/json": {
+  2352→                "schema": {
+  2353→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2354→                }
+  2355→              }
+  2356→            }
+  2357→          }
+  2358→        }
+  2359→      }
+  2360→    },
+  2361→    "/v1/orgs/{org_id}/notifications/configs/{config_id}": {
+  2362→      "get": {
+  2363→        "tags": [
+  2364→          "Notifications"
+  2365→        ],
+  2366→        "summary": "Get Alert Config",
+  2367→        "operationId": "get_alert_config_v1_orgs__org_id__notifications_configs__config_id__get",
+  2368→        "security": [
+  2369→          {
+  2370→            "HTTPBearer": []
+  2371→          }
+  2372→        ],
+  2373→        "parameters": [
+  2374→          {
+  2375→            "name": "org_id",
+  2376→            "in": "path",
+  2377→            "required": true,
+  2378→            "schema": {
+  2379→              "type": "string",
+  2380→              "format": "uuid",
+  2381→              "title": "Org Id"
+  2382→            }
+  2383→          },
+  2384→          {
+  2385→            "name": "config_id",
+  2386→            "in": "path",
+  2387→            "required": true,
+  2388→            "schema": {
+  2389→              "type": "string",
+  2390→              "format": "uuid",
+  2391→              "title": "Config Id"
+  2392→            }
+  2393→          }
+  2394→        ],
+  2395→        "responses": {
+  2396→          "200": {
+  2397→            "description": "Successful Response",
+  2398→            "content": {
+  2399→              "application/json": {
+  2400→                "schema": {
+  2401→                  "$ref": "#/components/schemas/AlertConfigResponse"
+  2402→                }
+  2403→              }
+  2404→            }
+  2405→          },
+  2406→          "422": {
+  2407→            "description": "Validation Error",
+  2408→            "content": {
+  2409→              "application/json": {
+  2410→                "schema": {
+  2411→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2412→                }
+  2413→              }
+  2414→            }
+  2415→          }
+  2416→        }
+  2417→      },
+  2418→      "patch": {
+  2419→        "tags": [
+  2420→          "Notifications"
+  2421→        ],
+  2422→        "summary": "Update Alert Config",
+  2423→        "operationId": "update_alert_config_v1_orgs__org_id__notifications_configs__config_id__patch",
+  2424→        "security": [
+  2425→          {
+  2426→            "HTTPBearer": []
+  2427→          }
+  2428→        ],
+  2429→        "parameters": [
+  2430→          {
+  2431→            "name": "org_id",
+  2432→            "in": "path",
+  2433→            "required": true,
+  2434→            "schema": {
+  2435→              "type": "string",
+  2436→              "format": "uuid",
+  2437→              "title": "Org Id"
+  2438→            }
+  2439→          },
+  2440→          {
+  2441→            "name": "config_id",
+  2442→            "in": "path",
+  2443→            "required": true,
+  2444→            "schema": {
+  2445→              "type": "string",
+  2446→              "format": "uuid",
+  2447→              "title": "Config Id"
+  2448→            }
+  2449→          }
+  2450→        ],
+  2451→        "requestBody": {
+  2452→          "required": true,
+  2453→          "content": {
+  2454→            "application/json": {
+  2455→              "schema": {
+  2456→                "$ref": "#/components/schemas/AlertConfigUpdateRequest"
+  2457→              }
+  2458→            }
+  2459→          }
+  2460→        },
+  2461→        "responses": {
+  2462→          "200": {
+  2463→            "description": "Successful Response",
+  2464→            "content": {
+  2465→              "application/json": {
+  2466→                "schema": {
+  2467→                  "$ref": "#/components/schemas/AlertConfigResponse"
+  2468→                }
+  2469→              }
+  2470→            }
+  2471→          },
+  2472→          "422": {
+  2473→            "description": "Validation Error",
+  2474→            "content": {
+  2475→              "application/json": {
+  2476→                "schema": {
+  2477→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2478→                }
+  2479→              }
+  2480→            }
+  2481→          }
+  2482→        }
+  2483→      },
+  2484→      "delete": {
+  2485→        "tags": [
+  2486→          "Notifications"
+  2487→        ],
+  2488→        "summary": "Delete Alert Config",
+  2489→        "operationId": "delete_alert_config_v1_orgs__org_id__notifications_configs__config_id__delete",
+  2490→        "security": [
+  2491→          {
+  2492→            "HTTPBearer": []
+  2493→          }
+  2494→        ],
+  2495→        "parameters": [
+  2496→          {
+  2497→            "name": "org_id",
+  2498→            "in": "path",
+  2499→            "required": true,
+  2500→            "schema": {
+
+[showing lines 1501-2500 of 7349; use offset=2501 with limit to continue reading]

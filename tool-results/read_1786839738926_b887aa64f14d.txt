@@ -1,0 +1,1002 @@
+  5501→        },
+  5502→        "type": "object",
+  5503→        "required": [
+  5504→          "total_spots",
+  5505→          "spots_taken",
+  5506→          "spots_remaining",
+  5507→          "founding_discount_pct",
+  5508→          "eligible_plans",
+  5509→          "plan_discounts"
+  5510→        ],
+  5511→        "title": "FoundingSpotsResponse"
+  5512→      },
+  5513→      "GitHubAuthRequest": {
+  5514→        "properties": {
+  5515→          "code": {
+  5516→            "type": "string",
+  5517→            "title": "Code"
+  5518→          },
+  5519→          "state": {
+  5520→            "anyOf": [
+  5521→              {
+  5522→                "type": "string"
+  5523→              },
+  5524→              {
+  5525→                "type": "null"
+  5526→              }
+  5527→            ],
+  5528→            "title": "State"
+  5529→          }
+  5530→        },
+  5531→        "type": "object",
+  5532→        "required": [
+  5533→          "code"
+  5534→        ],
+  5535→        "title": "GitHubAuthRequest"
+  5536→      },
+  5537→      "GitHubAuthUrlResponse": {
+  5538→        "properties": {
+  5539→          "authorization_url": {
+  5540→            "type": "string",
+  5541→            "title": "Authorization Url"
+  5542→          },
+  5543→          "state": {
+  5544→            "type": "string",
+  5545→            "title": "State"
+  5546→          }
+  5547→        },
+  5548→        "type": "object",
+  5549→        "required": [
+  5550→          "authorization_url",
+  5551→          "state"
+  5552→        ],
+  5553→        "title": "GitHubAuthUrlResponse"
+  5554→      },
+  5555→      "GoogleAuthRequest": {
+  5556→        "properties": {
+  5557→          "code": {
+  5558→            "type": "string",
+  5559→            "title": "Code"
+  5560→          },
+  5561→          "state": {
+  5562→            "anyOf": [
+  5563→              {
+  5564→                "type": "string"
+  5565→              },
+  5566→              {
+  5567→                "type": "null"
+  5568→              }
+  5569→            ],
+  5570→            "title": "State"
+  5571→          }
+  5572→        },
+  5573→        "type": "object",
+  5574→        "required": [
+  5575→          "code"
+  5576→        ],
+  5577→        "title": "GoogleAuthRequest"
+  5578→      },
+  5579→      "GoogleAuthUrlResponse": {
+  5580→        "properties": {
+  5581→          "authorization_url": {
+  5582→            "type": "string",
+  5583→            "title": "Authorization Url"
+  5584→          },
+  5585→          "state": {
+  5586→            "type": "string",
+  5587→            "title": "State"
+  5588→          }
+  5589→        },
+  5590→        "type": "object",
+  5591→        "required": [
+  5592→          "authorization_url",
+  5593→          "state"
+  5594→        ],
+  5595→        "title": "GoogleAuthUrlResponse"
+  5596→      },
+  5597→      "HTTPValidationError": {
+  5598→        "properties": {
+  5599→          "detail": {
+  5600→            "items": {
+  5601→              "$ref": "#/components/schemas/ValidationError"
+  5602→            },
+  5603→            "type": "array",
+  5604→            "title": "Detail"
+  5605→          }
+  5606→        },
+  5607→        "type": "object",
+  5608→        "title": "HTTPValidationError"
+  5609→      },
+  5610→      "HttpMethod": {
+  5611→        "type": "string",
+  5612→        "enum": [
+  5613→          "GET",
+  5614→          "HEAD",
+  5615→          "POST"
+  5616→        ],
+  5617→        "title": "HttpMethod"
+  5618→      },
+  5619→      "IncidentCorrelateRequest": {
+  5620→        "properties": {
+  5621→          "correlated_dependency_id": {
+  5622→            "type": "string",
+  5623→            "format": "uuid",
+  5624→            "title": "Correlated Dependency Id"
+  5625→          },
+  5626→          "correlation_confidence": {
+  5627→            "type": "number",
+  5628→            "title": "Correlation Confidence",
+  5629→            "default": 1.0
+  5630→          },
+  5631→          "correlation_method": {
+  5632→            "$ref": "#/components/schemas/CorrelationMethod",
+  5633→            "default": "manual"
+  5634→          },
+  5635→          "time_window_seconds": {
+  5636→            "type": "integer",
+  5637→            "title": "Time Window Seconds",
+  5638→            "default": 300
+  5639→          }
+  5640→        },
+  5641→        "type": "object",
+  5642→        "required": [
+  5643→          "correlated_dependency_id"
+  5644→        ],
+  5645→        "title": "IncidentCorrelateRequest"
+  5646→      },
+  5647→      "IncidentCorrelationResponse": {
+  5648→        "properties": {
+  5649→          "id": {
+  5650→            "type": "string",
+  5651→            "format": "uuid",
+  5652→            "title": "Id"
+  5653→          },
+  5654→          "incident_id": {
+  5655→            "type": "string",
+  5656→            "format": "uuid",
+  5657→            "title": "Incident Id"
+  5658→          },
+  5659→          "correlated_dependency_id": {
+  5660→            "type": "string",
+  5661→            "format": "uuid",
+  5662→            "title": "Correlated Dependency Id"
+  5663→          },
+  5664→          "correlation_confidence": {
+  5665→            "type": "number",
+  5666→            "title": "Correlation Confidence"
+  5667→          },
+  5668→          "time_window_seconds": {
+  5669→            "type": "integer",
+  5670→            "title": "Time Window Seconds"
+  5671→          },
+  5672→          "correlation_method": {
+  5673→            "type": "string",
+  5674→            "title": "Correlation Method"
+  5675→          },
+  5676→          "created_at": {
+  5677→            "type": "string",
+  5678→            "format": "date-time",
+  5679→            "title": "Created At"
+  5680→          }
+  5681→        },
+  5682→        "type": "object",
+  5683→        "required": [
+  5684→          "id",
+  5685→          "incident_id",
+  5686→          "correlated_dependency_id",
+  5687→          "correlation_confidence",
+  5688→          "time_window_seconds",
+  5689→          "correlation_method",
+  5690→          "created_at"
+  5691→        ],
+  5692→        "title": "IncidentCorrelationResponse"
+  5693→      },
+  5694→      "IncidentDetailResponse": {
+  5695→        "properties": {
+  5696→          "id": {
+  5697→            "type": "string",
+  5698→            "format": "uuid",
+  5699→            "title": "Id"
+  5700→          },
+  5701→          "org_id": {
+  5702→            "type": "string",
+  5703→            "format": "uuid",
+  5704→            "title": "Org Id"
+  5705→          },
+  5706→          "dependency_id": {
+  5707→            "type": "string",
+  5708→            "format": "uuid",
+  5709→            "title": "Dependency Id"
+  5710→          },
+  5711→          "started_at": {
+  5712→            "type": "string",
+  5713→            "format": "date-time",
+  5714→            "title": "Started At"
+  5715→          },
+  5716→          "resolved_at": {
+  5717→            "anyOf": [
+  5718→              {
+  5719→                "type": "string",
+  5720→                "format": "date-time"
+  5721→              },
+  5722→              {
+  5723→                "type": "null"
+  5724→              }
+  5725→            ],
+  5726→            "title": "Resolved At"
+  5727→          },
+  5728→          "severity": {
+  5729→            "type": "string",
+  5730→            "title": "Severity"
+  5731→          },
+  5732→          "status": {
+  5733→            "type": "string",
+  5734→            "title": "Status"
+  5735→          },
+  5736→          "root_cause": {
+  5737→            "type": "string",
+  5738→            "title": "Root Cause"
+  5739→          },
+  5740→          "description": {
+  5741→            "anyOf": [
+  5742→              {
+  5743→                "type": "string"
+  5744→              },
+  5745→              {
+  5746→                "type": "null"
+  5747→              }
+  5748→            ],
+  5749→            "title": "Description"
+  5750→          },
+  5751→          "evidence_report_id": {
+  5752→            "anyOf": [
+  5753→              {
+  5754→                "type": "string",
+  5755→                "format": "uuid"
+  5756→              },
+  5757→              {
+  5758→                "type": "null"
+  5759→              }
+  5760→            ],
+  5761→            "title": "Evidence Report Id"
+  5762→          },
+  5763→          "created_at": {
+  5764→            "type": "string",
+  5765→            "format": "date-time",
+  5766→            "title": "Created At"
+  5767→          },
+  5768→          "updated_at": {
+  5769→            "type": "string",
+  5770→            "format": "date-time",
+  5771→            "title": "Updated At"
+  5772→          },
+  5773→          "correlations": {
+  5774→            "items": {
+  5775→              "$ref": "#/components/schemas/IncidentCorrelationResponse"
+  5776→            },
+  5777→            "type": "array",
+  5778→            "title": "Correlations",
+  5779→            "default": []
+  5780→          }
+  5781→        },
+  5782→        "type": "object",
+  5783→        "required": [
+  5784→          "id",
+  5785→          "org_id",
+  5786→          "dependency_id",
+  5787→          "started_at",
+  5788→          "severity",
+  5789→          "status",
+  5790→          "root_cause",
+  5791→          "created_at",
+  5792→          "updated_at"
+  5793→        ],
+  5794→        "title": "IncidentDetailResponse"
+  5795→      },
+  5796→      "IncidentResponse": {
+  5797→        "properties": {
+  5798→          "id": {
+  5799→            "type": "string",
+  5800→            "format": "uuid",
+  5801→            "title": "Id"
+  5802→          },
+  5803→          "org_id": {
+  5804→            "type": "string",
+  5805→            "format": "uuid",
+  5806→            "title": "Org Id"
+  5807→          },
+  5808→          "dependency_id": {
+  5809→            "type": "string",
+  5810→            "format": "uuid",
+  5811→            "title": "Dependency Id"
+  5812→          },
+  5813→          "started_at": {
+  5814→            "type": "string",
+  5815→            "format": "date-time",
+  5816→            "title": "Started At"
+  5817→          },
+  5818→          "resolved_at": {
+  5819→            "anyOf": [
+  5820→              {
+  5821→                "type": "string",
+  5822→                "format": "date-time"
+  5823→              },
+  5824→              {
+  5825→                "type": "null"
+  5826→              }
+  5827→            ],
+  5828→            "title": "Resolved At"
+  5829→          },
+  5830→          "severity": {
+  5831→            "type": "string",
+  5832→            "title": "Severity"
+  5833→          },
+  5834→          "status": {
+  5835→            "type": "string",
+  5836→            "title": "Status"
+  5837→          },
+  5838→          "root_cause": {
+  5839→            "type": "string",
+  5840→            "title": "Root Cause"
+  5841→          },
+  5842→          "description": {
+  5843→            "anyOf": [
+  5844→              {
+  5845→                "type": "string"
+  5846→              },
+  5847→              {
+  5848→                "type": "null"
+  5849→              }
+  5850→            ],
+  5851→            "title": "Description"
+  5852→          },
+  5853→          "evidence_report_id": {
+  5854→            "anyOf": [
+  5855→              {
+  5856→                "type": "string",
+  5857→                "format": "uuid"
+  5858→              },
+  5859→              {
+  5860→                "type": "null"
+  5861→              }
+  5862→            ],
+  5863→            "title": "Evidence Report Id"
+  5864→          },
+  5865→          "created_at": {
+  5866→            "type": "string",
+  5867→            "format": "date-time",
+  5868→            "title": "Created At"
+  5869→          },
+  5870→          "updated_at": {
+  5871→            "type": "string",
+  5872→            "format": "date-time",
+  5873→            "title": "Updated At"
+  5874→          }
+  5875→        },
+  5876→        "type": "object",
+  5877→        "required": [
+  5878→          "id",
+  5879→          "org_id",
+  5880→          "dependency_id",
+  5881→          "started_at",
+  5882→          "severity",
+  5883→          "status",
+  5884→          "root_cause",
+  5885→          "created_at",
+  5886→          "updated_at"
+  5887→        ],
+  5888→        "title": "IncidentResponse"
+  5889→      },
+  5890→      "IncidentSeverity": {
+  5891→        "type": "string",
+  5892→        "enum": [
+  5893→          "critical",
+  5894→          "major",
+  5895→          "minor"
+  5896→        ],
+  5897→        "title": "IncidentSeverity"
+  5898→      },
+  5899→      "IncidentStatus": {
+  5900→        "type": "string",
+  5901→        "enum": [
+  5902→          "open",
+  5903→          "resolved",
+  5904→          "false_positive"
+  5905→        ],
+  5906→        "title": "IncidentStatus"
+  5907→      },
+  5908→      "IncidentUpdateRequest": {
+  5909→        "properties": {
+  5910→          "status": {
+  5911→            "anyOf": [
+  5912→              {
+  5913→                "$ref": "#/components/schemas/IncidentStatus"
+  5914→              },
+  5915→              {
+  5916→                "type": "null"
+  5917→              }
+  5918→            ]
+  5919→          },
+  5920→          "severity": {
+  5921→            "anyOf": [
+  5922→              {
+  5923→                "$ref": "#/components/schemas/IncidentSeverity"
+  5924→              },
+  5925→              {
+  5926→                "type": "null"
+  5927→              }
+  5928→            ]
+  5929→          },
+  5930→          "root_cause": {
+  5931→            "anyOf": [
+  5932→              {
+  5933→                "$ref": "#/components/schemas/RootCause"
+  5934→              },
+  5935→              {
+  5936→                "type": "null"
+  5937→              }
+  5938→            ]
+  5939→          },
+  5940→          "description": {
+  5941→            "anyOf": [
+  5942→              {
+  5943→                "type": "string"
+  5944→              },
+  5945→              {
+  5946→                "type": "null"
+  5947→              }
+  5948→            ],
+  5949→            "title": "Description"
+  5950→          }
+  5951→        },
+  5952→        "type": "object",
+  5953→        "title": "IncidentUpdateRequest"
+  5954→      },
+  5955→      "InitializePaymentRequest": {
+  5956→        "properties": {
+  5957→          "plan": {
+  5958→            "type": "string",
+  5959→            "maxLength": 50,
+  5960→            "minLength": 1,
+  5961→            "title": "Plan"
+  5962→          },
+  5963→          "email": {
+  5964→            "anyOf": [
+  5965→              {
+  5966→                "type": "string",
+  5967→                "format": "email"
+  5968→              },
+  5969→              {
+  5970→                "type": "null"
+  5971→              }
+  5972→            ],
+  5973→            "title": "Email"
+  5974→          }
+  5975→        },
+  5976→        "type": "object",
+  5977→        "required": [
+  5978→          "plan"
+  5979→        ],
+  5980→        "title": "InitializePaymentRequest"
+  5981→      },
+  5982→      "InitializePaymentResponse": {
+  5983→        "properties": {
+  5984→          "authorization_url": {
+  5985→            "type": "string",
+  5986→            "title": "Authorization Url"
+  5987→          },
+  5988→          "reference": {
+  5989→            "type": "string",
+  5990→            "title": "Reference"
+  5991→          },
+  5992→          "access_code": {
+  5993→            "type": "string",
+  5994→            "title": "Access Code"
+  5995→          }
+  5996→        },
+  5997→        "type": "object",
+  5998→        "required": [
+  5999→          "authorization_url",
+  6000→          "reference",
+  6001→          "access_code"
+  6002→        ],
+  6003→        "title": "InitializePaymentResponse"
+  6004→      },
+  6005→      "LatencyPointResponse": {
+  6006→        "properties": {
+  6007→          "timestamp": {
+  6008→            "type": "string",
+  6009→            "format": "date-time",
+  6010→            "title": "Timestamp"
+  6011→          },
+  6012→          "region": {
+  6013→            "type": "string",
+  6014→            "title": "Region"
+  6015→          },
+  6016→          "latency_ms": {
+  6017→            "type": "number",
+  6018→            "title": "Latency Ms"
+  6019→          },
+  6020→          "dependency_id": {
+  6021→            "anyOf": [
+  6022→              {
+  6023→                "type": "string",
+  6024→                "format": "uuid"
+  6025→              },
+  6026→              {
+  6027→                "type": "null"
+  6028→              }
+  6029→            ],
+  6030→            "title": "Dependency Id"
+  6031→          }
+  6032→        },
+  6033→        "type": "object",
+  6034→        "required": [
+  6035→          "timestamp",
+  6036→          "region",
+  6037→          "latency_ms"
+  6038→        ],
+  6039→        "title": "LatencyPointResponse"
+  6040→      },
+  6041→      "LoginRequest": {
+  6042→        "properties": {
+  6043→          "email": {
+  6044→            "type": "string",
+  6045→            "format": "email",
+  6046→            "title": "Email"
+  6047→          },
+  6048→          "password": {
+  6049→            "type": "string",
+  6050→            "title": "Password"
+  6051→          }
+  6052→        },
+  6053→        "type": "object",
+  6054→        "required": [
+  6055→          "email",
+  6056→          "password"
+  6057→        ],
+  6058→        "title": "LoginRequest"
+  6059→      },
+  6060→      "LogoutRequest": {
+  6061→        "properties": {
+  6062→          "refresh_token": {
+  6063→            "type": "string",
+  6064→            "title": "Refresh Token"
+  6065→          }
+  6066→        },
+  6067→        "type": "object",
+  6068→        "required": [
+  6069→          "refresh_token"
+  6070→        ],
+  6071→        "title": "LogoutRequest"
+  6072→      },
+  6073→      "OAuthAuthResponse": {
+  6074→        "properties": {
+  6075→          "access_token": {
+  6076→            "type": "string",
+  6077→            "title": "Access Token"
+  6078→          },
+  6079→          "refresh_token": {
+  6080→            "type": "string",
+  6081→            "title": "Refresh Token"
+  6082→          },
+  6083→          "token_type": {
+  6084→            "type": "string",
+  6085→            "title": "Token Type",
+  6086→            "default": "bearer"
+  6087→          },
+  6088→          "expires_in": {
+  6089→            "type": "integer",
+  6090→            "title": "Expires In"
+  6091→          },
+  6092→          "is_new_user": {
+  6093→            "type": "boolean",
+  6094→            "title": "Is New User",
+  6095→            "default": false
+  6096→          },
+  6097→          "user_id": {
+  6098→            "type": "string",
+  6099→            "format": "uuid",
+  6100→            "title": "User Id"
+  6101→          },
+  6102→          "email": {
+  6103→            "type": "string",
+  6104→            "title": "Email"
+  6105→          },
+  6106→          "full_name": {
+  6107→            "type": "string",
+  6108→            "title": "Full Name"
+  6109→          }
+  6110→        },
+  6111→        "type": "object",
+  6112→        "required": [
+  6113→          "access_token",
+  6114→          "refresh_token",
+  6115→          "expires_in",
+  6116→          "user_id",
+  6117→          "email",
+  6118→          "full_name"
+  6119→        ],
+  6120→        "title": "OAuthAuthResponse",
+  6121→        "description": "Shared response for both Google and GitHub OAuth."
+  6122→      },
+  6123→      "OrganizationCreateRequest": {
+  6124→        "properties": {
+  6125→          "name": {
+  6126→            "type": "string",
+  6127→            "title": "Name"
+  6128→          },
+  6129→          "slug": {
+  6130→            "anyOf": [
+  6131→              {
+  6132→                "type": "string"
+  6133→              },
+  6134→              {
+  6135→                "type": "null"
+  6136→              }
+  6137→            ],
+  6138→            "title": "Slug"
+  6139→          }
+  6140→        },
+  6141→        "type": "object",
+  6142→        "required": [
+  6143→          "name"
+  6144→        ],
+  6145→        "title": "OrganizationCreateRequest"
+  6146→      },
+  6147→      "OrganizationMemberInviteRequest": {
+  6148→        "properties": {
+  6149→          "email": {
+  6150→            "type": "string",
+  6151→            "format": "email",
+  6152→            "title": "Email"
+  6153→          },
+  6154→          "role": {
+  6155→            "$ref": "#/components/schemas/Role",
+  6156→            "default": "member"
+  6157→          }
+  6158→        },
+  6159→        "type": "object",
+  6160→        "required": [
+  6161→          "email"
+  6162→        ],
+  6163→        "title": "OrganizationMemberInviteRequest"
+  6164→      },
+  6165→      "OrganizationMemberResponse": {
+  6166→        "properties": {
+  6167→          "id": {
+  6168→            "type": "string",
+  6169→            "format": "uuid",
+  6170→            "title": "Id"
+  6171→          },
+  6172→          "org_id": {
+  6173→            "type": "string",
+  6174→            "format": "uuid",
+  6175→            "title": "Org Id"
+  6176→          },
+  6177→          "user_id": {
+  6178→            "type": "string",
+  6179→            "format": "uuid",
+  6180→            "title": "User Id"
+  6181→          },
+  6182→          "role": {
+  6183→            "type": "string",
+  6184→            "title": "Role"
+  6185→          },
+  6186→          "joined_at": {
+  6187→            "type": "string",
+  6188→            "format": "date-time",
+  6189→            "title": "Joined At"
+  6190→          }
+  6191→        },
+  6192→        "type": "object",
+  6193→        "required": [
+  6194→          "id",
+  6195→          "org_id",
+  6196→          "user_id",
+  6197→          "role",
+  6198→          "joined_at"
+  6199→        ],
+  6200→        "title": "OrganizationMemberResponse"
+  6201→      },
+  6202→      "OrganizationMemberRoleUpdateRequest": {
+  6203→        "properties": {
+  6204→          "role": {
+  6205→            "$ref": "#/components/schemas/Role"
+  6206→          }
+  6207→        },
+  6208→        "type": "object",
+  6209→        "required": [
+  6210→          "role"
+  6211→        ],
+  6212→        "title": "OrganizationMemberRoleUpdateRequest"
+  6213→      },
+  6214→      "OrganizationResponse": {
+  6215→        "properties": {
+  6216→          "id": {
+  6217→            "type": "string",
+  6218→            "format": "uuid",
+  6219→            "title": "Id"
+  6220→          },
+  6221→          "name": {
+  6222→            "type": "string",
+  6223→            "title": "Name"
+  6224→          },
+  6225→          "slug": {
+  6226→            "type": "string",
+  6227→            "title": "Slug"
+  6228→          },
+  6229→          "plan": {
+  6230→            "type": "string",
+  6231→            "title": "Plan"
+  6232→          },
+  6233→          "has_agency_mode": {
+  6234→            "type": "boolean",
+  6235→            "title": "Has Agency Mode",
+  6236→            "default": false
+  6237→          },
+  6238→          "created_at": {
+  6239→            "type": "string",
+  6240→            "format": "date-time",
+  6241→            "title": "Created At"
+  6242→          },
+  6243→          "updated_at": {
+  6244→            "type": "string",
+  6245→            "format": "date-time",
+  6246→            "title": "Updated At"
+  6247→          }
+  6248→        },
+  6249→        "type": "object",
+  6250→        "required": [
+  6251→          "id",
+  6252→          "name",
+  6253→          "slug",
+  6254→          "plan",
+  6255→          "created_at",
+  6256→          "updated_at"
+  6257→        ],
+  6258→        "title": "OrganizationResponse"
+  6259→      },
+  6260→      "OrganizationUpdateRequest": {
+  6261→        "properties": {
+  6262→          "name": {
+  6263→            "anyOf": [
+  6264→              {
+  6265→                "type": "string"
+  6266→              },
+  6267→              {
+  6268→                "type": "null"
+  6269→              }
+  6270→            ],
+  6271→            "title": "Name"
+  6272→          },
+  6273→          "plan": {
+  6274→            "anyOf": [
+  6275→              {
+  6276→                "$ref": "#/components/schemas/Plan"
+  6277→              },
+  6278→              {
+  6279→                "type": "null"
+  6280→              }
+  6281→            ]
+  6282→          }
+  6283→        },
+  6284→        "type": "object",
+  6285→        "title": "OrganizationUpdateRequest"
+  6286→      },
+  6287→      "PaystackWebhookResponse": {
+  6288→        "properties": {
+  6289→          "received": {
+  6290→            "type": "boolean",
+  6291→            "title": "Received"
+  6292→          },
+  6293→          "event_type": {
+  6294→            "type": "string",
+  6295→            "title": "Event Type"
+  6296→          }
+  6297→        },
+  6298→        "type": "object",
+  6299→        "required": [
+  6300→          "received",
+  6301→          "event_type"
+  6302→        ],
+  6303→        "title": "PaystackWebhookResponse"
+  6304→      },
+  6305→      "Plan": {
+  6306→        "type": "string",
+  6307→        "enum": [
+  6308→          "free",
+  6309→          "starter",
+  6310→          "standard",
+  6311→          "professional",
+  6312→          "agency"
+  6313→        ],
+  6314→        "title": "Plan"
+  6315→      },
+  6316→      "PlanDetailsResponse": {
+  6317→        "properties": {
+  6318→          "org_id": {
+  6319→            "type": "string",
+  6320→            "format": "uuid",
+  6321→            "title": "Org Id"
+  6322→          },
+  6323→          "plan": {
+  6324→            "type": "string",
+  6325→            "title": "Plan"
+  6326→          },
+  6327→          "max_dependencies": {
+  6328→            "type": "integer",
+  6329→            "title": "Max Dependencies"
+  6330→          },
+  6331→          "min_check_interval_seconds": {
+  6332→            "type": "integer",
+  6333→            "title": "Min Check Interval Seconds"
+  6334→          },
+  6335→          "subscription_status": {
+  6336→            "anyOf": [
+  6337→              {
+  6338→                "type": "string"
+  6339→              },
+  6340→              {
+  6341→                "type": "null"
+  6342→              }
+  6343→            ],
+  6344→            "title": "Subscription Status"
+  6345→          },
+  6346→          "current_period_end": {
+  6347→            "anyOf": [
+  6348→              {
+  6349→                "type": "string",
+  6350→                "format": "date-time"
+  6351→              },
+  6352→              {
+  6353→                "type": "null"
+  6354→              }
+  6355→            ],
+  6356→            "title": "Current Period End"
+  6357→          },
+  6358→          "is_founding_customer": {
+  6359→            "type": "boolean",
+  6360→            "title": "Is Founding Customer",
+  6361→            "default": false
+  6362→          },
+  6363→          "founding_discount_pct": {
+  6364→            "type": "integer",
+  6365→            "title": "Founding Discount Pct",
+  6366→            "default": 0
+  6367→          },
+  6368→          "price_usd": {
+  6369→            "type": "integer",
+  6370→            "title": "Price Usd",
+  6371→            "default": 0
+  6372→          },
+  6373→          "discounted_price_usd": {
+  6374→            "anyOf": [
+  6375→              {
+  6376→                "type": "integer"
+  6377→              },
+  6378→              {
+  6379→                "type": "null"
+  6380→              }
+  6381→            ],
+  6382→            "title": "Discounted Price Usd"
+  6383→          }
+  6384→        },
+  6385→        "type": "object",
+  6386→        "required": [
+  6387→          "org_id",
+  6388→          "plan",
+  6389→          "max_dependencies",
+  6390→          "min_check_interval_seconds"
+  6391→        ],
+  6392→        "title": "PlanDetailsResponse"
+  6393→      },
+  6394→      "PricingPlanResponse": {
+  6395→        "properties": {
+  6396→          "plan": {
+  6397→            "type": "string",
+  6398→            "title": "Plan"
+  6399→          },
+  6400→          "display_name": {
+  6401→            "type": "string",
+  6402→            "title": "Display Name"
+  6403→          },
+  6404→          "description": {
+  6405→            "type": "string",
+  6406→            "title": "Description"
+  6407→          },
+  6408→          "tag": {
+  6409→            "anyOf": [
+  6410→              {
+  6411→                "type": "string"
+  6412→              },
+  6413→              {
+  6414→                "type": "null"
+  6415→              }
+  6416→            ],
+  6417→            "title": "Tag"
+  6418→          },
+  6419→          "price_usd": {
+  6420→            "type": "integer",
+  6421→            "title": "Price Usd"
+  6422→          },
+  6423→          "max_dependencies": {
+  6424→            "type": "integer",
+  6425→            "title": "Max Dependencies"
+  6426→          },
+  6427→          "min_check_interval_seconds": {
+  6428→            "type": "integer",
+  6429→            "title": "Min Check Interval Seconds"
+  6430→          },
+  6431→          "data_retention_days": {
+  6432→            "type": "integer",
+  6433→            "title": "Data Retention Days"
+  6434→          },
+  6435→          "features": {
+  6436→            "additionalProperties": true,
+  6437→            "type": "object",
+  6438→            "title": "Features"
+  6439→          }
+  6440→        },
+  6441→        "type": "object",
+  6442→        "required": [
+  6443→          "plan",
+  6444→          "display_name",
+  6445→          "description",
+  6446→          "price_usd",
+  6447→          "max_dependencies",
+  6448→          "min_check_interval_seconds",
+  6449→          "data_retention_days",
+  6450→          "features"
+  6451→        ],
+  6452→        "title": "PricingPlanResponse"
+  6453→      },
+  6454→      "PricingPlansResponse": {
+  6455→        "properties": {
+  6456→          "plans": {
+  6457→            "items": {
+  6458→              "$ref": "#/components/schemas/PricingPlanResponse"
+  6459→            },
+  6460→            "type": "array",
+  6461→            "title": "Plans"
+  6462→          }
+  6463→        },
+  6464→        "type": "object",
+  6465→        "required": [
+  6466→          "plans"
+  6467→        ],
+  6468→        "title": "PricingPlansResponse"
+  6469→      },
+  6470→      "RefreshRequest": {
+  6471→        "properties": {
+  6472→          "refresh_token": {
+  6473→            "type": "string",
+  6474→            "title": "Refresh Token"
+  6475→          }
+  6476→        },
+  6477→        "type": "object",
+  6478→        "required": [
+  6479→          "refresh_token"
+  6480→        ],
+  6481→        "title": "RefreshRequest"
+  6482→      },
+  6483→      "RegisterRequest": {
+  6484→        "properties": {
+  6485→          "email": {
+  6486→            "type": "string",
+  6487→            "format": "email",
+  6488→            "title": "Email"
+  6489→          },
+  6490→          "password": {
+  6491→            "type": "string",
+  6492→            "title": "Password"
+  6493→          },
+  6494→          "full_name": {
+  6495→            "type": "string",
+  6496→            "title": "Full Name"
+  6497→          },
+  6498→          "org_name": {
+  6499→            "anyOf": [
+  6500→              {
+
+[showing lines 5501-6500 of 7349; use offset=6501 with limit to continue reading]

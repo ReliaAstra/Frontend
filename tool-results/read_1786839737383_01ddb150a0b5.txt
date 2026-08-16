@@ -1,0 +1,1002 @@
+  4501→              {
+  4502→                "type": "string",
+  4503→                "format": "date-time"
+  4504→              },
+  4505→              {
+  4506→                "type": "null"
+  4507→              }
+  4508→            ],
+  4509→            "title": "Last Used At"
+  4510→          },
+  4511→          "expires_at": {
+  4512→            "anyOf": [
+  4513→              {
+  4514→                "type": "string",
+  4515→                "format": "date-time"
+  4516→              },
+  4517→              {
+  4518→                "type": "null"
+  4519→              }
+  4520→            ],
+  4521→            "title": "Expires At"
+  4522→          },
+  4523→          "created_at": {
+  4524→            "type": "string",
+  4525→            "format": "date-time",
+  4526→            "title": "Created At"
+  4527→          }
+  4528→        },
+  4529→        "type": "object",
+  4530→        "required": [
+  4531→          "id",
+  4532→          "org_id",
+  4533→          "name",
+  4534→          "prefix",
+  4535→          "scopes",
+  4536→          "created_at"
+  4537→        ],
+  4538→        "title": "ApiKeyResponse"
+  4539→      },
+  4540→      "ApplicationCreateRequest": {
+  4541→        "properties": {
+  4542→          "name": {
+  4543→            "type": "string",
+  4544→            "maxLength": 150,
+  4545→            "minLength": 1,
+  4546→            "title": "Name"
+  4547→          },
+  4548→          "description": {
+  4549→            "anyOf": [
+  4550→              {
+  4551→                "type": "string",
+  4552→                "maxLength": 500
+  4553→              },
+  4554→              {
+  4555→                "type": "null"
+  4556→              }
+  4557→            ],
+  4558→            "title": "Description"
+  4559→          }
+  4560→        },
+  4561→        "type": "object",
+  4562→        "required": [
+  4563→          "name"
+  4564→        ],
+  4565→        "title": "ApplicationCreateRequest"
+  4566→      },
+  4567→      "ApplicationResponse": {
+  4568→        "properties": {
+  4569→          "id": {
+  4570→            "type": "string",
+  4571→            "format": "uuid",
+  4572→            "title": "Id"
+  4573→          },
+  4574→          "org_id": {
+  4575→            "type": "string",
+  4576→            "format": "uuid",
+  4577→            "title": "Org Id"
+  4578→          },
+  4579→          "client_id": {
+  4580→            "anyOf": [
+  4581→              {
+  4582→                "type": "string",
+  4583→                "format": "uuid"
+  4584→              },
+  4585→              {
+  4586→                "type": "null"
+  4587→              }
+  4588→            ],
+  4589→            "title": "Client Id"
+  4590→          },
+  4591→          "name": {
+  4592→            "type": "string",
+  4593→            "title": "Name"
+  4594→          },
+  4595→          "description": {
+  4596→            "anyOf": [
+  4597→              {
+  4598→                "type": "string"
+  4599→              },
+  4600→              {
+  4601→                "type": "null"
+  4602→              }
+  4603→            ],
+  4604→            "title": "Description"
+  4605→          },
+  4606→          "created_at": {
+  4607→            "type": "string",
+  4608→            "format": "date-time",
+  4609→            "title": "Created At"
+  4610→          },
+  4611→          "updated_at": {
+  4612→            "type": "string",
+  4613→            "format": "date-time",
+  4614→            "title": "Updated At"
+  4615→          }
+  4616→        },
+  4617→        "type": "object",
+  4618→        "required": [
+  4619→          "id",
+  4620→          "org_id",
+  4621→          "client_id",
+  4622→          "name",
+  4623→          "description",
+  4624→          "created_at",
+  4625→          "updated_at"
+  4626→        ],
+  4627→        "title": "ApplicationResponse"
+  4628→      },
+  4629→      "ChannelType": {
+  4630→        "type": "string",
+  4631→        "enum": [
+  4632→          "email",
+  4633→          "slack",
+  4634→          "pagerduty",
+  4635→          "webhook"
+  4636→        ],
+  4637→        "title": "ChannelType"
+  4638→      },
+  4639→      "CheckResultResponse": {
+  4640→        "properties": {
+  4641→          "id": {
+  4642→            "type": "string",
+  4643→            "format": "uuid",
+  4644→            "title": "Id"
+  4645→          },
+  4646→          "dependency_id": {
+  4647→            "type": "string",
+  4648→            "format": "uuid",
+  4649→            "title": "Dependency Id"
+  4650→          },
+  4651→          "org_id": {
+  4652→            "type": "string",
+  4653→            "format": "uuid",
+  4654→            "title": "Org Id"
+  4655→          },
+  4656→          "region": {
+  4657→            "type": "string",
+  4658→            "title": "Region"
+  4659→          },
+  4660→          "executed_at": {
+  4661→            "type": "string",
+  4662→            "format": "date-time",
+  4663→            "title": "Executed At"
+  4664→          },
+  4665→          "latency_ms": {
+  4666→            "type": "number",
+  4667→            "title": "Latency Ms"
+  4668→          },
+  4669→          "status_code": {
+  4670→            "anyOf": [
+  4671→              {
+  4672→                "type": "integer"
+  4673→              },
+  4674→              {
+  4675→                "type": "null"
+  4676→              }
+  4677→            ],
+  4678→            "title": "Status Code"
+  4679→          },
+  4680→          "is_up": {
+  4681→            "type": "boolean",
+  4682→            "title": "Is Up"
+  4683→          },
+  4684→          "error_message": {
+  4685→            "anyOf": [
+  4686→              {
+  4687→                "type": "string"
+  4688→              },
+  4689→              {
+  4690→                "type": "null"
+  4691→              }
+  4692→            ],
+  4693→            "title": "Error Message"
+  4694→          },
+  4695→          "quorum_confirmed": {
+  4696→            "type": "boolean",
+  4697→            "title": "Quorum Confirmed"
+  4698→          }
+  4699→        },
+  4700→        "type": "object",
+  4701→        "required": [
+  4702→          "id",
+  4703→          "dependency_id",
+  4704→          "org_id",
+  4705→          "region",
+  4706→          "executed_at",
+  4707→          "latency_ms",
+  4708→          "is_up",
+  4709→          "quorum_confirmed"
+  4710→        ],
+  4711→        "title": "CheckResultResponse"
+  4712→      },
+  4713→      "ClaimFoundingSpotRequest": {
+  4714→        "properties": {
+  4715→          "email": {
+  4716→            "anyOf": [
+  4717→              {
+  4718→                "type": "string"
+  4719→              },
+  4720→              {
+  4721→                "type": "null"
+  4722→              }
+  4723→            ],
+  4724→            "title": "Email"
+  4725→          }
+  4726→        },
+  4727→        "type": "object",
+  4728→        "title": "ClaimFoundingSpotRequest",
+  4729→        "description": "Request body for claiming a founding customer spot."
+  4730→      },
+  4731→      "ClaimFoundingSpotResponse": {
+  4732→        "properties": {
+  4733→          "success": {
+  4734→            "type": "boolean",
+  4735→            "title": "Success"
+  4736→          },
+  4737→          "message": {
+  4738→            "type": "string",
+  4739→            "title": "Message"
+  4740→          },
+  4741→          "is_founding_customer": {
+  4742→            "type": "boolean",
+  4743→            "title": "Is Founding Customer"
+  4744→          },
+  4745→          "founding_discount_pct": {
+  4746→            "type": "integer",
+  4747→            "title": "Founding Discount Pct"
+  4748→          }
+  4749→        },
+  4750→        "type": "object",
+  4751→        "required": [
+  4752→          "success",
+  4753→          "message",
+  4754→          "is_founding_customer",
+  4755→          "founding_discount_pct"
+  4756→        ],
+  4757→        "title": "ClaimFoundingSpotResponse"
+  4758→      },
+  4759→      "ClientCreateRequest": {
+  4760→        "properties": {
+  4761→          "name": {
+  4762→            "type": "string",
+  4763→            "maxLength": 150,
+  4764→            "minLength": 1,
+  4765→            "title": "Name"
+  4766→          },
+  4767→          "description": {
+  4768→            "anyOf": [
+  4769→              {
+  4770→                "type": "string",
+  4771→                "maxLength": 500
+  4772→              },
+  4773→              {
+  4774→                "type": "null"
+  4775→              }
+  4776→            ],
+  4777→            "title": "Description"
+  4778→          }
+  4779→        },
+  4780→        "type": "object",
+  4781→        "required": [
+  4782→          "name"
+  4783→        ],
+  4784→        "title": "ClientCreateRequest"
+  4785→      },
+  4786→      "ClientResponse": {
+  4787→        "properties": {
+  4788→          "id": {
+  4789→            "type": "string",
+  4790→            "format": "uuid",
+  4791→            "title": "Id"
+  4792→          },
+  4793→          "org_id": {
+  4794→            "type": "string",
+  4795→            "format": "uuid",
+  4796→            "title": "Org Id"
+  4797→          },
+  4798→          "name": {
+  4799→            "type": "string",
+  4800→            "title": "Name"
+  4801→          },
+  4802→          "description": {
+  4803→            "anyOf": [
+  4804→              {
+  4805→                "type": "string"
+  4806→              },
+  4807→              {
+  4808→                "type": "null"
+  4809→              }
+  4810→            ],
+  4811→            "title": "Description"
+  4812→          },
+  4813→          "created_at": {
+  4814→            "type": "string",
+  4815→            "format": "date-time",
+  4816→            "title": "Created At"
+  4817→          },
+  4818→          "updated_at": {
+  4819→            "type": "string",
+  4820→            "format": "date-time",
+  4821→            "title": "Updated At"
+  4822→          }
+  4823→        },
+  4824→        "type": "object",
+  4825→        "required": [
+  4826→          "id",
+  4827→          "org_id",
+  4828→          "name",
+  4829→          "description",
+  4830→          "created_at",
+  4831→          "updated_at"
+  4832→        ],
+  4833→        "title": "ClientResponse"
+  4834→      },
+  4835→      "CorrelationMethod": {
+  4836→        "type": "string",
+  4837→        "enum": [
+  4838→          "temporal",
+  4839→          "manual",
+  4840→          "ml"
+  4841→        ],
+  4842→        "title": "CorrelationMethod"
+  4843→      },
+  4844→      "DashboardSummaryResponse": {
+  4845→        "properties": {
+  4846→          "active_dependencies_count": {
+  4847→            "type": "integer",
+  4848→            "title": "Active Dependencies Count"
+  4849→          },
+  4850→          "open_incidents_count": {
+  4851→            "type": "integer",
+  4852→            "title": "Open Incidents Count"
+  4853→          },
+  4854→          "overall_uptime_percentage": {
+  4855→            "type": "number",
+  4856→            "title": "Overall Uptime Percentage"
+  4857→          },
+  4858→          "alerts_today_count": {
+  4859→            "type": "integer",
+  4860→            "title": "Alerts Today Count"
+  4861→          }
+  4862→        },
+  4863→        "type": "object",
+  4864→        "required": [
+  4865→          "active_dependencies_count",
+  4866→          "open_incidents_count",
+  4867→          "overall_uptime_percentage",
+  4868→          "alerts_today_count"
+  4869→        ],
+  4870→        "title": "DashboardSummaryResponse"
+  4871→      },
+  4872→      "DependencyCreateRequest": {
+  4873→        "properties": {
+  4874→          "name": {
+  4875→            "type": "string",
+  4876→            "maxLength": 150,
+  4877→            "minLength": 1,
+  4878→            "title": "Name"
+  4879→          },
+  4880→          "application_id": {
+  4881→            "anyOf": [
+  4882→              {
+  4883→                "type": "string",
+  4884→                "format": "uuid"
+  4885→              },
+  4886→              {
+  4887→                "type": "null"
+  4888→              }
+  4889→            ],
+  4890→            "title": "Application Id"
+  4891→          },
+  4892→          "endpoint_url": {
+  4893→            "type": "string",
+  4894→            "title": "Endpoint Url"
+  4895→          },
+  4896→          "method": {
+  4897→            "$ref": "#/components/schemas/HttpMethod",
+  4898→            "default": "GET"
+  4899→          },
+  4900→          "headers": {
+  4901→            "anyOf": [
+  4902→              {
+  4903→                "additionalProperties": true,
+  4904→                "type": "object"
+  4905→              },
+  4906→              {
+  4907→                "type": "null"
+  4908→              }
+  4909→            ],
+  4910→            "title": "Headers"
+  4911→          },
+  4912→          "expected_status_codes": {
+  4913→            "items": {
+  4914→              "type": "integer"
+  4915→            },
+  4916→            "type": "array",
+  4917→            "title": "Expected Status Codes",
+  4918→            "default": [
+  4919→              200
+  4920→            ]
+  4921→          },
+  4922→          "timeout_seconds": {
+  4923→            "type": "integer",
+  4924→            "maximum": 300.0,
+  4925→            "minimum": 1.0,
+  4926→            "title": "Timeout Seconds",
+  4927→            "default": 10
+  4928→          },
+  4929→          "check_interval_seconds": {
+  4930→            "type": "integer",
+  4931→            "maximum": 86400.0,
+  4932→            "minimum": 10.0,
+  4933→            "title": "Check Interval Seconds",
+  4934→            "default": 300
+  4935→          },
+  4936→          "regions": {
+  4937→            "items": {
+  4938→              "type": "string"
+  4939→            },
+  4940→            "type": "array",
+  4941→            "minItems": 1,
+  4942→            "title": "Regions",
+  4943→            "default": [
+  4944→              "us-east",
+  4945→              "eu-west"
+  4946→            ]
+  4947→          },
+  4948→          "alert_threshold_ms": {
+  4949→            "anyOf": [
+  4950→              {
+  4951→                "type": "integer",
+  4952→                "minimum": 1.0
+  4953→              },
+  4954→              {
+  4955→                "type": "null"
+  4956→              }
+  4957→            ],
+  4958→            "title": "Alert Threshold Ms"
+  4959→          },
+  4960→          "is_active": {
+  4961→            "type": "boolean",
+  4962→            "title": "Is Active",
+  4963→            "default": true
+  4964→          }
+  4965→        },
+  4966→        "type": "object",
+  4967→        "required": [
+  4968→          "name",
+  4969→          "endpoint_url"
+  4970→        ],
+  4971→        "title": "DependencyCreateRequest"
+  4972→      },
+  4973→      "DependencyHealthResponse": {
+  4974→        "properties": {
+  4975→          "dependency_id": {
+  4976→            "type": "string",
+  4977→            "format": "uuid",
+  4978→            "title": "Dependency Id"
+  4979→          },
+  4980→          "name": {
+  4981→            "type": "string",
+  4982→            "title": "Name"
+  4983→          },
+  4984→          "endpoint_url": {
+  4985→            "type": "string",
+  4986→            "title": "Endpoint Url"
+  4987→          },
+  4988→          "current_status": {
+  4989→            "type": "string",
+  4990→            "title": "Current Status"
+  4991→          },
+  4992→          "uptime_percentage_24h": {
+  4993→            "type": "number",
+  4994→            "title": "Uptime Percentage 24H"
+  4995→          },
+  4996→          "avg_latency_ms_24h": {
+  4997→            "type": "number",
+  4998→            "title": "Avg Latency Ms 24H"
+  4999→          }
+  5000→        },
+  5001→        "type": "object",
+  5002→        "required": [
+  5003→          "dependency_id",
+  5004→          "name",
+  5005→          "endpoint_url",
+  5006→          "current_status",
+  5007→          "uptime_percentage_24h",
+  5008→          "avg_latency_ms_24h"
+  5009→        ],
+  5010→        "title": "DependencyHealthResponse"
+  5011→      },
+  5012→      "DependencyHistoryResponse": {
+  5013→        "properties": {
+  5014→          "dependency_id": {
+  5015→            "type": "string",
+  5016→            "format": "uuid",
+  5017→            "title": "Dependency Id"
+  5018→          },
+  5019→          "uptime_percentage": {
+  5020→            "type": "number",
+  5021→            "title": "Uptime Percentage"
+  5022→          },
+  5023→          "avg_latency_ms": {
+  5024→            "type": "number",
+  5025→            "title": "Avg Latency Ms"
+  5026→          },
+  5027→          "total_checks": {
+  5028→            "type": "integer",
+  5029→            "title": "Total Checks"
+  5030→          },
+  5031→          "total_up": {
+  5032→            "type": "integer",
+  5033→            "title": "Total Up"
+  5034→          },
+  5035→          "total_down": {
+  5036→            "type": "integer",
+  5037→            "title": "Total Down"
+  5038→          }
+  5039→        },
+  5040→        "type": "object",
+  5041→        "required": [
+  5042→          "dependency_id",
+  5043→          "uptime_percentage",
+  5044→          "avg_latency_ms",
+  5045→          "total_checks",
+  5046→          "total_up",
+  5047→          "total_down"
+  5048→        ],
+  5049→        "title": "DependencyHistoryResponse"
+  5050→      },
+  5051→      "DependencyResponse": {
+  5052→        "properties": {
+  5053→          "id": {
+  5054→            "type": "string",
+  5055→            "format": "uuid",
+  5056→            "title": "Id"
+  5057→          },
+  5058→          "org_id": {
+  5059→            "type": "string",
+  5060→            "format": "uuid",
+  5061→            "title": "Org Id"
+  5062→          },
+  5063→          "application_id": {
+  5064→            "anyOf": [
+  5065→              {
+  5066→                "type": "string",
+  5067→                "format": "uuid"
+  5068→              },
+  5069→              {
+  5070→                "type": "null"
+  5071→              }
+  5072→            ],
+  5073→            "title": "Application Id"
+  5074→          },
+  5075→          "name": {
+  5076→            "type": "string",
+  5077→            "title": "Name"
+  5078→          },
+  5079→          "endpoint_url": {
+  5080→            "type": "string",
+  5081→            "title": "Endpoint Url"
+  5082→          },
+  5083→          "method": {
+  5084→            "type": "string",
+  5085→            "title": "Method"
+  5086→          },
+  5087→          "headers": {
+  5088→            "anyOf": [
+  5089→              {
+  5090→                "additionalProperties": true,
+  5091→                "type": "object"
+  5092→              },
+  5093→              {
+  5094→                "type": "null"
+  5095→              }
+  5096→            ],
+  5097→            "title": "Headers"
+  5098→          },
+  5099→          "expected_status_codes": {
+  5100→            "items": {
+  5101→              "type": "integer"
+  5102→            },
+  5103→            "type": "array",
+  5104→            "title": "Expected Status Codes"
+  5105→          },
+  5106→          "timeout_seconds": {
+  5107→            "type": "integer",
+  5108→            "title": "Timeout Seconds"
+  5109→          },
+  5110→          "check_interval_seconds": {
+  5111→            "type": "integer",
+  5112→            "title": "Check Interval Seconds"
+  5113→          },
+  5114→          "next_check_at": {
+  5115→            "anyOf": [
+  5116→              {
+  5117→                "type": "string",
+  5118→                "format": "date-time"
+  5119→              },
+  5120→              {
+  5121→                "type": "null"
+  5122→              }
+  5123→            ],
+  5124→            "title": "Next Check At"
+  5125→          },
+  5126→          "regions": {
+  5127→            "items": {
+  5128→              "type": "string"
+  5129→            },
+  5130→            "type": "array",
+  5131→            "title": "Regions"
+  5132→          },
+  5133→          "alert_threshold_ms": {
+  5134→            "anyOf": [
+  5135→              {
+  5136→                "type": "integer"
+  5137→              },
+  5138→              {
+  5139→                "type": "null"
+  5140→              }
+  5141→            ],
+  5142→            "title": "Alert Threshold Ms"
+  5143→          },
+  5144→          "is_active": {
+  5145→            "type": "boolean",
+  5146→            "title": "Is Active"
+  5147→          },
+  5148→          "created_at": {
+  5149→            "type": "string",
+  5150→            "format": "date-time",
+  5151→            "title": "Created At"
+  5152→          },
+  5153→          "updated_at": {
+  5154→            "type": "string",
+  5155→            "format": "date-time",
+  5156→            "title": "Updated At"
+  5157→          }
+  5158→        },
+  5159→        "type": "object",
+  5160→        "required": [
+  5161→          "id",
+  5162→          "org_id",
+  5163→          "name",
+  5164→          "endpoint_url",
+  5165→          "method",
+  5166→          "expected_status_codes",
+  5167→          "timeout_seconds",
+  5168→          "check_interval_seconds",
+  5169→          "regions",
+  5170→          "is_active",
+  5171→          "created_at",
+  5172→          "updated_at"
+  5173→        ],
+  5174→        "title": "DependencyResponse"
+  5175→      },
+  5176→      "DependencyUpdateRequest": {
+  5177→        "properties": {
+  5178→          "name": {
+  5179→            "anyOf": [
+  5180→              {
+  5181→                "type": "string",
+  5182→                "maxLength": 150,
+  5183→                "minLength": 1
+  5184→              },
+  5185→              {
+  5186→                "type": "null"
+  5187→              }
+  5188→            ],
+  5189→            "title": "Name"
+  5190→          },
+  5191→          "application_id": {
+  5192→            "anyOf": [
+  5193→              {
+  5194→                "type": "string",
+  5195→                "format": "uuid"
+  5196→              },
+  5197→              {
+  5198→                "type": "null"
+  5199→              }
+  5200→            ],
+  5201→            "title": "Application Id"
+  5202→          },
+  5203→          "endpoint_url": {
+  5204→            "anyOf": [
+  5205→              {
+  5206→                "type": "string"
+  5207→              },
+  5208→              {
+  5209→                "type": "null"
+  5210→              }
+  5211→            ],
+  5212→            "title": "Endpoint Url"
+  5213→          },
+  5214→          "method": {
+  5215→            "anyOf": [
+  5216→              {
+  5217→                "$ref": "#/components/schemas/HttpMethod"
+  5218→              },
+  5219→              {
+  5220→                "type": "null"
+  5221→              }
+  5222→            ]
+  5223→          },
+  5224→          "headers": {
+  5225→            "anyOf": [
+  5226→              {
+  5227→                "additionalProperties": true,
+  5228→                "type": "object"
+  5229→              },
+  5230→              {
+  5231→                "type": "null"
+  5232→              }
+  5233→            ],
+  5234→            "title": "Headers"
+  5235→          },
+  5236→          "expected_status_codes": {
+  5237→            "anyOf": [
+  5238→              {
+  5239→                "items": {
+  5240→                  "type": "integer"
+  5241→                },
+  5242→                "type": "array"
+  5243→              },
+  5244→              {
+  5245→                "type": "null"
+  5246→              }
+  5247→            ],
+  5248→            "title": "Expected Status Codes"
+  5249→          },
+  5250→          "timeout_seconds": {
+  5251→            "anyOf": [
+  5252→              {
+  5253→                "type": "integer",
+  5254→                "maximum": 300.0,
+  5255→                "minimum": 1.0
+  5256→              },
+  5257→              {
+  5258→                "type": "null"
+  5259→              }
+  5260→            ],
+  5261→            "title": "Timeout Seconds"
+  5262→          },
+  5263→          "check_interval_seconds": {
+  5264→            "anyOf": [
+  5265→              {
+  5266→                "type": "integer",
+  5267→                "maximum": 86400.0,
+  5268→                "minimum": 10.0
+  5269→              },
+  5270→              {
+  5271→                "type": "null"
+  5272→              }
+  5273→            ],
+  5274→            "title": "Check Interval Seconds"
+  5275→          },
+  5276→          "regions": {
+  5277→            "anyOf": [
+  5278→              {
+  5279→                "items": {
+  5280→                  "type": "string"
+  5281→                },
+  5282→                "type": "array"
+  5283→              },
+  5284→              {
+  5285→                "type": "null"
+  5286→              }
+  5287→            ],
+  5288→            "title": "Regions"
+  5289→          },
+  5290→          "alert_threshold_ms": {
+  5291→            "anyOf": [
+  5292→              {
+  5293→                "type": "integer",
+  5294→                "minimum": 1.0
+  5295→              },
+  5296→              {
+  5297→                "type": "null"
+  5298→              }
+  5299→            ],
+  5300→            "title": "Alert Threshold Ms"
+  5301→          },
+  5302→          "is_active": {
+  5303→            "anyOf": [
+  5304→              {
+  5305→                "type": "boolean"
+  5306→              },
+  5307→              {
+  5308→                "type": "null"
+  5309→              }
+  5310→            ],
+  5311→            "title": "Is Active"
+  5312→          }
+  5313→        },
+  5314→        "type": "object",
+  5315→        "title": "DependencyUpdateRequest"
+  5316→      },
+  5317→      "EvidenceReportDownloadResponse": {
+  5318→        "properties": {
+  5319→          "id": {
+  5320→            "type": "string",
+  5321→            "format": "uuid",
+  5322→            "title": "Id"
+  5323→          },
+  5324→          "org_id": {
+  5325→            "type": "string",
+  5326→            "format": "uuid",
+  5327→            "title": "Org Id"
+  5328→          },
+  5329→          "incident_id": {
+  5330→            "type": "string",
+  5331→            "format": "uuid",
+  5332→            "title": "Incident Id"
+  5333→          },
+  5334→          "file_size_bytes": {
+  5335→            "type": "integer",
+  5336→            "title": "File Size Bytes"
+  5337→          },
+  5338→          "checksum": {
+  5339→            "type": "string",
+  5340→            "title": "Checksum"
+  5341→          },
+  5342→          "generated_at": {
+  5343→            "type": "string",
+  5344→            "format": "date-time",
+  5345→            "title": "Generated At"
+  5346→          },
+  5347→          "expires_at": {
+  5348→            "anyOf": [
+  5349→              {
+  5350→                "type": "string",
+  5351→                "format": "date-time"
+  5352→              },
+  5353→              {
+  5354→                "type": "null"
+  5355→              }
+  5356→            ],
+  5357→            "title": "Expires At"
+  5358→          },
+  5359→          "created_at": {
+  5360→            "type": "string",
+  5361→            "format": "date-time",
+  5362→            "title": "Created At"
+  5363→          },
+  5364→          "updated_at": {
+  5365→            "type": "string",
+  5366→            "format": "date-time",
+  5367→            "title": "Updated At"
+  5368→          },
+  5369→          "download_url": {
+  5370→            "type": "string",
+  5371→            "title": "Download Url"
+  5372→          }
+  5373→        },
+  5374→        "type": "object",
+  5375→        "required": [
+  5376→          "id",
+  5377→          "org_id",
+  5378→          "incident_id",
+  5379→          "file_size_bytes",
+  5380→          "checksum",
+  5381→          "generated_at",
+  5382→          "created_at",
+  5383→          "updated_at",
+  5384→          "download_url"
+  5385→        ],
+  5386→        "title": "EvidenceReportDownloadResponse"
+  5387→      },
+  5388→      "EvidenceReportResponse": {
+  5389→        "properties": {
+  5390→          "id": {
+  5391→            "type": "string",
+  5392→            "format": "uuid",
+  5393→            "title": "Id"
+  5394→          },
+  5395→          "org_id": {
+  5396→            "type": "string",
+  5397→            "format": "uuid",
+  5398→            "title": "Org Id"
+  5399→          },
+  5400→          "incident_id": {
+  5401→            "type": "string",
+  5402→            "format": "uuid",
+  5403→            "title": "Incident Id"
+  5404→          },
+  5405→          "file_size_bytes": {
+  5406→            "type": "integer",
+  5407→            "title": "File Size Bytes"
+  5408→          },
+  5409→          "checksum": {
+  5410→            "type": "string",
+  5411→            "title": "Checksum"
+  5412→          },
+  5413→          "generated_at": {
+  5414→            "type": "string",
+  5415→            "format": "date-time",
+  5416→            "title": "Generated At"
+  5417→          },
+  5418→          "expires_at": {
+  5419→            "anyOf": [
+  5420→              {
+  5421→                "type": "string",
+  5422→                "format": "date-time"
+  5423→              },
+  5424→              {
+  5425→                "type": "null"
+  5426→              }
+  5427→            ],
+  5428→            "title": "Expires At"
+  5429→          },
+  5430→          "created_at": {
+  5431→            "type": "string",
+  5432→            "format": "date-time",
+  5433→            "title": "Created At"
+  5434→          },
+  5435→          "updated_at": {
+  5436→            "type": "string",
+  5437→            "format": "date-time",
+  5438→            "title": "Updated At"
+  5439→          }
+  5440→        },
+  5441→        "type": "object",
+  5442→        "required": [
+  5443→          "id",
+  5444→          "org_id",
+  5445→          "incident_id",
+  5446→          "file_size_bytes",
+  5447→          "checksum",
+  5448→          "generated_at",
+  5449→          "created_at",
+  5450→          "updated_at"
+  5451→        ],
+  5452→        "title": "EvidenceReportResponse"
+  5453→      },
+  5454→      "ForgotPasswordRequest": {
+  5455→        "properties": {
+  5456→          "email": {
+  5457→            "type": "string",
+  5458→            "format": "email",
+  5459→            "title": "Email"
+  5460→          }
+  5461→        },
+  5462→        "type": "object",
+  5463→        "required": [
+  5464→          "email"
+  5465→        ],
+  5466→        "title": "ForgotPasswordRequest"
+  5467→      },
+  5468→      "FoundingSpotsResponse": {
+  5469→        "properties": {
+  5470→          "total_spots": {
+  5471→            "type": "integer",
+  5472→            "title": "Total Spots"
+  5473→          },
+  5474→          "spots_taken": {
+  5475→            "type": "integer",
+  5476→            "title": "Spots Taken"
+  5477→          },
+  5478→          "spots_remaining": {
+  5479→            "type": "integer",
+  5480→            "title": "Spots Remaining"
+  5481→          },
+  5482→          "founding_discount_pct": {
+  5483→            "type": "integer",
+  5484→            "title": "Founding Discount Pct"
+  5485→          },
+  5486→          "eligible_plans": {
+  5487→            "items": {
+  5488→              "type": "string"
+  5489→            },
+  5490→            "type": "array",
+  5491→            "title": "Eligible Plans"
+  5492→          },
+  5493→          "plan_discounts": {
+  5494→            "additionalProperties": {
+  5495→              "additionalProperties": true,
+  5496→              "type": "object"
+  5497→            },
+  5498→            "type": "object",
+  5499→            "title": "Plan Discounts"
+  5500→          }
+
+[showing lines 4501-5500 of 7349; use offset=5501 with limit to continue reading]

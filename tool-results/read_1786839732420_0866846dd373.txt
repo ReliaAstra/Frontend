@@ -1,0 +1,1002 @@
+  2501→              "type": "string",
+  2502→              "format": "uuid",
+  2503→              "title": "Org Id"
+  2504→            }
+  2505→          },
+  2506→          {
+  2507→            "name": "config_id",
+  2508→            "in": "path",
+  2509→            "required": true,
+  2510→            "schema": {
+  2511→              "type": "string",
+  2512→              "format": "uuid",
+  2513→              "title": "Config Id"
+  2514→            }
+  2515→          }
+  2516→        ],
+  2517→        "responses": {
+  2518→          "204": {
+  2519→            "description": "Successful Response"
+  2520→          },
+  2521→          "422": {
+  2522→            "description": "Validation Error",
+  2523→            "content": {
+  2524→              "application/json": {
+  2525→                "schema": {
+  2526→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2527→                }
+  2528→              }
+  2529→            }
+  2530→          }
+  2531→        }
+  2532→      }
+  2533→    },
+  2534→    "/v1/orgs/{org_id}/notifications/test": {
+  2535→      "post": {
+  2536→        "tags": [
+  2537→          "Notifications"
+  2538→        ],
+  2539→        "summary": "Send Test Notification",
+  2540→        "operationId": "send_test_notification_v1_orgs__org_id__notifications_test_post",
+  2541→        "security": [
+  2542→          {
+  2543→            "HTTPBearer": []
+  2544→          }
+  2545→        ],
+  2546→        "parameters": [
+  2547→          {
+  2548→            "name": "org_id",
+  2549→            "in": "path",
+  2550→            "required": true,
+  2551→            "schema": {
+  2552→              "type": "string",
+  2553→              "format": "uuid",
+  2554→              "title": "Org Id"
+  2555→            }
+  2556→          }
+  2557→        ],
+  2558→        "requestBody": {
+  2559→          "required": true,
+  2560→          "content": {
+  2561→            "application/json": {
+  2562→              "schema": {
+  2563→                "$ref": "#/components/schemas/AlertTestRequest"
+  2564→              }
+  2565→            }
+  2566→          }
+  2567→        },
+  2568→        "responses": {
+  2569→          "200": {
+  2570→            "description": "Successful Response",
+  2571→            "content": {
+  2572→              "application/json": {
+  2573→                "schema": {
+  2574→                  "$ref": "#/components/schemas/AlertTestResponse"
+  2575→                }
+  2576→              }
+  2577→            }
+  2578→          },
+  2579→          "422": {
+  2580→            "description": "Validation Error",
+  2581→            "content": {
+  2582→              "application/json": {
+  2583→                "schema": {
+  2584→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2585→                }
+  2586→              }
+  2587→            }
+  2588→          }
+  2589→        }
+  2590→      }
+  2591→    },
+  2592→    "/v1/orgs/{org_id}/dashboard/summary": {
+  2593→      "get": {
+  2594→        "tags": [
+  2595→          "Dashboard"
+  2596→        ],
+  2597→        "summary": "Get Dashboard Summary",
+  2598→        "operationId": "get_dashboard_summary_v1_orgs__org_id__dashboard_summary_get",
+  2599→        "security": [
+  2600→          {
+  2601→            "HTTPBearer": []
+  2602→          }
+  2603→        ],
+  2604→        "parameters": [
+  2605→          {
+  2606→            "name": "org_id",
+  2607→            "in": "path",
+  2608→            "required": true,
+  2609→            "schema": {
+  2610→              "type": "string",
+  2611→              "format": "uuid",
+  2612→              "title": "Org Id"
+  2613→            }
+  2614→          }
+  2615→        ],
+  2616→        "responses": {
+  2617→          "200": {
+  2618→            "description": "Successful Response",
+  2619→            "content": {
+  2620→              "application/json": {
+  2621→                "schema": {
+  2622→                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+  2623→                }
+  2624→              }
+  2625→            }
+  2626→          },
+  2627→          "422": {
+  2628→            "description": "Validation Error",
+  2629→            "content": {
+  2630→              "application/json": {
+  2631→                "schema": {
+  2632→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2633→                }
+  2634→              }
+  2635→            }
+  2636→          }
+  2637→        }
+  2638→      }
+  2639→    },
+  2640→    "/v1/orgs/{org_id}/dashboard/latency": {
+  2641→      "get": {
+  2642→        "tags": [
+  2643→          "Dashboard"
+  2644→        ],
+  2645→        "summary": "Get Latency Timeseries",
+  2646→        "description": "Return organization-scoped latency observations for charting.",
+  2647→        "operationId": "get_latency_timeseries_v1_orgs__org_id__dashboard_latency_get",
+  2648→        "security": [
+  2649→          {
+  2650→            "HTTPBearer": []
+  2651→          }
+  2652→        ],
+  2653→        "parameters": [
+  2654→          {
+  2655→            "name": "org_id",
+  2656→            "in": "path",
+  2657→            "required": true,
+  2658→            "schema": {
+  2659→              "type": "string",
+  2660→              "format": "uuid",
+  2661→              "title": "Org Id"
+  2662→            }
+  2663→          },
+  2664→          {
+  2665→            "name": "hours",
+  2666→            "in": "query",
+  2667→            "required": false,
+  2668→            "schema": {
+  2669→              "type": "integer",
+  2670→              "maximum": 2160,
+  2671→              "minimum": 1,
+  2672→              "default": 24,
+  2673→              "title": "Hours"
+  2674→            }
+  2675→          }
+  2676→        ],
+  2677→        "responses": {
+  2678→          "200": {
+  2679→            "description": "Successful Response",
+  2680→            "content": {
+  2681→              "application/json": {
+  2682→                "schema": {
+  2683→                  "type": "array",
+  2684→                  "items": {
+  2685→                    "$ref": "#/components/schemas/LatencyPointResponse"
+  2686→                  },
+  2687→                  "title": "Response Get Latency Timeseries V1 Orgs  Org Id  Dashboard Latency Get"
+  2688→                }
+  2689→              }
+  2690→            }
+  2691→          },
+  2692→          "422": {
+  2693→            "description": "Validation Error",
+  2694→            "content": {
+  2695→              "application/json": {
+  2696→                "schema": {
+  2697→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2698→                }
+  2699→              }
+  2700→            }
+  2701→          }
+  2702→        }
+  2703→      }
+  2704→    },
+  2705→    "/v1/orgs/{org_id}/dashboard/sla-degradation": {
+  2706→      "get": {
+  2707→        "tags": [
+  2708→          "Dashboard"
+  2709→        ],
+  2710→        "summary": "Get Sla Degradation",
+  2711→        "description": "Aggregate observed degradation per dependency for the requested period.",
+  2712→        "operationId": "get_sla_degradation_v1_orgs__org_id__dashboard_sla_degradation_get",
+  2713→        "security": [
+  2714→          {
+  2715→            "HTTPBearer": []
+  2716→          }
+  2717→        ],
+  2718→        "parameters": [
+  2719→          {
+  2720→            "name": "org_id",
+  2721→            "in": "path",
+  2722→            "required": true,
+  2723→            "schema": {
+  2724→              "type": "string",
+  2725→              "format": "uuid",
+  2726→              "title": "Org Id"
+  2727→            }
+  2728→          },
+  2729→          {
+  2730→            "name": "period_days",
+  2731→            "in": "query",
+  2732→            "required": false,
+  2733→            "schema": {
+  2734→              "type": "integer",
+  2735→              "maximum": 365,
+  2736→              "minimum": 1,
+  2737→              "default": 30,
+  2738→              "title": "Period Days"
+  2739→            }
+  2740→          }
+  2741→        ],
+  2742→        "responses": {
+  2743→          "200": {
+  2744→            "description": "Successful Response",
+  2745→            "content": {
+  2746→              "application/json": {
+  2747→                "schema": {
+  2748→                  "$ref": "#/components/schemas/SLADegradationResponse"
+  2749→                }
+  2750→              }
+  2751→            }
+  2752→          },
+  2753→          "422": {
+  2754→            "description": "Validation Error",
+  2755→            "content": {
+  2756→              "application/json": {
+  2757→                "schema": {
+  2758→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2759→                }
+  2760→              }
+  2761→            }
+  2762→          }
+  2763→        }
+  2764→      }
+  2765→    },
+  2766→    "/v1/orgs/{org_id}/dashboard/dependency-health": {
+  2767→      "get": {
+  2768→        "tags": [
+  2769→          "Dashboard"
+  2770→        ],
+  2771→        "summary": "Get Dependency Health",
+  2772→        "operationId": "get_dependency_health_v1_orgs__org_id__dashboard_dependency_health_get",
+  2773→        "security": [
+  2774→          {
+  2775→            "HTTPBearer": []
+  2776→          }
+  2777→        ],
+  2778→        "parameters": [
+  2779→          {
+  2780→            "name": "org_id",
+  2781→            "in": "path",
+  2782→            "required": true,
+  2783→            "schema": {
+  2784→              "type": "string",
+  2785→              "format": "uuid",
+  2786→              "title": "Org Id"
+  2787→            }
+  2788→          }
+  2789→        ],
+  2790→        "responses": {
+  2791→          "200": {
+  2792→            "description": "Successful Response",
+  2793→            "content": {
+  2794→              "application/json": {
+  2795→                "schema": {
+  2796→                  "type": "array",
+  2797→                  "items": {
+  2798→                    "$ref": "#/components/schemas/DependencyHealthResponse"
+  2799→                  },
+  2800→                  "title": "Response Get Dependency Health V1 Orgs  Org Id  Dashboard Dependency Health Get"
+  2801→                }
+  2802→              }
+  2803→            }
+  2804→          },
+  2805→          "422": {
+  2806→            "description": "Validation Error",
+  2807→            "content": {
+  2808→              "application/json": {
+  2809→                "schema": {
+  2810→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2811→                }
+  2812→              }
+  2813→            }
+  2814→          }
+  2815→        }
+  2816→      }
+  2817→    },
+  2818→    "/v1/orgs/{org_id}/dashboard/incident-timeline": {
+  2819→      "get": {
+  2820→        "tags": [
+  2821→          "Dashboard"
+  2822→        ],
+  2823→        "summary": "Get Incident Timeline",
+  2824→        "operationId": "get_incident_timeline_v1_orgs__org_id__dashboard_incident_timeline_get",
+  2825→        "security": [
+  2826→          {
+  2827→            "HTTPBearer": []
+  2828→          }
+  2829→        ],
+  2830→        "parameters": [
+  2831→          {
+  2832→            "name": "org_id",
+  2833→            "in": "path",
+  2834→            "required": true,
+  2835→            "schema": {
+  2836→              "type": "string",
+  2837→              "format": "uuid",
+  2838→              "title": "Org Id"
+  2839→            }
+  2840→          }
+  2841→        ],
+  2842→        "responses": {
+  2843→          "200": {
+  2844→            "description": "Successful Response",
+  2845→            "content": {
+  2846→              "application/json": {
+  2847→                "schema": {
+  2848→                  "type": "array",
+  2849→                  "items": {
+  2850→                    "$ref": "#/components/schemas/IncidentDetailResponse"
+  2851→                  },
+  2852→                  "title": "Response Get Incident Timeline V1 Orgs  Org Id  Dashboard Incident Timeline Get"
+  2853→                }
+  2854→              }
+  2855→            }
+  2856→          },
+  2857→          "422": {
+  2858→            "description": "Validation Error",
+  2859→            "content": {
+  2860→              "application/json": {
+  2861→                "schema": {
+  2862→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2863→                }
+  2864→              }
+  2865→            }
+  2866→          }
+  2867→        }
+  2868→      }
+  2869→    },
+  2870→    "/v1/orgs/{org_id}/dashboard/vendor-status": {
+  2871→      "get": {
+  2872→        "tags": [
+  2873→          "Dashboard"
+  2874→        ],
+  2875→        "summary": "Get Vendor Status",
+  2876→        "operationId": "get_vendor_status_v1_orgs__org_id__dashboard_vendor_status_get",
+  2877→        "security": [
+  2878→          {
+  2879→            "HTTPBearer": []
+  2880→          }
+  2881→        ],
+  2882→        "parameters": [
+  2883→          {
+  2884→            "name": "org_id",
+  2885→            "in": "path",
+  2886→            "required": true,
+  2887→            "schema": {
+  2888→              "type": "string",
+  2889→              "format": "uuid",
+  2890→              "title": "Org Id"
+  2891→            }
+  2892→          }
+  2893→        ],
+  2894→        "responses": {
+  2895→          "200": {
+  2896→            "description": "Successful Response",
+  2897→            "content": {
+  2898→              "application/json": {
+  2899→                "schema": {
+  2900→                  "type": "array",
+  2901→                  "items": {
+  2902→                    "$ref": "#/components/schemas/VendorDetailResponse"
+  2903→                  },
+  2904→                  "title": "Response Get Vendor Status V1 Orgs  Org Id  Dashboard Vendor Status Get"
+  2905→                }
+  2906→              }
+  2907→            }
+  2908→          },
+  2909→          "422": {
+  2910→            "description": "Validation Error",
+  2911→            "content": {
+  2912→              "application/json": {
+  2913→                "schema": {
+  2914→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2915→                }
+  2916→              }
+  2917→            }
+  2918→          }
+  2919→        }
+  2920→      }
+  2921→    },
+  2922→    "/v1/public/pricing": {
+  2923→      "get": {
+  2924→        "tags": [
+  2925→          "Billing"
+  2926→        ],
+  2927→        "summary": "Get Pricing Plans",
+  2928→        "description": "Public endpoint returning all plan details for the pricing page.\n\nDoes NOT include founding discount pricing \u2014 the founding program is private.",
+  2929→        "operationId": "get_pricing_plans_v1_public_pricing_get",
+  2930→        "responses": {
+  2931→          "200": {
+  2932→            "description": "Successful Response",
+  2933→            "content": {
+  2934→              "application/json": {
+  2935→                "schema": {
+  2936→                  "$ref": "#/components/schemas/PricingPlansResponse"
+  2937→                }
+  2938→              }
+  2939→            }
+  2940→          }
+  2941→        }
+  2942→      }
+  2943→    },
+  2944→    "/v1/orgs/{org_id}/billing/founding-spots": {
+  2945→      "get": {
+  2946→        "tags": [
+  2947→          "Billing"
+  2948→        ],
+  2949→        "summary": "Get Founding Spots",
+  2950→        "description": "PRIVATE endpoint: founding customer program status.\n\nRequires authentication. Returns founding spots remaining and\nthe discounted prices for all eligible paid tiers.\n\nThe founding program is invite-only and not advertised publicly.",
+  2951→        "operationId": "get_founding_spots_v1_orgs__org_id__billing_founding_spots_get",
+  2952→        "security": [
+  2953→          {
+  2954→            "HTTPBearer": []
+  2955→          }
+  2956→        ],
+  2957→        "parameters": [
+  2958→          {
+  2959→            "name": "org_id",
+  2960→            "in": "path",
+  2961→            "required": true,
+  2962→            "schema": {
+  2963→              "type": "string",
+  2964→              "format": "uuid",
+  2965→              "title": "Org Id"
+  2966→            }
+  2967→          }
+  2968→        ],
+  2969→        "responses": {
+  2970→          "200": {
+  2971→            "description": "Successful Response",
+  2972→            "content": {
+  2973→              "application/json": {
+  2974→                "schema": {
+  2975→                  "$ref": "#/components/schemas/FoundingSpotsResponse"
+  2976→                }
+  2977→              }
+  2978→            }
+  2979→          },
+  2980→          "422": {
+  2981→            "description": "Validation Error",
+  2982→            "content": {
+  2983→              "application/json": {
+  2984→                "schema": {
+  2985→                  "$ref": "#/components/schemas/HTTPValidationError"
+  2986→                }
+  2987→              }
+  2988→            }
+  2989→          }
+  2990→        }
+  2991→      }
+  2992→    },
+  2993→    "/v1/orgs/{org_id}/billing/founding-spot/claim": {
+  2994→      "post": {
+  2995→        "tags": [
+  2996→          "Billing"
+  2997→        ],
+  2998→        "summary": "Claim Founding Spot",
+  2999→        "description": "PRIVATE endpoint: claim a founding customer spot for an organization.\n\nOnly org owners/admins can claim. Enforces the 25-spot hard cap.\nOnce all 25 spots are taken, no more organizations can join.\n\nThe founding discount (40% off any paid tier) is applied automatically\nat payment initialization for founding organizations.",
+  3000→        "operationId": "claim_founding_spot_v1_orgs__org_id__billing_founding_spot_claim_post",
+  3001→        "security": [
+  3002→          {
+  3003→            "HTTPBearer": []
+  3004→          }
+  3005→        ],
+  3006→        "parameters": [
+  3007→          {
+  3008→            "name": "org_id",
+  3009→            "in": "path",
+  3010→            "required": true,
+  3011→            "schema": {
+  3012→              "type": "string",
+  3013→              "format": "uuid",
+  3014→              "title": "Org Id"
+  3015→            }
+  3016→          }
+  3017→        ],
+  3018→        "requestBody": {
+  3019→          "content": {
+  3020→            "application/json": {
+  3021→              "schema": {
+  3022→                "anyOf": [
+  3023→                  {
+  3024→                    "$ref": "#/components/schemas/ClaimFoundingSpotRequest"
+  3025→                  },
+  3026→                  {
+  3027→                    "type": "null"
+  3028→                  }
+  3029→                ],
+  3030→                "title": "Body"
+  3031→              }
+  3032→            }
+  3033→          }
+  3034→        },
+  3035→        "responses": {
+  3036→          "200": {
+  3037→            "description": "Successful Response",
+  3038→            "content": {
+  3039→              "application/json": {
+  3040→                "schema": {
+  3041→                  "$ref": "#/components/schemas/ClaimFoundingSpotResponse"
+  3042→                }
+  3043→              }
+  3044→            }
+  3045→          },
+  3046→          "422": {
+  3047→            "description": "Validation Error",
+  3048→            "content": {
+  3049→              "application/json": {
+  3050→                "schema": {
+  3051→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3052→                }
+  3053→              }
+  3054→            }
+  3055→          }
+  3056→        }
+  3057→      }
+  3058→    },
+  3059→    "/v1/orgs/{org_id}/billing/plan": {
+  3060→      "get": {
+  3061→        "tags": [
+  3062→          "Billing"
+  3063→        ],
+  3064→        "summary": "Get Organization Plan",
+  3065→        "operationId": "get_organization_plan_v1_orgs__org_id__billing_plan_get",
+  3066→        "security": [
+  3067→          {
+  3068→            "HTTPBearer": []
+  3069→          }
+  3070→        ],
+  3071→        "parameters": [
+  3072→          {
+  3073→            "name": "org_id",
+  3074→            "in": "path",
+  3075→            "required": true,
+  3076→            "schema": {
+  3077→              "type": "string",
+  3078→              "format": "uuid",
+  3079→              "title": "Org Id"
+  3080→            }
+  3081→          }
+  3082→        ],
+  3083→        "responses": {
+  3084→          "200": {
+  3085→            "description": "Successful Response",
+  3086→            "content": {
+  3087→              "application/json": {
+  3088→                "schema": {
+  3089→                  "$ref": "#/components/schemas/PlanDetailsResponse"
+  3090→                }
+  3091→              }
+  3092→            }
+  3093→          },
+  3094→          "422": {
+  3095→            "description": "Validation Error",
+  3096→            "content": {
+  3097→              "application/json": {
+  3098→                "schema": {
+  3099→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3100→                }
+  3101→              }
+  3102→            }
+  3103→          }
+  3104→        }
+  3105→      }
+  3106→    },
+  3107→    "/v1/orgs/{org_id}/billing/initialize": {
+  3108→      "post": {
+  3109→        "tags": [
+  3110→          "Billing"
+  3111→        ],
+  3112→        "summary": "Initialize Payment",
+  3113→        "operationId": "initialize_payment_v1_orgs__org_id__billing_initialize_post",
+  3114→        "security": [
+  3115→          {
+  3116→            "HTTPBearer": []
+  3117→          }
+  3118→        ],
+  3119→        "parameters": [
+  3120→          {
+  3121→            "name": "org_id",
+  3122→            "in": "path",
+  3123→            "required": true,
+  3124→            "schema": {
+  3125→              "type": "string",
+  3126→              "format": "uuid",
+  3127→              "title": "Org Id"
+  3128→            }
+  3129→          }
+  3130→        ],
+  3131→        "requestBody": {
+  3132→          "required": true,
+  3133→          "content": {
+  3134→            "application/json": {
+  3135→              "schema": {
+  3136→                "$ref": "#/components/schemas/InitializePaymentRequest"
+  3137→              }
+  3138→            }
+  3139→          }
+  3140→        },
+  3141→        "responses": {
+  3142→          "200": {
+  3143→            "description": "Successful Response",
+  3144→            "content": {
+  3145→              "application/json": {
+  3146→                "schema": {
+  3147→                  "$ref": "#/components/schemas/InitializePaymentResponse"
+  3148→                }
+  3149→              }
+  3150→            }
+  3151→          },
+  3152→          "422": {
+  3153→            "description": "Validation Error",
+  3154→            "content": {
+  3155→              "application/json": {
+  3156→                "schema": {
+  3157→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3158→                }
+  3159→              }
+  3160→            }
+  3161→          }
+  3162→        }
+  3163→      }
+  3164→    },
+  3165→    "/v1/billing/verify": {
+  3166→      "post": {
+  3167→        "tags": [
+  3168→          "Billing"
+  3169→        ],
+  3170→        "summary": "Verify Transaction",
+  3171→        "operationId": "verify_transaction_v1_billing_verify_post",
+  3172→        "parameters": [
+  3173→          {
+  3174→            "name": "reference",
+  3175→            "in": "query",
+  3176→            "required": true,
+  3177→            "schema": {
+  3178→              "type": "string",
+  3179→              "minLength": 1,
+  3180→              "maxLength": 200,
+  3181→              "title": "Reference"
+  3182→            }
+  3183→          }
+  3184→        ],
+  3185→        "responses": {
+  3186→          "200": {
+  3187→            "description": "Successful Response",
+  3188→            "content": {
+  3189→              "application/json": {
+  3190→                "schema": {
+  3191→                  "$ref": "#/components/schemas/VerifyTransactionResponse"
+  3192→                }
+  3193→              }
+  3194→            }
+  3195→          },
+  3196→          "422": {
+  3197→            "description": "Validation Error",
+  3198→            "content": {
+  3199→              "application/json": {
+  3200→                "schema": {
+  3201→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3202→                }
+  3203→              }
+  3204→            }
+  3205→          }
+  3206→        }
+  3207→      }
+  3208→    },
+  3209→    "/v1/billing/webhook": {
+  3210→      "post": {
+  3211→        "tags": [
+  3212→          "Billing"
+  3213→        ],
+  3214→        "summary": "Paystack Webhook",
+  3215→        "operationId": "paystack_webhook_v1_billing_webhook_post",
+  3216→        "parameters": [
+  3217→          {
+  3218→            "name": "x-paystack-signature",
+  3219→            "in": "header",
+  3220→            "required": false,
+  3221→            "schema": {
+  3222→              "anyOf": [
+  3223→                {
+  3224→                  "type": "string"
+  3225→                },
+  3226→                {
+  3227→                  "type": "null"
+  3228→                }
+  3229→              ],
+  3230→              "title": "X-Paystack-Signature"
+  3231→            }
+  3232→          }
+  3233→        ],
+  3234→        "responses": {
+  3235→          "200": {
+  3236→            "description": "Successful Response",
+  3237→            "content": {
+  3238→              "application/json": {
+  3239→                "schema": {
+  3240→                  "$ref": "#/components/schemas/PaystackWebhookResponse"
+  3241→                }
+  3242→              }
+  3243→            }
+  3244→          },
+  3245→          "422": {
+  3246→            "description": "Validation Error",
+  3247→            "content": {
+  3248→              "application/json": {
+  3249→                "schema": {
+  3250→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3251→                }
+  3252→              }
+  3253→            }
+  3254→          }
+  3255→        }
+  3256→      }
+  3257→    },
+  3258→    "/v1/orgs/{org_id}/api-keys": {
+  3259→      "get": {
+  3260→        "tags": [
+  3261→          "API Keys"
+  3262→        ],
+  3263→        "summary": "List Api Keys",
+  3264→        "operationId": "list_api_keys_v1_orgs__org_id__api_keys_get",
+  3265→        "security": [
+  3266→          {
+  3267→            "HTTPBearer": []
+  3268→          }
+  3269→        ],
+  3270→        "parameters": [
+  3271→          {
+  3272→            "name": "org_id",
+  3273→            "in": "path",
+  3274→            "required": true,
+  3275→            "schema": {
+  3276→              "type": "string",
+  3277→              "format": "uuid",
+  3278→              "title": "Org Id"
+  3279→            }
+  3280→          }
+  3281→        ],
+  3282→        "responses": {
+  3283→          "200": {
+  3284→            "description": "Successful Response",
+  3285→            "content": {
+  3286→              "application/json": {
+  3287→                "schema": {
+  3288→                  "type": "array",
+  3289→                  "items": {
+  3290→                    "$ref": "#/components/schemas/ApiKeyResponse"
+  3291→                  },
+  3292→                  "title": "Response List Api Keys V1 Orgs  Org Id  Api Keys Get"
+  3293→                }
+  3294→              }
+  3295→            }
+  3296→          },
+  3297→          "422": {
+  3298→            "description": "Validation Error",
+  3299→            "content": {
+  3300→              "application/json": {
+  3301→                "schema": {
+  3302→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3303→                }
+  3304→              }
+  3305→            }
+  3306→          }
+  3307→        }
+  3308→      },
+  3309→      "post": {
+  3310→        "tags": [
+  3311→          "API Keys"
+  3312→        ],
+  3313→        "summary": "Create Api Key",
+  3314→        "operationId": "create_api_key_v1_orgs__org_id__api_keys_post",
+  3315→        "security": [
+  3316→          {
+  3317→            "HTTPBearer": []
+  3318→          }
+  3319→        ],
+  3320→        "parameters": [
+  3321→          {
+  3322→            "name": "org_id",
+  3323→            "in": "path",
+  3324→            "required": true,
+  3325→            "schema": {
+  3326→              "type": "string",
+  3327→              "format": "uuid",
+  3328→              "title": "Org Id"
+  3329→            }
+  3330→          }
+  3331→        ],
+  3332→        "requestBody": {
+  3333→          "required": true,
+  3334→          "content": {
+  3335→            "application/json": {
+  3336→              "schema": {
+  3337→                "$ref": "#/components/schemas/ApiKeyCreateRequest"
+  3338→              }
+  3339→            }
+  3340→          }
+  3341→        },
+  3342→        "responses": {
+  3343→          "201": {
+  3344→            "description": "Successful Response",
+  3345→            "content": {
+  3346→              "application/json": {
+  3347→                "schema": {
+  3348→                  "$ref": "#/components/schemas/ApiKeyCreateResponse"
+  3349→                }
+  3350→              }
+  3351→            }
+  3352→          },
+  3353→          "422": {
+  3354→            "description": "Validation Error",
+  3355→            "content": {
+  3356→              "application/json": {
+  3357→                "schema": {
+  3358→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3359→                }
+  3360→              }
+  3361→            }
+  3362→          }
+  3363→        }
+  3364→      }
+  3365→    },
+  3366→    "/v1/orgs/{org_id}/api-keys/{key_id}": {
+  3367→      "delete": {
+  3368→        "tags": [
+  3369→          "API Keys"
+  3370→        ],
+  3371→        "summary": "Revoke Api Key",
+  3372→        "operationId": "revoke_api_key_v1_orgs__org_id__api_keys__key_id__delete",
+  3373→        "security": [
+  3374→          {
+  3375→            "HTTPBearer": []
+  3376→          }
+  3377→        ],
+  3378→        "parameters": [
+  3379→          {
+  3380→            "name": "org_id",
+  3381→            "in": "path",
+  3382→            "required": true,
+  3383→            "schema": {
+  3384→              "type": "string",
+  3385→              "format": "uuid",
+  3386→              "title": "Org Id"
+  3387→            }
+  3388→          },
+  3389→          {
+  3390→            "name": "key_id",
+  3391→            "in": "path",
+  3392→            "required": true,
+  3393→            "schema": {
+  3394→              "type": "string",
+  3395→              "format": "uuid",
+  3396→              "title": "Key Id"
+  3397→            }
+  3398→          }
+  3399→        ],
+  3400→        "responses": {
+  3401→          "204": {
+  3402→            "description": "Successful Response"
+  3403→          },
+  3404→          "422": {
+  3405→            "description": "Validation Error",
+  3406→            "content": {
+  3407→              "application/json": {
+  3408→                "schema": {
+  3409→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3410→                }
+  3411→              }
+  3412→            }
+  3413→          }
+  3414→        }
+  3415→      }
+  3416→    },
+  3417→    "/v1/orgs/{org_id}/clients": {
+  3418→      "get": {
+  3419→        "tags": [
+  3420→          "Agency"
+  3421→        ],
+  3422→        "summary": "List Clients",
+  3423→        "operationId": "list_clients_v1_orgs__org_id__clients_get",
+  3424→        "security": [
+  3425→          {
+  3426→            "HTTPBearer": []
+  3427→          }
+  3428→        ],
+  3429→        "parameters": [
+  3430→          {
+  3431→            "name": "org_id",
+  3432→            "in": "path",
+  3433→            "required": true,
+  3434→            "schema": {
+  3435→              "type": "string",
+  3436→              "format": "uuid",
+  3437→              "title": "Org Id"
+  3438→            }
+  3439→          }
+  3440→        ],
+  3441→        "responses": {
+  3442→          "200": {
+  3443→            "description": "Successful Response",
+  3444→            "content": {
+  3445→              "application/json": {
+  3446→                "schema": {
+  3447→                  "type": "array",
+  3448→                  "items": {
+  3449→                    "$ref": "#/components/schemas/ClientResponse"
+  3450→                  },
+  3451→                  "title": "Response List Clients V1 Orgs  Org Id  Clients Get"
+  3452→                }
+  3453→              }
+  3454→            }
+  3455→          },
+  3456→          "422": {
+  3457→            "description": "Validation Error",
+  3458→            "content": {
+  3459→              "application/json": {
+  3460→                "schema": {
+  3461→                  "$ref": "#/components/schemas/HTTPValidationError"
+  3462→                }
+  3463→              }
+  3464→            }
+  3465→          }
+  3466→        }
+  3467→      },
+  3468→      "post": {
+  3469→        "tags": [
+  3470→          "Agency"
+  3471→        ],
+  3472→        "summary": "Create Client",
+  3473→        "operationId": "create_client_v1_orgs__org_id__clients_post",
+  3474→        "security": [
+  3475→          {
+  3476→            "HTTPBearer": []
+  3477→          }
+  3478→        ],
+  3479→        "parameters": [
+  3480→          {
+  3481→            "name": "org_id",
+  3482→            "in": "path",
+  3483→            "required": true,
+  3484→            "schema": {
+  3485→              "type": "string",
+  3486→              "format": "uuid",
+  3487→              "title": "Org Id"
+  3488→            }
+  3489→          }
+  3490→        ],
+  3491→        "requestBody": {
+  3492→          "required": true,
+  3493→          "content": {
+  3494→            "application/json": {
+  3495→              "schema": {
+  3496→                "$ref": "#/components/schemas/ClientCreateRequest"
+  3497→              }
+  3498→            }
+  3499→          }
+  3500→        },
+
+[showing lines 2501-3500 of 7349; use offset=3501 with limit to continue reading]

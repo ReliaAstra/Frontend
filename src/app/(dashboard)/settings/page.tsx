@@ -2,17 +2,24 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { billingService, type PlanDetailsResponse, type PricingPlansResponse } from "@/services/billingService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { User, CreditCard, Users, Check, Lock, Zap, Globe, FileText, Key, Bell } from "lucide-react";
 import { ConsoleCard, ConsoleCardHeader, ConsoleCardBody } from "@/components/dashboard/ConsoleLayout";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { getPlanConfig, PLANS } from "@/lib/tierLimits";
-import { orgService, type OrgMemberResponse } from "@/services/orgService";
 import { apiClient, BackendError } from "@/lib/api";
-import type { Plan } from "@/services/billingService";
+import { type Plan, type PricingPlanResponse } from "@/services/billingService";
 import { toast } from "sonner";
+import {
+  useBillingPlan,
+  usePricingPlans,
+  useOrgMembers,
+  useInviteMember,
+  useInitializePayment,
+  useVerifyPayment,
+} from "@/hooks/useApi";
+import type { OrgMemberResponse } from "@/services/orgService";
 
 const tabs = [
   { key: "profile", label: "Profile", icon: User },
@@ -64,23 +71,30 @@ export default function SettingsPage() {
 
   const activeTab = searchParams.get("tab") || "profile";
 
+  // ── TanStack Query hooks ──
+  const { data: plan } = useBillingPlan();
+  const { data: pricingPlans } = usePricingPlans();
+  const {
+    data: members = [],
+    isLoading: membersLoading,
+    isError: membersError,
+  } = useOrgMembers();
+  const inviteMutation = useInviteMember();
+  const initializePayment = useInitializePayment();
+  const verifyPayment = useVerifyPayment();
+
   // Profile state
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Team state
-  const [members, setMembers] = useState<OrgMemberResponse[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
-  const [membersError, setMembersError] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviting, setInviting] = useState(false);
+  const [membersErrorMsg, setMembersErrorMsg] = useState<string | null>(null);
 
   // Billing state
-  const [plan, setPlan] = useState<PlanDetailsResponse | null>(null);
-  const [pricingPlans, setPricingPlans] = useState<PricingPlansResponse | null>(null);
-  const [billingLoading, setBillingLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [verifyingRef, setVerifyingRef] = useState(false);
 
   // Initialize profile
   useEffect(() => {
@@ -89,33 +103,27 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  // Fetch team data
+  // ── Auto-verify Paystack payment on return ──
   useEffect(() => {
-    if (activeTab === "team" && !authLoading) {
-      setMembersLoading(true);
-      setMembersError(null);
-      orgService
-        .listMembers()
-        .then(setMembers)
-        .catch(() => setMembersError("Unable to load team members."))
-        .finally(() => setMembersLoading(false));
-    }
-  }, [activeTab, authLoading]);
-
-  // Fetch billing data
-  useEffect(() => {
-    if ((activeTab === "billing") && !authLoading) {
-      setBillingLoading(true);
-      setBillingError(null);
-      Promise.all([billingService.getPlan(), billingService.getPricingPlans()])
-        .then(([planData, pricingData]) => {
-          setPlan(planData);
-          setPricingPlans(pricingData);
+    const reference = searchParams.get("reference");
+    if (reference && !verifyingRef) {
+      setVerifyingRef(true);
+      verifyPayment.mutateAsync(reference)
+        .then(() => {
+          toast.success("Payment verified! Your plan has been updated.");
+          // Clean URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete("reference");
+          router.replace(url.pathname + url.search);
         })
-        .catch(() => setBillingError("Unable to load billing information."))
-        .finally(() => setBillingLoading(false));
+        .catch(() => {
+          toast.error("Payment verification failed. Please contact support.");
+        })
+        .finally(() => {
+          setVerifyingRef(false);
+        });
     }
-  }, [activeTab, authLoading]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleProfileUpdate = async () => {
     setSaving(true);
@@ -138,24 +146,19 @@ export default function SettingsPage() {
       toast.error("Please enter a valid email address.");
       return;
     }
-    setInviting(true);
     try {
-      await orgService.inviteMember(currentOrg.id, inviteEmail);
+      await inviteMutation.mutateAsync({ orgId: currentOrg.id, email: inviteEmail });
       toast.success(`Invitation sent to ${inviteEmail}.`);
       setInviteEmail("");
-      // Refresh members
-      orgService.listMembers().then(setMembers).catch(() => {});
     } catch {
       toast.error("Failed to send invitation.");
-    } finally {
-      setInviting(false);
     }
   };
 
   const handleUpgrade = async (targetPlan: string) => {
     setUpgrading(targetPlan);
     try {
-      const result = await billingService.initializePayment(targetPlan, user?.email);
+      const result = await initializePayment.mutateAsync({ plan: targetPlan, email: user?.email });
       window.location.href = result.authorization_url;
     } catch {
       toast.error("Failed to initialize payment.");
@@ -315,10 +318,10 @@ export default function SettingsPage() {
                   />
                   <button
                     onClick={handleInvite}
-                    disabled={inviting || !inviteEmail}
+                    disabled={inviteMutation.isPending || !inviteEmail}
                     className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
-                    {inviting ? "Inviting..." : "Invite"}
+                    {inviteMutation.isPending ? "Inviting..." : "Invite"}
                   </button>
                 </div>
               </ConsoleCardBody>
@@ -336,7 +339,7 @@ export default function SettingsPage() {
             </ConsoleCard>
           ) : membersError ? (
             <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
-              <p className="text-sm text-[#DC2626]">{membersError}</p>
+              <p className="text-sm text-[#DC2626]">Unable to load team members.</p>
             </div>
           ) : members.length > 0 ? (
             <ConsoleCard>
@@ -399,16 +402,8 @@ export default function SettingsPage() {
       {/* Billing Tab */}
       {activeTab === "billing" && (
         <div className="max-w-4xl space-y-6">
-          {billingLoading ? (
-            <div className="space-y-5">
-              <Skeleton className="h-[180px] rounded-xl bg-[#1C1C22]" />
-              <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
-            </div>
-          ) : billingError ? (
-            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
-              <p className="text-sm text-[#DC2626]">{billingError}</p>
-            </div>
-          ) : plan ? (
+          {/* Billing loading handled by TanStack Query */}
+          {plan ? (
             <>
               {/* Current Plan Card (Large, Prominent) */}
               <ConsoleCard className="border-[rgba(8,145,178,0.2)]">
@@ -675,7 +670,13 @@ export default function SettingsPage() {
                 </div>
               )}
             </>
-          ) : null}
+          ) : (
+            /* Billing loading skeleton (while plan is loading) */
+            <div className="space-y-5">
+              <Skeleton className="h-[180px] rounded-xl bg-[#1C1C22]" />
+              <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
+            </div>
+          )}
         </div>
       )}
     </div>

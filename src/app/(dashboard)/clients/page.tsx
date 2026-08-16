@@ -1,43 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { clientService, type Client } from "@/services/clientService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Users, Plus, ChevronRight } from "lucide-react";
 import { ConsoleCard } from "@/components/dashboard/ConsoleLayout";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { useClients } from "@/hooks/useApi";
 
 export default function ClientsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: clientsData, isLoading: loading, isError: error, refetch } = useClients();
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    clientService
-      .list()
-      .then((res) => {
-        if (cancelled) return;
-        const items = Array.isArray(res) ? res : res?.items ?? [];
-        setClients(items);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Unable to load clients.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated]);
+  // Normalize response
+  const clients = Array.isArray(clientsData)
+    ? clientsData
+    : (clientsData as any)?.items ?? [];
 
   if (authLoading || loading) {
     return (
@@ -90,9 +69,9 @@ export default function ClientsPage() {
       {error && (
         <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-4 flex items-start gap-3">
           <span className="w-2 h-2 rounded-full bg-[#DC2626] mt-1.5 shrink-0" />
-          <p className="text-sm text-[#FAFAFA] flex-1">{error}</p>
+          <p className="text-sm text-[#FAFAFA] flex-1">Unable to load clients.</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="text-xs font-medium text-[#0891B2]"
           >
             Retry
@@ -125,7 +104,7 @@ export default function ClientsPage() {
           </div>
 
           {/* Rows */}
-          {clients.map((client) => {
+          {clients.map((client: any) => {
             const hasIncidents = client.open_incidents_count > 0;
             return (
               <Link

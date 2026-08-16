@@ -1,15 +1,16 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { incidentService, type Incident, type IncidentSeverity, type IncidentStatus } from "@/services/incidentService";
+import { type Incident, type IncidentSeverity, type IncidentStatus } from "@/services/incidentService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Filter, ChevronRight } from "lucide-react";
 import { ConsoleCard, ConsoleCardHeader, StatusDot } from "@/components/dashboard/ConsoleLayout";
 import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { useIncidents } from "@/hooks/useApi";
 
 const statusOptions: Array<{ value: IncidentStatus | "all"; label: string }> = [
   { value: "all", label: "All" },
@@ -26,35 +27,13 @@ const severityOptions: Array<{ value: IncidentSeverity | "all"; label: string }>
 
 export default function IncidentsPage() {
   const { currentOrg } = useAuth();
-  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | "all">("all");
   const [severityFilter, setSeverityFilter] = useState<IncidentSeverity | "all">("all");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!currentOrg) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    incidentService
-      .list(
-        statusFilter === "all" ? undefined : statusFilter,
-        severityFilter === "all" ? undefined : severityFilter
-      )
-      .then((data) => {
-        if (!cancelled) setIncidents(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Unable to load incidents.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentOrg, statusFilter, severityFilter]);
+  const { data: incidents = [], isLoading: loading, isError: error, refetch } = useIncidents({
+    status: statusFilter,
+    severity: severityFilter,
+  });
 
   return (
     <div className="space-y-6">
@@ -116,7 +95,10 @@ export default function IncidentsPage() {
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-sm text-red-300">Unable to load incidents.</p>
+          <button onClick={() => refetch()} className="text-xs text-[#0891B2] hover:underline ml-auto">
+            Retry
+          </button>
         </div>
       )}
 

@@ -1,0 +1,684 @@
+     1→"use client";
+     2→import { useState, useEffect } from "react";
+     3→import { useSearchParams, useRouter } from "next/navigation";
+     4→import { useAuth } from "@/lib/auth-context";
+     5→import { billingService, type PlanDetailsResponse, type PricingPlansResponse } from "@/services/billingService";
+     6→import { Skeleton } from "@/components/ui/skeleton";
+     7→import { cn } from "@/lib/utils";
+     8→import { User, CreditCard, Users, Check, Lock, Zap, Globe, FileText, Key, Bell } from "lucide-react";
+     9→import { ConsoleCard, ConsoleCardHeader, ConsoleCardBody } from "@/components/dashboard/ConsoleLayout";
+    10→import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
+    11→import { getPlanConfig, PLANS } from "@/lib/tierLimits";
+    12→import { orgService, type OrgMemberResponse } from "@/services/orgService";
+    13→import { apiClient, BackendError } from "@/lib/api";
+    14→import type { Plan } from "@/services/billingService";
+    15→import { toast } from "sonner";
+    16→
+    17→const tabs = [
+    18→  { key: "profile", label: "Profile", icon: User },
+    19→  { key: "team", label: "Team", icon: Users },
+    20→  { key: "billing", label: "Billing", icon: CreditCard },
+    21→] as const;
+    22→
+    23→// All features that can be checked across plans
+    24→const allFeatures = [
+    25→  { key: "dependencies", label: "Dependency monitoring" },
+    26→  { key: "email_alerts", label: "Email alerts" },
+    27→  { key: "slack_alerts", label: "Slack alerts" },
+    28→  { key: "webhook_alerts", label: "Webhook alerts" },
+    29→  { key: "pagerduty_alerts", label: "PagerDuty alerts" },
+    30→  { key: "evidence", label: "Evidence generation" },
+    31→  { key: "attribution", label: "Deterministic attribution" },
+    32→  { key: "client_groups", label: "Client groups" },
+    33→  { key: "api_keys", label: "API access" },
+    34→  { key: "custom_branding", label: "Custom branding" },
+    35→  { key: "client_reports", label: "Client-facing reports" },
+    36→  { key: "white_label", label: "White-label evidence" },
+    37→  { key: "multi_region", label: "Multi-region checks" },
+    38→  { key: "fast_intervals", label: "15s check intervals" },
+    39→  { key: "long_retention", label: "Extended data retention" },
+    40→];
+    41→
+    42→const featurePlanMap: Record<string, Plan[]> = {
+    43→  dependencies: ["free", "starter", "standard", "professional", "agency"],
+    44→  email_alerts: ["free", "starter", "standard", "professional", "agency"],
+    45→  slack_alerts: ["starter", "standard", "professional", "agency"],
+    46→  webhook_alerts: ["standard", "professional", "agency"],
+    47→  pagerduty_alerts: ["standard", "professional", "agency"],
+    48→  evidence: ["standard", "professional", "agency"],
+    49→  attribution: ["standard", "professional", "agency"],
+    50→  client_groups: ["standard", "professional", "agency"],
+    51→  api_keys: ["standard", "professional", "agency"],
+    52→  custom_branding: ["professional", "agency"],
+    53→  client_reports: ["agency"],
+    54→  white_label: ["agency"],
+    55→  multi_region: ["starter", "standard", "professional", "agency"],
+    56→  fast_intervals: ["professional", "agency"],
+    57→  long_retention: ["starter", "standard", "professional", "agency"],
+    58→};
+    59→
+    60→export default function SettingsPage() {
+    61→  const searchParams = useSearchParams();
+    62→  const router = useRouter();
+    63→  const { user, memberRole, currentOrg, isLoading: authLoading } = useAuth();
+    64→
+    65→  const activeTab = searchParams.get("tab") || "profile";
+    66→
+    67→  // Profile state
+    68→  const [name, setName] = useState("");
+    69→  const [saving, setSaving] = useState(false);
+    70→
+    71→  // Team state
+    72→  const [members, setMembers] = useState<OrgMemberResponse[]>([]);
+    73→  const [membersLoading, setMembersLoading] = useState(false);
+    74→  const [membersError, setMembersError] = useState<string | null>(null);
+    75→  const [inviteEmail, setInviteEmail] = useState("");
+    76→  const [inviting, setInviting] = useState(false);
+    77→
+    78→  // Billing state
+    79→  const [plan, setPlan] = useState<PlanDetailsResponse | null>(null);
+    80→  const [pricingPlans, setPricingPlans] = useState<PricingPlansResponse | null>(null);
+    81→  const [billingLoading, setBillingLoading] = useState(false);
+    82→  const [billingError, setBillingError] = useState<string | null>(null);
+    83→  const [upgrading, setUpgrading] = useState<string | null>(null);
+    84→
+    85→  // Initialize profile
+    86→  useEffect(() => {
+    87→    if (user) {
+    88→      setName(user.full_name);
+    89→    }
+    90→  }, [user]);
+    91→
+    92→  // Fetch team data
+    93→  useEffect(() => {
+    94→    if (activeTab === "team" && !authLoading) {
+    95→      setMembersLoading(true);
+    96→      setMembersError(null);
+    97→      orgService
+    98→        .listMembers()
+    99→        .then(setMembers)
+   100→        .catch(() => setMembersError("Unable to load team members."))
+   101→        .finally(() => setMembersLoading(false));
+   102→    }
+   103→  }, [activeTab, authLoading]);
+   104→
+   105→  // Fetch billing data
+   106→  useEffect(() => {
+   107→    if ((activeTab === "billing") && !authLoading) {
+   108→      setBillingLoading(true);
+   109→      setBillingError(null);
+   110→      Promise.all([billingService.getPlan(), billingService.getPricingPlans()])
+   111→        .then(([planData, pricingData]) => {
+   112→          setPlan(planData);
+   113→          setPricingPlans(pricingData);
+   114→        })
+   115→        .catch(() => setBillingError("Unable to load billing information."))
+   116→        .finally(() => setBillingLoading(false));
+   117→    }
+   118→  }, [activeTab, authLoading]);
+   119→
+   120→  const handleProfileUpdate = async () => {
+   121→    setSaving(true);
+   122→    try {
+   123→      await apiClient.patch("/users/me", { full_name: name });
+   124→      toast.success("Profile updated.");
+   125→    } catch (err) {
+   126→      if (err instanceof BackendError) {
+   127→        toast.error(err.message);
+   128→      } else {
+   129→        toast.error("Unable to update profile.");
+   130→      }
+   131→    } finally {
+   132→      setSaving(false);
+   133→    }
+   134→  };
+   135→
+   136→  const handleInvite = async () => {
+   137→    if (!inviteEmail || !currentOrg?.id) {
+   138→      toast.error("Please enter a valid email address.");
+   139→      return;
+   140→    }
+   141→    setInviting(true);
+   142→    try {
+   143→      await orgService.inviteMember(currentOrg.id, inviteEmail);
+   144→      toast.success(`Invitation sent to ${inviteEmail}.`);
+   145→      setInviteEmail("");
+   146→      // Refresh members
+   147→      orgService.listMembers().then(setMembers).catch(() => {});
+   148→    } catch {
+   149→      toast.error("Failed to send invitation.");
+   150→    } finally {
+   151→      setInviting(false);
+   152→    }
+   153→  };
+   154→
+   155→  const handleUpgrade = async (targetPlan: string) => {
+   156→    setUpgrading(targetPlan);
+   157→    try {
+   158→      const result = await billingService.initializePayment(targetPlan, user?.email);
+   159→      window.location.href = result.authorization_url;
+   160→    } catch {
+   161→      toast.error("Failed to initialize payment.");
+   162→    } finally {
+   163→      setUpgrading(null);
+   164→    }
+   165→  };
+   166→
+   167→  const setTab = (tab: string) => {
+   168→    router.push(`/settings?tab=${tab}`);
+   169→  };
+   170→
+   171→  if (authLoading) {
+   172→    return (
+   173→      <div className="space-y-5">
+   174→        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
+   175→        <Skeleton className="h-[400px] rounded-xl bg-[#1C1C22]" />
+   176→      </div>
+   177→    );
+   178→  }
+   179→
+   180→  const currentPlanTyped = (plan?.plan || "free") as Plan;
+   181→  const planConfig = getPlanConfig(currentPlanTyped);
+   182→
+   183→  return (
+   184→    <div className="space-y-6">
+   185→      {/* Header */}
+   186→      <div>
+   187→        <h1 className="text-[15px] font-semibold text-[#FAFAFA] tracking-tight">
+   188→          Settings
+   189→        </h1>
+   190→        <p className="text-[12px] text-[#A1A1AA] mt-1">
+   191→          Manage your account and organization
+   192→        </p>
+   193→      </div>
+   194→
+   195→      {/* Tab Navigation */}
+   196→      <div className="flex gap-1 rounded-lg bg-[#131318] border border-[rgba(255,255,255,0.08)] p-1 w-fit">
+   197→        {tabs.map((tab) => {
+   198→          const Icon = tab.icon;
+   199→          return (
+   200→            <button
+   201→              key={tab.key}
+   202→              onClick={() => setTab(tab.key)}
+   203→              className={cn(
+   204→                "rounded-md px-4 py-2 text-xs font-medium transition-colors flex items-center gap-2",
+   205→                activeTab === tab.key
+   206→                  ? "bg-[rgba(255,255,255,0.08)] text-[#FAFAFA]"
+   207→                  : "text-[#A1A1AA] hover:text-[#FAFAFA]"
+   208→              )}
+   209→            >
+   210→              <Icon className="w-3.5 h-3.5" />
+   211→              {tab.label}
+   212→            </button>
+   213→          );
+   214→        })}
+   215→      </div>
+   216→
+   217→      {/* Profile Tab */}
+   218→      {activeTab === "profile" && (
+   219→        <div className="max-w-2xl">
+   220→          <ConsoleCard>
+   221→            <ConsoleCardBody className="space-y-6">
+   222→              {/* Avatar + Name Row */}
+   223→              <div className="flex items-center gap-4">
+   224→                <div className="w-8 h-8 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xs font-semibold shrink-0">
+   225→                  {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+   226→                </div>
+   227→                <div>
+   228→                  <p className="text-[14px] font-medium text-[#FAFAFA]">
+   229→                    {user?.full_name}
+   230→                  </p>
+   231→                  <p className="text-[12px] text-[#A1A1AA] capitalize">
+   232→                    {memberRole || "Member"}
+   233→                  </p>
+   234→                </div>
+   235→              </div>
+   236→
+   237→              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
+   238→
+   239→              {/* Full Name */}
+   240→              <div>
+   241→                <label className="text-[13px] font-medium text-[#A1A1AA] mb-1.5 block">
+   242→                  Full Name
+   243→                </label>
+   244→                <input
+   245→                  type="text"
+   246→                  value={name}
+   247→                  onChange={(e) => setName(e.target.value)}
+   248→                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(255,255,255,0.2)] transition-colors"
+   249→                />
+   250→              </div>
+   251→
+   252→              {/* Email (readonly) */}
+   253→              <div>
+   254→                <label className="text-[13px] font-medium text-[#A1A1AA] mb-1.5 block">
+   255→                  Email
+   256→                </label>
+   257→                <input
+   258→                  type="email"
+   259→                  value={user?.email || ""}
+   260→                  readOnly
+   261→                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#52525B] cursor-not-allowed focus:outline-none"
+   262→                />
+   263→              </div>
+   264→
+   265→              {/* Update Button */}
+   266→              <button
+   267→                onClick={handleProfileUpdate}
+   268→                disabled={saving}
+   269→                className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+   270→              >
+   271→                {saving ? "Saving..." : "Update Profile"}
+   272→              </button>
+   273→            </ConsoleCardBody>
+   274→          </ConsoleCard>
+   275→        </div>
+   276→      )}
+   277→
+   278→      {/* Team Tab */}
+   279→      {activeTab === "team" && (
+   280→        <div className="max-w-3xl space-y-5">
+   281→          {/* Free plan banner */}
+   282→          {currentPlanTyped === "free" && (
+   283→            <div className="rounded-xl border border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)] px-4 py-3 flex items-center justify-between">
+   284→              <div className="flex items-center gap-3">
+   285→                <Lock className="w-4 h-4 text-[#0891B2]" />
+   286→                <div>
+   287→                  <p className="text-[13px] font-medium text-[#FAFAFA]">
+   288→                    Team invites require Starter plan
+   289→                  </p>
+   290→                  <p className="text-[12px] text-[#A1A1AA]">
+   291→                    Upgrade to invite team members to your organization.
+   292→                  </p>
+   293→                </div>
+   294→              </div>
+   295→              <button
+   296→                onClick={() => handleUpgrade("starter")}
+   297→                className="bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white transition-all shrink-0"
+   298→              >
+   299→                Upgrade
+   300→              </button>
+   301→            </div>
+   302→          )}
+   303→
+   304→          {/* Invite Bar */}
+   305→          {currentPlanTyped !== "free" && (
+   306→            <ConsoleCard>
+   307→              <ConsoleCardBody>
+   308→                <div className="flex items-center gap-3">
+   309→                  <input
+   310→                    type="email"
+   311→                    value={inviteEmail}
+   312→                    onChange={(e) => setInviteEmail(e.target.value)}
+   313→                    placeholder="colleague@company.com"
+   314→                    className="flex-1 bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(255,255,255,0.2)] transition-colors"
+   315→                  />
+   316→                  <button
+   317→                    onClick={handleInvite}
+   318→                    disabled={inviting || !inviteEmail}
+   319→                    className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+   320→                  >
+   321→                    {inviting ? "Inviting..." : "Invite"}
+   322→                  </button>
+   323→                </div>
+   324→              </ConsoleCardBody>
+   325→            </ConsoleCard>
+   326→          )}
+   327→
+   328→          {/* Members Table */}
+   329→          {membersLoading ? (
+   330→            <ConsoleCard>
+   331→              <div className="p-5 space-y-3">
+   332→                {Array.from({ length: 3 }).map((_, i) => (
+   333→                  <Skeleton key={i} className="h-[48px] bg-[#1C1C22] rounded-lg" />
+   334→                ))}
+   335→              </div>
+   336→            </ConsoleCard>
+   337→          ) : membersError ? (
+   338→            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
+   339→              <p className="text-sm text-[#DC2626]">{membersError}</p>
+   340→            </div>
+   341→          ) : members.length > 0 ? (
+   342→            <ConsoleCard>
+   343→              <ConsoleCardHeader className="grid grid-cols-[1fr_1fr_100px] gap-4">
+   344→                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+   345→                  Member
+   346→                </span>
+   347→                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+   348→                  Role
+   349→                </span>
+   350→                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+   351→                  Joined
+   352→                </span>
+   353→              </ConsoleCardHeader>
+   354→              <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+   355→                {members.map((m) => (
+   356→                  <div
+   357→                    key={m.id}
+   358→                    className="px-5 py-3.5 grid grid-cols-[1fr_1fr_100px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+   359→                  >
+   360→                    <div className="flex items-center gap-3">
+   361→                      <div className="w-7 h-7 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center text-[11px] font-medium text-[#A1A1AA] shrink-0">
+   362→                        {m.user_id.slice(0, 2).toUpperCase()}
+   363→                      </div>
+   364→                      <span className="text-[13px] font-mono text-[#FAFAFA]">
+   365→                        {m.user_id.slice(0, 12)}
+   366→                      </span>
+   367→                    </div>
+   368→                    <span className="text-[12px] text-[#A1A1AA] capitalize">
+   369→                      {m.role}
+   370→                    </span>
+   371→                    <span className="text-[12px] text-[#52525B]">
+   372→                      {new Date(m.joined_at).toLocaleDateString("en-US", {
+   373→                        month: "short",
+   374→                        day: "numeric",
+   375→                      })}
+   376→                    </span>
+   377→                  </div>
+   378→                ))}
+   379→              </div>
+   380→            </ConsoleCard>
+   381→          ) : (
+   382→            <ConsoleCard>
+   383→              <ConsoleCardBody className="py-12 text-center">
+   384→                <Users className="w-8 h-8 text-[#52525B] mx-auto mb-3" strokeWidth={1.5} />
+   385→                <p className="text-[14px] font-medium text-[#FAFAFA]">
+   386→                  No team members yet
+   387→                </p>
+   388→                <p className="text-[12px] text-[#A1A1AA] mt-1">
+   389→                  {currentPlanTyped === "free"
+   390→                    ? "Upgrade your plan to invite team members."
+   391→                    : "Invite team members to collaborate on monitoring."}
+   392→                </p>
+   393→              </ConsoleCardBody>
+   394→            </ConsoleCard>
+   395→          )}
+   396→        </div>
+   397→      )}
+   398→
+   399→      {/* Billing Tab */}
+   400→      {activeTab === "billing" && (
+   401→        <div className="max-w-4xl space-y-6">
+   402→          {billingLoading ? (
+   403→            <div className="space-y-5">
+   404→              <Skeleton className="h-[180px] rounded-xl bg-[#1C1C22]" />
+   405→              <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
+   406→            </div>
+   407→          ) : billingError ? (
+   408→            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
+   409→              <p className="text-sm text-[#DC2626]">{billingError}</p>
+   410→            </div>
+   411→          ) : plan ? (
+   412→            <>
+   413→              {/* Current Plan Card (Large, Prominent) */}
+   414→              <ConsoleCard className="border-[rgba(8,145,178,0.2)]">
+   415→                <div className="p-6">
+   416→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+   417→                    <div>
+   418→                      <div className="flex items-center gap-3 mb-2">
+   419→                        <div className="w-10 h-10 rounded-lg bg-[rgba(8,145,178,0.12)] flex items-center justify-center">
+   420→                          <Zap className="w-5 h-5 text-[#0891B2]" />
+   421→                        </div>
+   422→                        <div>
+   423→                          <h2 className="text-[18px] font-semibold text-[#FAFAFA]">
+   424→                            {planConfig.name} Plan
+   425→                          </h2>
+   426→                          <p className="text-[13px] text-[#A1A1AA]">
+   427→                            {planConfig.priceDisplay}/month
+   428→                          </p>
+   429→                        </div>
+   430→                      </div>
+   431→                      <div className="flex items-center gap-2 mt-2">
+   432→                        <span
+   433→                          className={cn(
+   434→                            "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+   435→                            plan.subscription_status === "active"
+   436→                              ? "bg-[rgba(22,163,74,0.12)] text-[#16A34A]"
+   437→                              : plan.price_usd === 0
+   438→                                ? "bg-[rgba(255,255,255,0.05)] text-[#52525B]"
+   439→                                : "bg-[rgba(217,119,6,0.12)] text-[#D97706]"
+   440→                          )}
+   441→                        >
+   442→                          {plan.subscription_status === "active"
+   443→                            ? "Active"
+   444→                            : plan.price_usd === 0
+   445→                              ? "Free"
+   446→                              : plan.subscription_status || "Inactive"}
+   447→                        </span>
+   448→                        {plan.current_period_end && (
+   449→                          <span className="text-[11px] text-[#52525B]">
+   450→                            Renews {new Date(plan.current_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+   451→                          </span>
+   452→                        )}
+   453→                      </div>
+   454→                    </div>
+   455→                    {planConfig.upgradeCTA && (
+   456→                      <button
+   457→                        onClick={() => planConfig.nextPlan && handleUpgrade(planConfig.nextPlan)}
+   458→                        className="bg-[#FAFAFA] text-[#0A0A0F] px-6 py-3 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all shrink-0"
+   459→                      >
+   460→                        {planConfig.upgradeCTA}
+   461→                      </button>
+   462→                    )}
+   463→                  </div>
+   464→                </div>
+   465→              </ConsoleCard>
+   466→
+   467→              {/* Usage Meters Grid */}
+   468→              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   469→                {[
+   470→                  {
+   471→                    label: "Dependencies",
+   472→                    icon: Globe,
+   473→                    used: 0,
+   474→                    limit: plan.max_dependencies,
+   475→                  },
+   476→                  {
+   477→                    label: "Evidence",
+   478→                    icon: FileText,
+   479→                    used: 0,
+   480→                    limit: planConfig.limits.evidence,
+   481→                  },
+   482→                  {
+   483→                    label: "API Keys",
+   484→                    icon: Key,
+   485→                    used: 0,
+   486→                    limit: planConfig.limits.apiKeys,
+   487→                  },
+   488→                  {
+   489→                    label: "Team",
+   490→                    icon: Users,
+   491→                    used: 1,
+   492→                    limit: planConfig.limits.team,
+   493→                  },
+   494→                ].map((meter) => {
+   495→                  const ratio =
+   496→                    meter.limit > 0 && meter.limit !== Infinity
+   497→                      ? Math.min(meter.used / meter.limit, 1)
+   498→                      : 0;
+   499→                  const barColor =
+   500→                    ratio > 0.9
+   501→                      ? "#DC2626"
+   502→                      : ratio > 0.7
+   503→                        ? "#D97706"
+   504→                        : "#0891B2";
+   505→
+   506→                  return (
+   507→                    <ConsoleCard key={meter.label}>
+   508→                      <div className="p-4">
+   509→                        <div className="flex items-center gap-2 mb-3">
+   510→                          <meter.icon className="w-4 h-4 text-[#52525B]" />
+   511→                          <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
+   512→                            {meter.label}
+   513→                          </span>
+   514→                        </div>
+   515→                        <p className="text-xl font-mono font-semibold text-[#FAFAFA]">
+   516→                          {meter.used}
+   517→                          <span className="text-[13px] text-[#52525B] font-normal">
+   518→                            /{meter.limit === Infinity ? "\u221E" : meter.limit}
+   519→                          </span>
+   520→                        </p>
+   521→                        {meter.limit > 0 && meter.limit !== Infinity && (
+   522→                          <div className="w-full h-1.5 bg-[rgba(255,255,255,0.08)] rounded-full mt-3">
+   523→                            <div
+   524→                              className="h-full rounded-full transition-all duration-500"
+   525→                              style={{
+   526→                                width: `${ratio * 100}%`,
+   527→                                backgroundColor: barColor,
+   528→                              }}
+   529→                            />
+   530→                          </div>
+   531→                        )}
+   532→                      </div>
+   533→                    </ConsoleCard>
+   534→                  );
+   535→                })}
+   536→              </div>
+   537→
+   538→              {/* Features Checklist */}
+   539→              <ConsoleCard>
+   540→                <ConsoleCardHeader>
+   541→                  <span className="text-[13px] font-semibold text-[#FAFAFA]">
+   542→                    Features
+   543→                  </span>
+   544→                </ConsoleCardHeader>
+   545→                <ConsoleCardBody>
+   546→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+   547→                    {allFeatures.map((feat) => {
+   548→                      const allowed = (featurePlanMap[feat.key] || []).includes(currentPlanTyped);
+   549→                      return (
+   550→                        <div
+   551→                          key={feat.key}
+   552→                          className="flex items-center gap-2.5 py-1"
+   553→                        >
+   554→                          {allowed ? (
+   555→                            <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+   556→                          ) : (
+   557→                            <Lock className="w-4 h-4 text-[#52525B] shrink-0" />
+   558→                          )}
+   559→                          <span
+   560→                            className={cn(
+   561→                              "text-[13px]",
+   562→                              allowed ? "text-[#FAFAFA]" : "text-[#52525B]"
+   563→                            )}
+   564→                          >
+   565→                            {feat.label}
+   566→                          </span>
+   567→                        </div>
+   568→                      );
+   569→                    })}
+   570→                  </div>
+   571→                </ConsoleCardBody>
+   572→              </ConsoleCard>
+   573→
+   574→              {/* Pricing Plans Comparison Grid */}
+   575→              {pricingPlans && pricingPlans.plans.length > 0 && (
+   576→                <div>
+   577→                  <h3 className="text-[13px] font-semibold text-[#FAFAFA] mb-4">
+   578→                    All Plans
+   579→                  </h3>
+   580→                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+   581→                    {pricingPlans.plans.map((p) => {
+   582→                      const isCurrent = p.plan === currentPlanTyped;
+   583→                      const pConfig = getPlanConfig(p.plan);
+   584→                      const planOrder: Plan[] = ["free", "starter", "standard", "professional", "agency"];
+   585→                      const canUpgrade =
+   586→                        !isCurrent &&
+   587→                        planOrder.indexOf(p.plan) > planOrder.indexOf(currentPlanTyped);
+   588→
+   589→                      return (
+   590→                        <ConsoleCard
+   591→                          key={p.plan}
+   592→                          className={cn(
+   593→                            isCurrent && "border-[rgba(8,145,178,0.3)]"
+   594→                          )}
+   595→                          hover
+   596→                        >
+   597→                          <div className="p-5">
+   598→                            <div className="flex items-center justify-between mb-3">
+   599→                              <h4 className="text-[14px] font-semibold text-[#FAFAFA]">
+   600→                                {p.display_name}
+   601→                              </h4>
+   602→                              {isCurrent && (
+   603→                                <span className="rounded-full bg-[rgba(8,145,178,0.12)] text-[#0891B2] text-[10px] font-medium px-2 py-0.5">
+   604→                                  Current
+   605→                                </span>
+   606→                              )}
+   607→                            </div>
+   608→
+   609→                            <div className="mb-4">
+   610→                              <span className="text-[22px] font-semibold text-[#FAFAFA]">
+   611→                                ${p.price_usd}
+   612→                              </span>
+   613→                              <span className="text-[12px] text-[#52525B]">/mo</span>
+   614→                            </div>
+   615→
+   616→                            <p className="text-[12px] text-[#A1A1AA] mb-4 line-clamp-2">
+   617→                              {p.description}
+   618→                            </p>
+   619→
+   620→                            {/* Plan features from API */}
+   621→                            <div className="space-y-2 mb-5">
+   622→                              {Object.entries(p.features)
+   623→                                .filter(([, v]) => v)
+   624→                                .slice(0, 5)
+   625→                                .map(([key]) => (
+   626→                                  <div
+   627→                                    key={key}
+   628→                                    className="flex items-center gap-2"
+   629→                                  >
+   630→                                    <Check className="w-3 h-3 text-[#16A34A] shrink-0" />
+   631→                                    <span className="text-[11px] text-[#A1A1AA] capitalize">
+   632→                                      {key.replace(/_/g, " ")}
+   633→                                    </span>
+   634→                                  </div>
+   635→                                ))}
+   636→                            </div>
+   637→
+   638→                            <div className="text-[11px] text-[#52525B] space-y-1 mb-4">
+   639→                              <p>
+   640→                                <span className="font-mono text-[#A1A1AA]">
+   641→                                  {p.max_dependencies}
+   642→                                </span>{" "}
+   643→                                dependencies
+   644→                              </p>
+   645→                              <p>
+   646→                                <span className="font-mono text-[#A1A1AA]">
+   647→                                  {p.data_retention_days}d
+   648→                                </span>{" "}
+   649→                                retention
+   650→                              </p>
+   651→                            </div>
+   652→
+   653→                            {isCurrent ? (
+   654→                              <div className="w-full text-center py-2.5 rounded-lg border border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)] text-[#0891B2] text-[12px] font-medium">
+   655→                                Current Plan
+   656→                              </div>
+   657→                            ) : canUpgrade ? (
+   658→                              <button
+   659→                                onClick={() => handleUpgrade(p.plan)}
+   660→                                disabled={upgrading === p.plan}
+   661→                                className="w-full bg-[#FAFAFA] text-[#0A0A0F] py-2.5 rounded-lg text-[12px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50"
+   662→                              >
+   663→                                {upgrading === p.plan ? "Processing..." : `Upgrade to ${p.display_name}`}
+   664→                              </button>
+   665→                            ) : (
+   666→                              <div className="w-full text-center py-2.5 rounded-lg border border-[rgba(255,255,255,0.05)] text-[#52525B] text-[12px] font-medium">
+   667→                                Downgrade not available
+   668→                              </div>
+   669→                            )}
+   670→                          </div>
+   671→                        </ConsoleCard>
+   672→                      );
+   673→                    })}
+   674→                  </div>
+   675→                </div>
+   676→              )}
+   677→            </>
+   678→          ) : null}
+   679→        </div>
+   680→      )}
+   681→    </div>
+   682→  );
+   683→}
+   684→

@@ -94,4 +94,11 @@ export const clientService = {
     );
     return res.data;
   },
+
+  async create(data: { name: string }): Promise<Client> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.post<Client>(`/orgs/${orgId}/clients`, data);
+    return res.data;
+  },
 };

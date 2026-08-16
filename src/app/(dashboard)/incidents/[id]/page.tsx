@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { incidentService, type IncidentDetail, buildTimeline, type TimelineEvent, type CorrelatedSignal, buildCorrelatedSignals } from "@/services/incidentService";
+import { buildTimeline, type TimelineEvent, type CorrelatedSignal, buildCorrelatedSignals } from "@/services/incidentService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
@@ -12,6 +12,7 @@ import { ConsoleCard, ConsoleCardBody } from "@/components/dashboard/ConsoleLayo
 import { LockedFeature } from "@/components/dashboard/LockedFeature";
 import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
 import type { Plan } from "@/services/billingService";
+import { useIncident, useUpdateIncident } from "@/hooks/useApi";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,47 +61,24 @@ export default function IncidentDetailPage() {
   const { currentOrg } = useAuth();
   const id = params.id as string;
 
-  const [incident, setIncident] = useState<IncidentDetail | null>(null);
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [signals, setSignals] = useState<CorrelatedSignal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusUpdating, setStatusUpdating] = useState(false);
-  const notFound = useRef(false);
+  const { data: incident, isLoading, isError, refetch } = useIncident(id);
+  const updateMutation = useUpdateIncident();
 
-  const fetchIncident = useCallback(async () => {
-    setLoading(true);
-    notFound.current = false;
-    try {
-      const inc = await incidentService.getById(id);
-      setIncident(inc);
-      setTimeline(buildTimeline(inc));
-      setSignals(buildCorrelatedSignals(inc));
-    } catch {
-      notFound.current = true;
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchIncident();
-  }, [fetchIncident]);
+  // Build derived data from incident
+  const timeline: TimelineEvent[] = incident ? buildTimeline(incident) : [];
+  const signals: CorrelatedSignal[] = incident ? buildCorrelatedSignals(incident) : [];
 
   const handleStatusUpdate = async (status: "open" | "resolved" | "false_positive") => {
-    setStatusUpdating(true);
     try {
-      await incidentService.update(id, { status });
-      if (incident) setIncident({ ...incident, status });
+      await updateMutation.mutateAsync({ id, data: { status } });
     } catch {
       /* toast could be added later */
-    } finally {
-      setStatusUpdating(false);
     }
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-4 w-48 bg-[rgba(255,255,255,0.04)]" />
@@ -114,7 +92,7 @@ export default function IncidentDetailPage() {
     );
   }
 
-  if (!incident || notFound.current) {
+  if (!incident || isError) {
     return (
       <div className="text-center py-20">
         <AlertTriangle className="w-8 h-8 text-[#52525B] mx-auto mb-3" />
@@ -394,7 +372,7 @@ export default function IncidentDetailPage() {
                 {incident.status === "open" && (
                   <button
                     onClick={() => handleStatusUpdate("open")}
-                    disabled={statusUpdating}
+                    disabled={updateMutation.isPending}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-2.5 text-sm font-medium text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.08)] transition-colors disabled:opacity-50"
                   >
                     <ShieldCheck className="w-4 h-4 text-[#D97706]" />
@@ -406,7 +384,7 @@ export default function IncidentDetailPage() {
                 {incident.status === "open" && (
                   <button
                     onClick={() => handleStatusUpdate("resolved")}
-                    disabled={statusUpdating}
+                    disabled={updateMutation.isPending}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -417,7 +395,7 @@ export default function IncidentDetailPage() {
                 {/* Generate Evidence (locked on free) */}
                 <LockedFeature currentPlan={currentPlan} feature="evidence">
                   <button
-                    disabled={statusUpdating}
+                    disabled={updateMutation.isPending}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#0891B2] hover:bg-[#0E7490] px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
                   >
                     <ShieldCheck className="w-4 h-4" />

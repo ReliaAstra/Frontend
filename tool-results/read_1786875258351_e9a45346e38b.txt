@@ -1,0 +1,650 @@
+     1→"use client";
+     2→import { useState, useEffect, useCallback } from "react";
+     3→import { useParams, useRouter } from "next/navigation";
+     4→import Link from "next/link";
+     5→import { cn } from "@/lib/utils";
+     6→import { formatDistanceToNow, format } from "date-fns";
+     7→import {
+     8→  ArrowLeft,
+     9→  ShieldCheck,
+    10→  Clock,
+    11→  Shield,
+    12→  Copy,
+    13→  Download,
+    14→  FileText,
+    15→  ExternalLink,
+    16→  Loader2,
+    17→  Eye,
+    18→  Lock,
+    19→  ChevronRight,
+    20→} from "lucide-react";
+    21→import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
+    22→import { Skeleton } from "@/components/ui/skeleton";
+    23→import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
+    24→import { toast } from "sonner";
+    25→
+    26→const strengthConfig: Record<string, { label: string; color: string; bg: string }> = {
+    27→  strong: { label: "Strong", color: "text-[#16A34A]", bg: "bg-[rgba(22,163,74,0.12)]" },
+    28→  moderate: { label: "Moderate", color: "text-[#D97706]", bg: "bg-[rgba(217,119,6,0.12)]" },
+    29→  weak: { label: "Weak", color: "text-[#52525B]", bg: "bg-[rgba(255,255,255,0.05)]" },
+    30→};
+    31→
+    32→const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof ShieldCheck }> = {
+    33→  verified: { label: "Verified", color: "text-[#16A34A]", bg: "bg-[rgba(22,163,74,0.12)]", icon: ShieldCheck },
+    34→  pending: { label: "Pending", color: "text-[#D97706]", bg: "bg-[rgba(217,119,6,0.12)]", icon: Clock },
+    35→  failed: { label: "Failed", color: "text-[#DC2626]", bg: "bg-[rgba(220,38,38,0.12)]", icon: Shield },
+    36→};
+    37→
+    38→function formatDuration(seconds: number): string {
+    39→  if (seconds < 60) return `${seconds}s`;
+    40→  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+    41→  const h = Math.floor(seconds / 3600);
+    42→  const m = Math.floor((seconds % 3600) / 60);
+    43→  return `${h}h ${m}m`;
+    44→}
+    45→
+    46→export default function EvidenceDetailPage() {
+    47→  const params = useParams();
+    48→  const router = useRouter();
+    49→  const evidenceId = params.evidenceId as string;
+    50→
+    51→  const [evidence, setEvidence] = useState<EvidenceDetail | null>(null);
+    52→  const [loading, setLoading] = useState(true);
+    53→  const [error, setError] = useState<string | null>(null);
+    54→  const [verifying, setVerifying] = useState(false);
+    55→  const [downloading, setDownloading] = useState(false);
+    56→  const [jsonView, setJsonView] = useState(false);
+    57→  const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(null);
+    58→  const [jsonLoading, setJsonLoading] = useState(false);
+    59→  const [generatingReport, setGeneratingReport] = useState(false);
+    60→
+    61→  const fetchEvidence = useCallback(async () => {
+    62→    setLoading(true);
+    63→    setError(null);
+    64→    try {
+    65→      const ev = await evidenceService.getById(evidenceId);
+    66→      setEvidence(ev);
+    67→    } catch {
+    68→      setError("Unable to load evidence.");
+    69→    } finally {
+    70→      setLoading(false);
+    71→    }
+    72→  }, [evidenceId]);
+    73→
+    74→  useEffect(() => {
+    75→    fetchEvidence();
+    76→  }, [fetchEvidence]);
+    77→
+    78→  const handleVerify = async () => {
+    79→    setVerifying(true);
+    80→    try {
+    81→      const result = await evidenceService.verify(evidenceId);
+    82→      if (evidence) {
+    83→        setEvidence({ ...evidence, status: "verified", verified_at: result.verified_at });
+    84→      }
+    85→      toast.success("Evidence verified successfully.");
+    86→    } catch {
+    87→      toast.error("Verification failed. Try again later.");
+    88→    } finally {
+    89→      setVerifying(false);
+    90→    }
+    91→  };
+    92→
+    93→  const handleDownloadPdf = async () => {
+    94→    setDownloading(true);
+    95→    try {
+    96→      const blob = await evidenceService.downloadPdf(evidenceId);
+    97→      const url = window.URL.createObjectURL(blob);
+    98→      const a = document.createElement("a");
+    99→      a.href = url;
+   100→      a.download = `evidence-${evidenceId.slice(0, 8)}.pdf`;
+   101→      document.body.appendChild(a);
+   102→      a.click();
+   103→      window.URL.revokeObjectURL(url);
+   104→      document.body.removeChild(a);
+   105→      toast.success("PDF downloaded.");
+   106→    } catch {
+   107→      toast.error("Failed to download PDF.");
+   108→    } finally {
+   109→      setDownloading(false);
+   110→    }
+   111→  };
+   112→
+   113→  const handleViewJson = async () => {
+   114→    if (jsonView && jsonData) {
+   115→      setJsonView(false);
+   116→      return;
+   117→    }
+   118→    setJsonLoading(true);
+   119→    try {
+   120→      const data = await evidenceService.getJson(evidenceId);
+   121→      setJsonData(data);
+   122→      setJsonView(true);
+   123→    } catch {
+   124→      toast.error("Failed to load JSON data.");
+   125→    } finally {
+   126→      setJsonLoading(false);
+   127→    }
+   128→  };
+   129→
+   130→  const handleCopyHash = () => {
+   131→    if (evidence?.data_hash) {
+   132→      navigator.clipboard.writeText(evidence.data_hash);
+   133→      toast.success("Hash copied to clipboard.");
+   134→    }
+   135→  };
+   136→
+   137→  const handleGenerateReport = async () => {
+   138→    setGeneratingReport(true);
+   139→    try {
+   140→      const result = await evidenceService.generateClientReport(evidenceId);
+   141→      toast.success("Client report generated.");
+   142→      if (result.report_url) {
+   143→        window.open(result.report_url, "_blank");
+   144→      }
+   145→    } catch {
+   146→      toast.error("Failed to generate client report.");
+   147→    } finally {
+   148→      setGeneratingReport(false);
+   149→    }
+   150→  };
+   151→
+   152→  if (loading) {
+   153→    return (
+   154→      <div className="space-y-5">
+   155→        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
+   156→        <Skeleton className="h-[120px] rounded-xl bg-[#1C1C22]" />
+   157→        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+   158→          <Skeleton className="h-[320px] rounded-xl bg-[#1C1C22]" />
+   159→          <Skeleton className="h-[320px] rounded-xl bg-[#1C1C22]" />
+   160→        </div>
+   161→      </div>
+   162→    );
+   163→  }
+   164→
+   165→  if (error || !evidence) {
+   166→    return (
+   167→      <div className="text-center py-20">
+   168→        <p className="text-[#A1A1AA]">{error || "Evidence not found."}</p>
+   169→        <button
+   170→          onClick={() => router.push("/evidence")}
+   171→          className="mt-4 text-xs text-[#0891B2] hover:underline"
+   172→        >
+   173→          Back to Evidence
+   174→        </button>
+   175→      </div>
+   176→    );
+   177→  }
+   178→
+   179→  const strength = strengthConfig[evidence.evidence_strength] || strengthConfig.moderate;
+   180→  const status = statusConfig[evidence.status] || statusConfig.pending;
+   181→  const StatusIcon = status.icon;
+   182→
+   183→  const failureRate =
+   184→    evidence.observation_window.total_checks > 0
+   185→      ? (evidence.observation_window.failed_checks / evidence.observation_window.total_checks) * 100
+   186→      : 0;
+   187→
+   188→  return (
+   189→    <div className="space-y-6">
+   190→      {/* Back link */}
+   191→      <button
+   192→        onClick={() => router.push("/evidence")}
+   193→        className="flex items-center gap-2 text-[13px] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
+   194→      >
+   195→        <ArrowLeft className="h-4 w-4" />
+   196→        Back to Evidence
+   197→      </button>
+   198→
+   199→      {/* Header Card */}
+   200→      <ConsoleCard>
+   201→        <div className="px-5 py-4">
+   202→          <div className="flex flex-wrap items-center gap-2 mb-3">
+   203→            <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
+   204→              Evidence Snapshot
+   205→            </span>
+   206→            <span className="text-[13px] font-mono text-[#A1A1AA] ml-1">
+   207→              {evidence.id}
+   208→            </span>
+   209→          </div>
+   210→
+   211→          <div className="flex flex-wrap items-center gap-2">
+   212→            <span
+   213→              className={cn(
+   214→                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium",
+   215→                status.bg,
+   216→                status.color
+   217→              )}
+   218→            >
+   219→              <StatusIcon className="w-3 h-3" />
+   220→              {status.label}
+   221→            </span>
+   222→            <span
+   223→              className={cn(
+   224→                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium",
+   225→                strength.bg,
+   226→                strength.color
+   227→              )}
+   228→            >
+   229→              <Shield className="w-3 h-3" />
+   230→              {strength.label}
+   231→            </span>
+   232→
+   233→            <button
+   234→              onClick={handleVerify}
+   235→              disabled={verifying || evidence.status === "verified"}
+   236→              className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-medium px-3.5 py-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+   237→            >
+   238→              {verifying ? (
+   239→                <Loader2 className="h-3 w-3 animate-spin" />
+   240→              ) : (
+   241→                <ShieldCheck className="h-3 w-3" />
+   242→              )}
+   243→              {evidence.status === "verified" ? "Verified" : "Verify"}
+   244→            </button>
+   245→          </div>
+   246→        </div>
+   247→      </ConsoleCard>
+   248→
+   249→      {/* Two-column layout */}
+   250→      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
+   251→        {/* Left: Details */}
+   252→        <div className="space-y-5">
+   253→          {/* Incident Link */}
+   254→          <ConsoleCard>
+   255→            <ConsoleCardHeader>
+   256→              <span className="text-[13px] font-semibold text-[#FAFAFA]">
+   257→                Details
+   258→              </span>
+   259→            </ConsoleCardHeader>
+   260→            <div className="p-5 space-y-4">
+   261→              {/* Incident */}
+   262→              <div className="flex items-center justify-between">
+   263→                <span className="text-xs text-[#A1A1AA]">Incident</span>
+   264→                {evidence.incident_id ? (
+   265→                  <Link
+   266→                    href={`/incidents/${evidence.incident_id}`}
+   267→                    className="text-[13px] font-mono text-[#0891B2] hover:underline flex items-center gap-1"
+   268→                  >
+   269→                    INC-{evidence.incident_id.slice(0, 12)}
+   270→                    <ChevronRight className="w-3 h-3" />
+   271→                  </Link>
+   272→                ) : (
+   273→                  <span className="text-[13px] text-[#52525B]">--</span>
+   274→                )}
+   275→              </div>
+   276→
+   277→              {/* Observation Window */}
+   278→              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
+   279→              <div>
+   280→                <span className="text-xs text-[#A1A1AA] block mb-3">
+   281→                  Observation Window
+   282→                </span>
+   283→                <div className="grid grid-cols-2 gap-3">
+   284→                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   285→                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   286→                      Start
+   287→                    </span>
+   288→                    <span className="text-[12px] font-mono text-[#FAFAFA]">
+   289→                      {format(new Date(evidence.observation_window.start), "MMM d, HH:mm:ss")}
+   290→                    </span>
+   291→                  </div>
+   292→                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   293→                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   294→                      End
+   295→                    </span>
+   296→                    <span className="text-[12px] font-mono text-[#FAFAFA]">
+   297→                      {format(new Date(evidence.observation_window.end), "MMM d, HH:mm:ss")}
+   298→                    </span>
+   299→                  </div>
+   300→                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   301→                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   302→                      Duration
+   303→                    </span>
+   304→                    <span className="text-[12px] font-mono font-medium text-[#FAFAFA]">
+   305→                      {formatDuration(evidence.observation_window.duration_seconds)}
+   306→                    </span>
+   307→                  </div>
+   308→                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   309→                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   310→                      Failure Rate
+   311→                    </span>
+   312→                    <span
+   313→                      className={cn(
+   314→                        "text-[12px] font-mono font-medium",
+   315→                        failureRate > 50 ? "text-[#DC2626]" : failureRate > 20 ? "text-[#D97706]" : "text-[#16A34A]"
+   316→                      )}
+   317→                    >
+   318→                      {failureRate.toFixed(1)}%
+   319→                    </span>
+   320→                  </div>
+   321→                </div>
+   322→                <div className="flex gap-4 mt-3 text-[11px] text-[#A1A1AA]">
+   323→                  <span>
+   324→                    <span className="text-[#FAFAFA] font-mono">
+   325→                      {evidence.observation_window.total_checks}
+   326→                    </span>{" "}
+   327→                    total checks
+   328→                  </span>
+   329→                  <span>
+   330→                    <span
+   331→                      className={cn(
+   332→                        "font-mono",
+   333→                        evidence.observation_window.failed_checks > 0
+   334→                          ? "text-[#DC2626]"
+   335→                          : "text-[#16A34A]"
+   336→                      )}
+   337→                    >
+   338→                      {evidence.observation_window.failed_checks}
+   339→                    </span>{" "}
+   340→                    failed
+   341→                  </span>
+   342→                </div>
+   343→              </div>
+   344→
+   345→              {/* Strength */}
+   346→              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
+   347→              <div className="flex items-center justify-between">
+   348→                <span className="text-xs text-[#A1A1AA]">Evidence Strength</span>
+   349→                <span
+   350→                  className={cn(
+   351→                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] font-medium",
+   352→                    strength.bg,
+   353→                    strength.color
+   354→                  )}
+   355→                >
+   356→                  {strength.label}
+   357→                </span>
+   358→              </div>
+   359→
+   360→              {/* Data Hash */}
+   361→              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
+   362→              <div>
+   363→                <div className="flex items-center justify-between mb-2">
+   364→                  <span className="text-xs text-[#A1A1AA]">Data Integrity Hash</span>
+   365→                  <button
+   366→                    onClick={handleCopyHash}
+   367→                    className="text-[11px] text-[#0891B2] hover:underline flex items-center gap-1"
+   368→                  >
+   369→                    <Copy className="w-3 h-3" />
+   370→                    Copy
+   371→                  </button>
+   372→                </div>
+   373→                <p className="text-[11px] font-mono text-[#52525B] break-all leading-relaxed bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   374→                  {evidence.data_hash}
+   375→                </p>
+   376→              </div>
+   377→            </div>
+   378→          </ConsoleCard>
+   379→        </div>
+   380→
+   381→        {/* Right: Actions */}
+   382→        <div className="space-y-5">
+   383→          <ConsoleCard>
+   384→            <ConsoleCardHeader>
+   385→              <span className="text-[13px] font-semibold text-[#FAFAFA]">
+   386→                Actions
+   387→              </span>
+   388→            </ConsoleCardHeader>
+   389→            <div className="p-5 space-y-3">
+   390→              <button
+   391→                onClick={handleViewJson}
+   392→                disabled={jsonLoading}
+   393→                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors text-left disabled:opacity-50"
+   394→              >
+   395→                {jsonLoading ? (
+   396→                  <Loader2 className="w-4 h-4 text-[#A1A1AA] animate-spin" />
+   397→                ) : (
+   398→                  <Eye className="w-4 h-4 text-[#A1A1AA]" />
+   399→                )}
+   400→                <div>
+   401→                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
+   402→                    {jsonView ? "Hide JSON" : "View JSON"}
+   403→                  </span>
+   404→                  <span className="text-[11px] text-[#52525B]">
+   405→                    Raw evidence data
+   406→                  </span>
+   407→                </div>
+   408→              </button>
+   409→
+   410→              <button
+   411→                onClick={handleDownloadPdf}
+   412→                disabled={downloading}
+   413→                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors text-left disabled:opacity-50"
+   414→              >
+   415→                {downloading ? (
+   416→                  <Loader2 className="w-4 h-4 text-[#A1A1AA] animate-spin" />
+   417→                ) : (
+   418→                  <Download className="w-4 h-4 text-[#A1A1AA]" />
+   419→                )}
+   420→                <div>
+   421→                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
+   422→                    Download PDF
+   423→                  </span>
+   424→                  <span className="text-[11px] text-[#52525B]">
+   425→                    Formatted evidence report
+   426→                  </span>
+   427→                </div>
+   428→              </button>
+   429→
+   430→              <button
+   431→                onClick={handleGenerateReport}
+   432→                disabled={generatingReport}
+   433→                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(8,145,178,0.08)] border border-[rgba(8,145,178,0.2)] hover:bg-[rgba(8,145,178,0.12)] hover:border-[rgba(8,145,178,0.3)] transition-colors text-left disabled:opacity-50"
+   434→              >
+   435→                {generatingReport ? (
+   436→                  <Loader2 className="w-4 h-4 text-[#0891B2] animate-spin" />
+   437→                ) : (
+   438→                  <FileText className="w-4 h-4 text-[#0891B2]" />
+   439→                )}
+   440→                <div>
+   441→                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
+   442→                    Generate Report
+   443→                  </span>
+   444→                  <span className="text-[11px] text-[#0891B2]/70">
+   445→                    Client-facing evidence report
+   446→                  </span>
+   447→                </div>
+   448→              </button>
+   449→            </div>
+   450→          </ConsoleCard>
+   451→
+   452→          {/* Timestamps */}
+   453→          <ConsoleCard>
+   454→            <div className="p-5 space-y-3">
+   455→              <div className="flex items-center justify-between">
+   456→                <span className="text-xs text-[#A1A1AA]">Created</span>
+   457→                <span className="text-[12px] font-mono text-[#FAFAFA]">
+   458→                  {formatDistanceToNow(new Date(evidence.created_at), { addSuffix: true })}
+   459→                </span>
+   460→              </div>
+   461→              {evidence.verified_at && (
+   462→                <div className="flex items-center justify-between">
+   463→                  <span className="text-xs text-[#A1A1AA]">Verified</span>
+   464→                  <span className="text-[12px] font-mono text-[#16A34A]">
+   465→                    {formatDistanceToNow(new Date(evidence.verified_at), { addSuffix: true })}
+   466→                  </span>
+   467→                </div>
+   468→              )}
+   469→            </div>
+   470→          </ConsoleCard>
+   471→        </div>
+   472→      </div>
+   473→
+   474→      {/* JSON Viewer */}
+   475→      {jsonView && jsonData && (
+   476→        <ConsoleCard>
+   477→          <ConsoleCardHeader className="flex items-center justify-between">
+   478→            <span className="text-[11px] font-medium text-[#52525B] uppercase tracking-wider">
+   479→              Raw JSON
+   480→            </span>
+   481→            <button
+   482→              onClick={() => setJsonView(false)}
+   483→              className="text-[11px] text-[#A1A1AA] hover:text-[#FAFAFA]"
+   484→            >
+   485→              Close
+   486→            </button>
+   487→          </ConsoleCardHeader>
+   488→          <pre className="px-5 pb-5 overflow-x-auto text-xs font-mono text-[#A1A1AA] leading-relaxed max-h-[400px] overflow-y-auto">
+   489→            {JSON.stringify(jsonData, null, 2)}
+   490→          </pre>
+   491→        </ConsoleCard>
+   492→      )}
+   493→
+   494→      {/* Evidence Preview Card */}
+   495→      <ConsoleCard>
+   496→        <ConsoleCardHeader>
+   497→          <span className="text-[13px] font-semibold text-[#FAFAFA]">
+   498→            Evidence Preview
+   499→          </span>
+   500→        </ConsoleCardHeader>
+   501→        <div className="p-5">
+   502→          {/* Snapshot */}
+   503→          <div className="mb-5">
+   504→            <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B] block mb-3">
+   505→              Snapshot
+   506→            </span>
+   507→            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   508→              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   509→                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   510→                  Status Code
+   511→                </span>
+   512→                <span
+   513→                  className={cn(
+   514→                    "text-lg font-mono font-semibold",
+   515→                    evidence.snapshot.status_code >= 200 &&
+   516→                      evidence.snapshot.status_code < 400
+   517→                      ? "text-[#16A34A]"
+   518→                      : "text-[#DC2626]"
+   519→                  )}
+   520→                >
+   521→                  {evidence.snapshot.status_code}
+   522→                </span>
+   523→              </div>
+   524→              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   525→                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   526→                  Response Time
+   527→                </span>
+   528→                <span className="text-lg font-mono font-semibold text-[#FAFAFA]">
+   529→                  {evidence.snapshot.response_time_ms}
+   530→                  <span className="text-xs text-[#A1A1AA] ml-1">ms</span>
+   531→                </span>
+   532→              </div>
+   533→              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   534→                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   535→                  Checks
+   536→                </span>
+   537→                <span className="text-lg font-mono font-semibold text-[#FAFAFA]">
+   538→                  {evidence.observation_window.total_checks}
+   539→                </span>
+   540→              </div>
+   541→              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
+   542→                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
+   543→                  Failed
+   544→                </span>
+   545→                <span
+   546→                  className={cn(
+   547→                    "text-lg font-mono font-semibold",
+   548→                    evidence.observation_window.failed_checks > 0
+   549→                      ? "text-[#DC2626]"
+   550→                      : "text-[#16A34A]"
+   551→                  )}
+   552→                >
+   553→                  {evidence.observation_window.failed_checks}
+   554→                </span>
+   555→              </div>
+   556→            </div>
+   557→          </div>
+   558→
+   559→          {/* Error Message */}
+   560→          {evidence.snapshot.error_message && (
+   561→            <div className="mb-5 rounded-lg bg-[rgba(220,38,38,0.08)] border border-[rgba(220,38,38,0.2)] p-3">
+   562→              <span className="text-[10px] text-[#DC2626] uppercase tracking-wider block mb-1">
+   563→                Error
+   564→              </span>
+   565→              <p className="text-[12px] font-mono text-[#DC2626]">
+   566→                {evidence.snapshot.error_message}
+   567→              </p>
+   568→            </div>
+   569→          )}
+   570→
+   571→          {/* Body Preview */}
+   572→          {evidence.snapshot.body_preview && (
+   573→            <div className="mb-5">
+   574→              <span className="text-[10px] text-[#52525B] uppercase tracking-wider block mb-2">
+   575→                Body Preview
+   576→              </span>
+   577→              <pre className="text-[11px] font-mono text-[#A1A1AA] overflow-x-auto max-h-[150px] overflow-y-auto whitespace-pre-wrap bg-[rgba(255,255,255,0.03)] rounded-lg p-3 border border-[rgba(255,255,255,0.05)]">
+   578→                {evidence.snapshot.body_preview.slice(0, 500)}
+   579→                {evidence.snapshot.body_preview.length > 500 ? "..." : ""}
+   580→              </pre>
+   581→            </div>
+   582→          )}
+   583→
+   584→          {/* Contributors */}
+   585→          {evidence.contributors && evidence.contributors.length > 0 && (
+   586→            <div>
+   587→              <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B] block mb-3">
+   588→                Likely Contributors ({evidence.contributors.length})
+   589→              </span>
+   590→              <div className="space-y-2">
+   591→                {evidence.contributors.map((c) => {
+   592→                  const cStrength = strengthConfig[c.evidence_strength] || strengthConfig.moderate;
+   593→                  return (
+   594→                    <div
+   595→                      key={c.dependency_id}
+   596→                      className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg p-3 border border-[rgba(255,255,255,0.05)]"
+   597→                    >
+   598→                      <div className="flex items-center gap-3 min-w-0">
+   599→                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.role === "primary" ? "#DC2626" : c.role === "contributing" ? "#D97706" : "#52525B" }} />
+   600→                        <div className="min-w-0">
+   601→                          <span className="text-[13px] font-medium text-[#FAFAFA] block truncate">
+   602→                            {c.dependency_name}
+   603→                          </span>
+   604→                          <span className="text-[11px] text-[#52525B] capitalize">
+   605→                            {c.role} · {c.confidence}% confidence
+   606→                          </span>
+   607→                        </div>
+   608→                      </div>
+   609→                      <span
+   610→                        className={cn(
+   611→                          "rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0",
+   612→                          cStrength.bg,
+   613→                          cStrength.color
+   614→                        )}
+   615→                      >
+   616→                        {cStrength.label}
+   617→                      </span>
+   618→                    </div>
+   619→                  );
+   620→                })}
+   621→              </div>
+   622→            </div>
+   623→          )}
+   624→
+   625→          {/* AI Assessment */}
+   626→          {evidence.ai_assessment && (
+   627→            <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.05)]">
+   628→              <div className="flex items-center gap-2 mb-2">
+   629→                <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
+   630→                  AI Assessment
+   631→                </span>
+   632→                <span className="text-[10px] rounded bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 text-[#52525B]">
+   633→                  Evidence-first
+   634→                </span>
+   635→              </div>
+   636→              <p className="text-[13px] text-[#A1A1AA] leading-relaxed">
+   637→                {evidence.ai_assessment}
+   638→              </p>
+   639→              <p className="text-[10px] text-[#52525B] mt-2">
+   640→                This assessment is AI-assisted and based on evidence data. Always verify with raw evidence before making decisions.
+   641→              </p>
+   642→            </div>
+   643→          )}
+   644→        </div>
+   645→      </ConsoleCard>
+   646→    </div>
+   647→  );
+   648→}
+   649→
+   650→

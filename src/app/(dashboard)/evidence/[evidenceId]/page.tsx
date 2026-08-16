@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -18,10 +18,11 @@ import {
   Lock,
   ChevronRight,
 } from "lucide-react";
-import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
+import { evidenceService } from "@/services/evidenceService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
 import { toast } from "sonner";
+import { useEvidenceDetail } from "@/hooks/useApi";
 
 const strengthConfig: Record<string, { label: string; color: string; bg: string }> = {
   strong: { label: "Strong", color: "text-[#16A34A]", bg: "bg-[rgba(22,163,74,0.12)]" },
@@ -48,9 +49,8 @@ export default function EvidenceDetailPage() {
   const router = useRouter();
   const evidenceId = params.evidenceId as string;
 
-  const [evidence, setEvidence] = useState<EvidenceDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: evidence, isLoading: loading, isError, refetch } = useEvidenceDetail(evidenceId);
+
   const [verifying, setVerifying] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [jsonView, setJsonView] = useState(false);
@@ -58,30 +58,11 @@ export default function EvidenceDetailPage() {
   const [jsonLoading, setJsonLoading] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  const fetchEvidence = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const ev = await evidenceService.getById(evidenceId);
-      setEvidence(ev);
-    } catch {
-      setError("Unable to load evidence.");
-    } finally {
-      setLoading(false);
-    }
-  }, [evidenceId]);
-
-  useEffect(() => {
-    fetchEvidence();
-  }, [fetchEvidence]);
-
   const handleVerify = async () => {
     setVerifying(true);
     try {
       const result = await evidenceService.verify(evidenceId);
-      if (evidence) {
-        setEvidence({ ...evidence, status: "verified", verified_at: result.verified_at });
-      }
+      await refetch();
       toast.success("Evidence verified successfully.");
     } catch {
       toast.error("Verification failed. Try again later.");
@@ -162,10 +143,10 @@ export default function EvidenceDetailPage() {
     );
   }
 
-  if (error || !evidence) {
+  if (isError || !evidence) {
     return (
       <div className="text-center py-20">
-        <p className="text-[#A1A1AA]">{error || "Evidence not found."}</p>
+        <p className="text-[#A1A1AA]">Evidence not found.</p>
         <button
           onClick={() => router.push("/evidence")}
           className="mt-4 text-xs text-[#0891B2] hover:underline"
@@ -646,4 +627,3 @@ export default function EvidenceDetailPage() {
     </div>
   );
 }
-

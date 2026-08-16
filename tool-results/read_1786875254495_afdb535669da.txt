@@ -1,0 +1,711 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→import Link from "next/link";
+     5→import { useAuth } from "@/lib/auth-context";
+     6→import {
+     7→  dashboardService,
+     8→  type DashboardSummaryResponse,
+     9→  type CheckResultResponse,
+    10→  type SlaDegradationResponse,
+    11→} from "@/services/dashboardService";
+    12→import { incidentService, type Incident } from "@/services/incidentService";
+    13→import { clientService, type Client } from "@/services/clientService";
+    14→import { billingService } from "@/services/billingService";
+    15→import { Skeleton } from "@/components/ui/skeleton";
+    16→import { cn } from "@/lib/utils";
+    17→import { formatDistanceToNow } from "date-fns";
+    18→import {
+    19→  Users,
+    20→  Layers,
+    21→  AlertTriangle,
+    22→  ShieldCheck,
+    23→  FileText,
+    24→  RefreshCw,
+    25→  ChevronRight,
+    26→  ExternalLink,
+    27→  Activity,
+    28→  Zap,
+    29→  AlertCircle,
+    30→  Lock,
+    31→} from "lucide-react";
+    32→import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
+    33→import {
+    34→  ConsoleCard,
+    35→  ConsoleCardBody,
+    36→  ConsoleCardHeader,
+    37→  StatusDot,
+    38→  MetricValue,
+    39→} from "@/components/dashboard/ConsoleLayout";
+    40→import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
+    41→import { EmptyState } from "@/components/dashboard/EmptyState";
+    42→import { getPlanConfig } from "@/lib/tierLimits";
+    43→import type { Plan } from "@/services/billingService";
+    44→
+    45→/* ────────────────────────────── Skeletons ────────────────────────────── */
+    46→
+    47→function KpiCardSkeleton() {
+    48→  return (
+    49→    <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+    50→      <div className="flex items-center gap-2 mb-2">
+    51→        <Skeleton className="h-4 w-4 rounded" />
+    52→        <Skeleton className="h-3 w-20" />
+    53→      </div>
+    54→      <Skeleton className="h-8 w-16 mb-1.5" />
+    55→      <Skeleton className="h-3 w-28" />
+    56→    </div>
+    57→  );
+    58→}
+    59→
+    60→function SectionSkeleton() {
+    61→  return (
+    62→    <ConsoleCard>
+    63→      <ConsoleCardHeader>
+    64→        <Skeleton className="h-4 w-36" />
+    65→      </ConsoleCardHeader>
+    66→      <ConsoleCardBody>
+    67→        <div className="space-y-3">
+    68→          {Array.from({ length: 3 }).map((_, i) => (
+    69→            <Skeleton key={i} className="h-12 w-full" />
+    70→          ))}
+    71→        </div>
+    72→      </ConsoleCardBody>
+    73→    </ConsoleCard>
+    74→  );
+    75→}
+    76→
+    77→/* ────────────────────────── Incident Table Grid ────────────────────────── */
+    78→
+    79→const INCIDENT_GRID_COLS = "grid-cols-[80px_1fr_120px_120px_40px]";
+    80→
+    81→/* ════════════════════════════════════════════════════════════════════════ */
+    82→
+    83→export default function DashboardPage() {
+    84→  const { currentOrg, isLoading: authLoading } = useAuth();
+    85→
+    86→  /* ── State ──────────────────────────────────────────────────────────────── */
+    87→  const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
+    88→  const [incidents, setIncidents] = useState<Incident[]>([]);
+    89→  const [clients, setClients] = useState<Client[]>([]);
+    90→  const [recentChecks, setRecentChecks] = useState<CheckResultResponse[]>([]);
+    91→  const [slaDegradation, setSlaDegradation] = useState<SlaDegradationResponse>({
+    92→    total_degradation_pct: 0,
+    93→    affected_services: 0,
+    94→    period: "30d",
+    95→  });
+    96→  const [plan, setPlan] = useState<Plan>("free");
+    97→  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    98→  const [loading, setLoading] = useState(true);
+    99→  const [error, setError] = useState<string | null>(null);
+   100→  const [refreshing, setRefreshing] = useState(false);
+   101→
+   102→  /* ── Derived ────────────────────────────────────────────────────────────── */
+   103→  const isAgency = currentOrg?.has_agency_mode === true;
+   104→  const isFreePlan = plan === "free";
+   105→  const planConfig = getPlanConfig(plan);
+   106→  const depLimit = planConfig.limits.dependencies;
+   107→  const atDepLimit =
+   108→    summary != null &&
+   109→    isFinite(depLimit) &&
+   110→    summary.active_dependencies_count >= depLimit;
+   111→  const evidenceCount = incidents.filter(
+   112→    (i) => i.evidence_report_id !== null
+   113→  ).length;
+   114→
+   115→  const slaColor =
+   116→    slaDegradation.total_degradation_pct <= 0.1
+   117→      ? "#16A34A"
+   118→      : slaDegradation.total_degradation_pct <= 1
+   119→        ? "#D97706"
+   120→        : "#DC2626";
+   121→
+   122→  /* ── Data fetching ────────────────────────────────────────────────────── */
+   123→  const fetchDashboard = useCallback(
+   124→    async (isRefresh = false) => {
+   125→      if (isRefresh) setRefreshing(true);
+   126→      else setLoading(true);
+   127→      setError(null);
+   128→
+   129→      try {
+   130→        // Core fetches — failure triggers the error banner
+   131→        const [summaryData, incidentsData] = await Promise.all([
+   132→          dashboardService.getSummary(),
+   133→          incidentService.list("open"),
+   134→        ]);
+   135→        setSummary(summaryData);
+   136→        setIncidents(incidentsData);
+   137→        setLastUpdated(new Date());
+   138→
+   139→        // Non-critical fetches — degrade gracefully
+   140→        try {
+   141→          const clientRes = await clientService.list({ per_page: 5 });
+   142→          setClients(
+   143→            Array.isArray(clientRes)
+   144→              ? clientRes
+   145→              : clientRes?.items ?? []
+   146→          );
+   147→        } catch {
+   148→          setClients([]);
+   149→        }
+   150→
+   151→        try {
+   152→          const planRes = await billingService.getPlan();
+   153→          setPlan(planRes.plan);
+   154→        } catch {
+   155→          setPlan("free");
+   156→        }
+   157→
+   158→        try {
+   159→          const checks = await dashboardService.getRecentChecks(5);
+   160→          setRecentChecks(checks);
+   161→        } catch {
+   162→          setRecentChecks([]);
+   163→        }
+   164→
+   165→        try {
+   166→          const sla = await dashboardService.getSlaDegradation(30);
+   167→          setSlaDegradation(sla);
+   168→        } catch {
+   169→          setSlaDegradation({
+   170→            total_degradation_pct: 0,
+   171→            affected_services: 0,
+   172→            period: "30d",
+   173→          });
+   174→        }
+   175→      } catch {
+   176→        setError(
+   177→          "Unable to load dashboard data."
+   178→        );
+   179→      } finally {
+   180→        setLoading(false);
+   181→        setRefreshing(false);
+   182→      }
+   183→    },
+   184→    []
+   185→  );
+   186→
+   187→  useEffect(() => {
+   188→    if (!authLoading) fetchDashboard();
+   189→  }, [authLoading, fetchDashboard]);
+   190→
+   191→  /* ── Auth loading shell ────────────────────────────────────────────────── */
+   192→  if (authLoading) {
+   193→    return (
+   194→      <div className="space-y-6 animate-[fadeIn_200ms_ease-out]">
+   195→        {/* Header skeleton */}
+   196→        <div className="flex items-start justify-between">
+   197→          <div>
+   198→            <Skeleton className="h-8 w-56 mb-2" />
+   199→            <Skeleton className="h-4 w-44" />
+   200→          </div>
+   201→          <Skeleton className="h-10 w-10 rounded-lg" />
+   202→        </div>
+   203→
+   204→        {/* KPI skeletons */}
+   205→        <div
+   206→          className={cn(
+   207→            "grid grid-cols-2 gap-4",
+   208→            isAgency ? "lg:grid-cols-5" : "lg:grid-cols-4"
+   209→          )}
+   210→        >
+   211→          {Array.from({ length: isAgency ? 5 : 4 }).map((_, i) => (
+   212→            <KpiCardSkeleton key={i} />
+   213→          ))}
+   214→        </div>
+   215→
+   216→        {/* Two-column skeletons */}
+   217→        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+   218→          <SectionSkeleton />
+   219→          <div className="space-y-4">
+   220→            <SectionSkeleton />
+   221→            <SectionSkeleton />
+   222→          </div>
+   223→        </div>
+   224→      </div>
+   225→    );
+   226→  }
+   227→
+   228→  /* ══════════════════════════════════════════════════════════════════════════ */
+   229→  return (
+   230→    <div className="space-y-6 animate-[fadeIn_200ms_ease-out]">
+   231→      {/* ────────────────────────── Header ─────────────────────────────── */}
+   232→      <div className="flex items-start justify-between">
+   233→        <div>
+   234→          <h1 className="text-2xl font-bold text-[#FAFAFA]">
+   235→            Operations overview
+   236→          </h1>
+   237→          <p className="text-sm text-[#52525B] mt-1">
+   238→            {currentOrg?.name || "Organization"}&nbsp;·&nbsp;Last updated{" "}
+   239→            {lastUpdated
+   240→              ? formatDistanceToNow(lastUpdated, { addSuffix: true })
+   241→              : "just now"}
+   242→          </p>
+   243→        </div>
+   244→        <button
+   245→          onClick={() => fetchDashboard(true)}
+   246→          disabled={refreshing || loading}
+   247→          className="p-2.5 rounded-lg bg-[#131318] border border-[rgba(255,255,255,0.08)] text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-[rgba(255,255,255,0.15)] transition-all disabled:opacity-50"
+   248→          aria-label="Refresh dashboard"
+   249→        >
+   250→          <RefreshCw
+   251→            className={cn("w-4 h-4", refreshing && "animate-spin")}
+   252→          />
+   253→        </button>
+   254→      </div>
+   255→
+   256→      {/* ────────────────────── Upgrade Banner ────────────────────────── */}
+   257→      {(plan === "free" || plan === "starter") && summary && (
+   258→        <UpgradeBanner
+   259→          plan={plan}
+   260→          usage={summary.active_dependencies_count}
+   261→          limit={depLimit}
+   262→          resource="dependencies"
+   263→        />
+   264→      )}
+   265→
+   266→      {/* ────────────────────── Error Banner ───────────────────────────── */}
+   267→      {error && (
+   268→        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.06)] px-5 py-4 flex items-start gap-3">
+   269→          <AlertCircle className="w-5 h-5 text-[#DC2626] mt-0.5 shrink-0" />
+   270→          <div className="flex-1">
+   271→            <p className="text-sm font-semibold text-[#FAFAFA]">{error}</p>
+   272→            <p className="text-xs text-[#A1A1AA] mt-0.5">
+   273→              Check that the backend is accessible and your session is valid.
+   274→            </p>
+   275→          </div>
+   276→          <button
+   277→            onClick={() => fetchDashboard()}
+   278→            className="text-xs font-semibold text-[#DC2626] hover:text-[#FAFAFA] transition-colors"
+   279→          >
+   280→            Retry
+   281→          </button>
+   282→        </div>
+   283→      )}
+   284→
+   285→      {/* ────────────────── Global Stats Row ──────────────────────────── */}
+   286→      {loading ? (
+   287→        <div
+   288→          className={cn(
+   289→            "grid grid-cols-2 gap-4",
+   290→            isAgency ? "lg:grid-cols-5" : "lg:grid-cols-4"
+   291→          )}
+   292→        >
+   293→          {Array.from({ length: isAgency ? 5 : 4 }).map((_, i) => (
+   294→            <KpiCardSkeleton key={i} />
+   295→          ))}
+   296→        </div>
+   297→      ) : summary ? (
+   298→        <div
+   299→          className={cn(
+   300→            "grid grid-cols-2 gap-4",
+   301→            isAgency ? "lg:grid-cols-5" : "lg:grid-cols-4"
+   302→          )}
+   303→        >
+   304→          {/* ── Clients (agency only) ──────────────────────────────────── */}
+   305→          {isAgency && (
+   306→            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   307→              <div className="flex items-center gap-2">
+   308→                <Users className="w-4 h-4 text-[#52525B]" />
+   309→                <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   310→                  Clients
+   311→                </span>
+   312→              </div>
+   313→              <MetricValue value={clients.length} className="mt-2" />
+   314→              <p className="text-xs text-[#52525B] mt-1">
+   315→                {clients.length} managed
+   316→              </p>
+   317→            </div>
+   318→          )}
+   319→
+   320→          {/* ── Dependencies ──────────────────────────────────────────── */}
+   321→          <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   322→            <div className="flex items-center gap-2">
+   323→              <Layers className="w-4 h-4 text-[#52525B]" />
+   324→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   325→                Dependencies
+   326→              </span>
+   327→              {atDepLimit && (
+   328→                <span className="text-[10px] font-semibold text-[#DC2626] bg-[rgba(220,38,38,0.12)] px-2 py-0.5 rounded-full">
+   329→                  At limit
+   330→                </span>
+   331→              )}
+   332→            </div>
+   333→            <MetricValue
+   334→              value={summary.active_dependencies_count}
+   335→              className="mt-2"
+   336→              color={atDepLimit ? "#DC2626" : undefined}
+   337→            />
+   338→            <p className="text-xs text-[#52525B] mt-1">
+   339→              of {depLimit === Infinity ? "\u221E" : depLimit} allowed
+   340→            </p>
+   341→          </div>
+   342→
+   343→          {/* ── Open Incidents ────────────────────────────────────────── */}
+   344→          <div
+   345→            className={cn(
+   346→              "bg-[#131318] rounded-xl border p-5 transition-colors",
+   347→              summary.open_incidents_count > 0
+   348→                ? "border-[rgba(220,38,38,0.2)]"
+   349→                : "border-[rgba(255,255,255,0.08)]"
+   350→            )}
+   351→          >
+   352→            <div className="flex items-center gap-2">
+   353→              <AlertTriangle
+   354→                className={cn(
+   355→                  "w-4 h-4",
+   356→                  summary.open_incidents_count > 0
+   357→                    ? "text-[#DC2626] animate-pulse"
+   358→                    : "text-[#52525B]"
+   359→                )}
+   360→              />
+   361→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   362→                Open Incidents
+   363→              </span>
+   364→            </div>
+   365→            <MetricValue
+   366→              value={summary.open_incidents_count}
+   367→              className="mt-2"
+   368→            />
+   369→            <p className="text-xs text-[#52525B] mt-1">
+   370→              {summary.open_incidents_count > 0
+   371→                ? "requiring attention"
+   372→                : "all clear"}
+   373→            </p>
+   374→          </div>
+   375→
+   376→          {/* ── Evidence ───────────────────────────────────────────────── */}
+   377→          {isFreePlan ? (
+   378→            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   379→              <div className="flex items-center gap-2">
+   380→                <FileText className="w-4 h-4 text-[#52525B]" />
+   381→                <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   382→                  Evidence
+   383→                </span>
+   384→                <Lock className="w-3 h-3 text-[#52525B]" />
+   385→              </div>
+   386→              <MetricValue value="\u2014" className="mt-2" />
+   387→              <p className="text-xs text-[#52525B] mt-1">
+   388→                Upgrade to generate
+   389→              </p>
+   390→            </div>
+   391→          ) : (
+   392→            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   393→              <div className="flex items-center gap-2">
+   394→                <FileText className="w-4 h-4 text-[#52525B]" />
+   395→                <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   396→                  Evidence
+   397→                </span>
+   398→              </div>
+   399→              <MetricValue value={evidenceCount} className="mt-2" />
+   400→              <p className="text-xs text-[#52525B] mt-1">reports generated</p>
+   401→            </div>
+   402→          )}
+   403→
+   404→          {/* ── SLA ───────────────────────────────────────────────────── */}
+   405→          <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   406→            <div className="flex items-center gap-2">
+   407→              <ShieldCheck className="w-4 h-4 text-[#52525B]" />
+   408→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   409→                SLA
+   410→              </span>
+   411→            </div>
+   412→            <MetricValue
+   413→              value={`${slaDegradation.total_degradation_pct.toFixed(2)}%`}
+   414→              className="mt-2"
+   415→              color={slaColor}
+   416→            />
+   417→            <p className="text-xs text-[#52525B] mt-1">degradation (30d)</p>
+   418→          </div>
+   419→        </div>
+   420→      ) : null}
+   421→
+   422→      {/* ────────────────── Active Incidents ─────────────────────────── */}
+   423→      <div>
+   424→        <div className="flex items-center justify-between mb-4">
+   425→          <h2 className="text-lg font-semibold text-[#FAFAFA]">
+   426→            Active incidents
+   427→          </h2>
+   428→          <Link
+   429→            href="/incidents"
+   430→            className="text-sm text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors flex items-center gap-1"
+   431→          >
+   432→            View all
+   433→            <ChevronRight className="w-4 h-4" />
+   434→          </Link>
+   435→        </div>
+   436→
+   437→        {loading ? (
+   438→          <ConsoleCard>
+   439→            <ConsoleCardBody>
+   440→              <div className="space-y-3">
+   441→                {Array.from({ length: 3 }).map((_, i) => (
+   442→                  <Skeleton key={i} className="h-14 w-full" />
+   443→                ))}
+   444→              </div>
+   445→            </ConsoleCardBody>
+   446→          </ConsoleCard>
+   447→        ) : incidents.length > 0 ? (
+   448→          <ConsoleCard>
+   449→            {/* Table header */}
+   450→            <div
+   451→              className={cn(
+   452→                "px-5 py-3 grid gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)]",
+   453→                INCIDENT_GRID_COLS
+   454→              )}
+   455→            >
+   456→              <span>Severity</span>
+   457→              <span>Title</span>
+   458→              <span>Dependency</span>
+   459→              <span>Opened</span>
+   460→              <span />
+   461→            </div>
+   462→
+   463→            {/* Rows */}
+   464→            {incidents.slice(0, 5).map((inc, index) => (
+   465→              <div
+   466→                key={inc.id}
+   467→                className="px-5 py-3.5 grid gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center group"
+   468→                style={{
+   469→                  gridTemplateColumns: "80px 1fr 120px 120px 40px",
+   470→                  animationDelay: `${index * 60}ms`,
+   471→                }}
+   472→              >
+   473→                <SeverityBadge severity={inc.severity} />
+   474→                <Link
+   475→                  href={`/incidents/${inc.id}`}
+   476→                  className="text-sm font-medium text-[#FAFAFA] hover:text-[#67E8F9] transition-colors truncate block"
+   477→                >
+   478→                  {inc.description || `Incident ${inc.id.slice(0, 8)}`}
+   479→                </Link>
+   480→                <span className="font-mono text-xs text-[#A1A1AA] truncate">
+   481→                  {inc.dependency_id.slice(0, 12)}
+   482→                </span>
+   483→                <span className="text-xs text-[#52525B]">
+   484→                  {formatDistanceToNow(new Date(inc.started_at), {
+   485→                    addSuffix: true,
+   486→                  })}
+   487→                </span>
+   488→                <Link
+   489→                  href={`/incidents/${inc.id}`}
+   490→                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+   491→                >
+   492→                  <ExternalLink className="w-3.5 h-3.5 text-[#52525B] hover:text-[#FAFAFA]" />
+   493→                </Link>
+   494→              </div>
+   495→            ))}
+   496→
+   497→            {/* "View all" footer */}
+   498→            {incidents.length > 5 && (
+   499→              <div className="px-5 py-3 border-t border-[rgba(255,255,255,0.05)]">
+   500→                <Link
+   501→                  href="/incidents"
+   502→                  className="text-xs font-medium text-[#0891B2] hover:text-[#67E8F9] transition-colors flex items-center gap-1"
+   503→                >
+   504→                  View all {incidents.length} incidents
+   505→                  <ChevronRight className="w-3 h-3" />
+   506→                </Link>
+   507→              </div>
+   508→            )}
+   509→          </ConsoleCard>
+   510→        ) : (
+   511→          <EmptyState
+   512→            icon={ShieldCheck}
+   513→            title="All systems operational"
+   514→            description={
+   515→              "No active incidents. Last check: " +
+   516→              (lastUpdated
+   517→                ? formatDistanceToNow(lastUpdated, { addSuffix: true })
+   518→                : "just now") +
+   519→              "."
+   520→            }
+   521→            variant="success"
+   522→          />
+   523→        )}
+   524→      </div>
+   525→
+   526→      {/* ────────────────── Two-Column Layout (65/35) ────────────────── */}
+   527→      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+   528→        {/* ── Left: Latency Overview ─────────────────────────────────── */}
+   529→        {loading ? (
+   530→          <ConsoleCard>
+   531→            <ConsoleCardHeader>
+   532→              <Skeleton className="h-4 w-32" />
+   533→            </ConsoleCardHeader>
+   534→            <ConsoleCardBody>
+   535→              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+   536→                <Skeleton className="h-16 w-16 rounded-xl" />
+   537→                <Skeleton className="h-4 w-64" />
+   538→                <Skeleton className="h-4 w-48" />
+   539→              </div>
+   540→            </ConsoleCardBody>
+   541→          </ConsoleCard>
+   542→        ) : (
+   543→          <ConsoleCard>
+   544→            <ConsoleCardHeader>
+   545→              <span className="text-sm font-semibold text-[#FAFAFA]">
+   546→                Latency Overview
+   547→              </span>
+   548→            </ConsoleCardHeader>
+   549→            <ConsoleCardBody>
+   550→              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+   551→                <div className="w-16 h-16 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
+   552→                  <Activity
+   553→                    className="w-8 h-8 text-[#52525B]"
+   554→                    strokeWidth={1.5}
+   555→                  />
+   556→                </div>
+   557→                <p className="text-sm text-[#A1A1AA] text-center max-w-sm">
+   558→                  Latency data will appear once checks begin
+   559→                </p>
+   560→                {summary && summary.active_dependencies_count === 0 && (
+   561→                  <Link
+   562→                    href="/dependencies"
+   563→                    className="inline-flex items-center bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white hover:shadow-lg transition-all mt-2"
+   564→                  >
+   565→                    Add your first dependency
+   566→                  </Link>
+   567→                )}
+   568→              </div>
+   569→            </ConsoleCardBody>
+   570→          </ConsoleCard>
+   571→        )}
+   572→
+   573→        {/* ── Right Column ───────────────────────────────────────────── */}
+   574→        <div className="space-y-4">
+   575→          {/* SLA Card */}
+   576→          {loading ? (
+   577→            <ConsoleCard>
+   578→              <ConsoleCardBody>
+   579→                <div className="flex flex-col items-center py-6 space-y-3">
+   580→                  <Skeleton className="h-8 w-8 rounded-lg" />
+   581→                  <Skeleton className="h-10 w-28" />
+   582→                  <Skeleton className="h-3 w-32" />
+   583→                </div>
+   584→              </ConsoleCardBody>
+   585→            </ConsoleCard>
+   586→          ) : (
+   587→            <ConsoleCard>
+   588→              <ConsoleCardBody className="flex flex-col items-center text-center py-8">
+   589→                <ShieldCheck
+   590→                  className="w-8 h-8 text-[#52525B] mb-3"
+   591→                  strokeWidth={1.5}
+   592→                />
+   593→                <span
+   594→                  className="font-mono text-3xl font-semibold"
+   595→                  style={{ color: slaColor }}
+   596→                >
+   597→                  {slaDegradation.total_degradation_pct.toFixed(2)}%
+   598→                </span>
+   599→                <span className="text-xs text-[#52525B] mt-2 uppercase tracking-wider">
+   600→                  30-day degradation
+   601→                </span>
+   602→                {slaDegradation.affected_services > 0 && (
+   603→                  <span className="text-xs text-[#A1A1AA] mt-1">
+   604→                    {slaDegradation.affected_services} service
+   605→                    {slaDegradation.affected_services !== 1 && "s"} affected
+   606→                  </span>
+   607→                )}
+   608→              </ConsoleCardBody>
+   609→            </ConsoleCard>
+   610→          )}
+   611→
+   612→          {/* Recent Checks Card */}
+   613→          {loading ? (
+   614→            <ConsoleCard>
+   615→              <ConsoleCardHeader>
+   616→                <Skeleton className="h-4 w-28" />
+   617→              </ConsoleCardHeader>
+   618→              <ConsoleCardBody>
+   619→                <div className="space-y-3">
+   620→                  {Array.from({ length: 4 }).map((_, i) => (
+   621→                    <Skeleton key={i} className="h-10 w-full" />
+   622→                  ))}
+   623→                </div>
+   624→              </ConsoleCardBody>
+   625→            </ConsoleCard>
+   626→          ) : (
+   627→            <ConsoleCard>
+   628→              <ConsoleCardHeader>
+   629→                <span className="text-sm font-semibold text-[#FAFAFA]">
+   630→                  Recent checks
+   631→                </span>
+   632→              </ConsoleCardHeader>
+   633→              <ConsoleCardBody>
+   634→                {recentChecks.length > 0 ? (
+   635→                  <div className="space-y-0">
+   636→                    {recentChecks.map((check) => (
+   637→                      <div
+   638→                        key={check.id}
+   639→                        className="flex items-center gap-3 py-2.5 border-b border-[rgba(255,255,255,0.05)] last:border-b-0"
+   640→                      >
+   641→                        <StatusDot
+   642→                          status={check.is_up ? "operational" : "down"}
+   643→                          pulse={!check.is_up}
+   644→                        />
+   645→                        <span className="text-sm text-[#FAFAFA] flex-1 truncate font-mono text-xs">
+   646→                          {check.dependency_id.slice(0, 12)}
+   647→                        </span>
+   648→                        <span className="font-mono text-xs text-[#A1A1AA]">
+   649→                          {check.latency_ms}ms
+   650→                        </span>
+   651→                        <span className="text-xs text-[#52525B] shrink-0">
+   652→                          {formatDistanceToNow(
+   653→                            new Date(check.executed_at),
+   654→                            { addSuffix: true }
+   655→                          )}
+   656→                        </span>
+   657→                      </div>
+   658→                    ))}
+   659→                  </div>
+   660→                ) : (
+   661→                  <p className="text-sm text-[#52525B] text-center py-8">
+   662→                    No checks recorded yet
+   663→                  </p>
+   664→                )}
+   665→              </ConsoleCardBody>
+   666→            </ConsoleCard>
+   667→          )}
+   668→        </div>
+   669→      </div>
+   670→
+   671→      {/* ────────────────────── Quick Actions Bar ────────────────────── */}
+   672→      <div className="flex gap-3 mt-8">
+   673→        <Link
+   674→          href="/dependencies"
+   675→          className="inline-flex items-center bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white hover:shadow-lg transition-all"
+   676→        >
+   677→          Add dependency
+   678→        </Link>
+   679→        <Link
+   680→          href="/incidents"
+   681→          className="inline-flex items-center bg-[#131318] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] px-5 py-2.5 rounded-lg text-sm font-semibold hover:border-[rgba(255,255,255,0.15)] transition-all"
+   682→        >
+   683→          View incidents
+   684→        </Link>
+   685→
+   686→        {isFreePlan ? (
+   687→          <div className="relative group">
+   688→            <button
+   689→              disabled
+   690→              className="inline-flex items-center bg-[rgba(8,145,178,0.3)] text-[rgba(255,255,255,0.4)] px-5 py-2.5 rounded-lg text-sm font-semibold cursor-not-allowed"
+   691→            >
+   692→              Generate report
+   693→              <Lock className="w-3.5 h-3.5 ml-2" />
+   694→            </button>
+   695→            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1A1A22] border border-[rgba(255,255,255,0.1)] rounded-lg text-xs text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-10">
+   696→              Upgrade to Starter to generate reports
+   697→            </div>
+   698→          </div>
+   699→        ) : (
+   700→          <Link
+   701→            href="/evidence"
+   702→            className="inline-flex items-center bg-[#0891B2] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0E7490] transition-all"
+   703→          >
+   704→            Generate report
+   705→          </Link>
+   706→        )}
+   707→      </div>
+   708→    </div>
+   709→  );
+   710→}
+   711→

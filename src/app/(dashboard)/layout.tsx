@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/lib/auth-context";
 import { Providers } from "@/components/Providers";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -16,6 +18,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -56,9 +59,19 @@ export default function DashboardLayout({
               onOpenMobileSidebar={() => setMobileOpen(true)}
             />
 
-            {/* Page content with fadeIn */}
+            {/* Page content with AnimatePresence */}
             <main className="p-8 min-h-[calc(100vh-56px)]">
-              <div className="animate-[fadeIn_200ms_ease-out]">{children}</div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
             </main>
           </div>
         </div>

@@ -5,34 +5,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Plus, Activity } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import {
-  vendorService,
-  type VendorResponse,
-} from "@/services/vendorService";
+import { vendorService, type VendorResponse, type VendorHistoryResponse } from "@/services/vendorService";
+import { usePublicVendors } from "@/hooks/useApi";
 
 interface VendorCardData extends VendorResponse {
   uptime?: number;
-  history?: { uptime_percentage_24h: number; avg_latency_ms_24h: number };
+  latency?: number;
 }
 
 function vendorStatusColor(vendor: VendorCardData): string {
-  if (!vendor.history) return "#52525B";
-  const up = vendor.history.uptime_percentage_24h;
-  if (up >= 99.9) return "#16A34A";
-  if (up >= 99) return "#D97706";
+  if (vendor.uptime == null) return "#52525B";
+  if (vendor.uptime >= 99.9) return "#16A34A";
+  if (vendor.uptime >= 99) return "#D97706";
   return "#DC2626";
 }
 
 function vendorStatusLabel(vendor: VendorCardData): string {
-  if (!vendor.history) return "Unknown";
-  const up = vendor.history.uptime_percentage_24h;
-  if (up >= 99.9) return "Operational";
-  if (up >= 99) return "Degraded";
+  if (vendor.uptime == null) return "Unknown";
+  if (vendor.uptime >= 99.9) return "Operational";
+  if (vendor.uptime >= 99) return "Degraded";
   return "Down";
 }
 
 function SparklinePlaceholder() {
-  // Simple SVG sparkline visual placeholder
   const points = [12, 10, 14, 11, 15, 13, 16, 14, 15, 13, 16, 15, 14, 16, 15, 14, 15, 16, 15, 14];
   const w = 120;
   const h = 32;
@@ -65,49 +60,42 @@ function SparklinePlaceholder() {
 
 export default function VendorsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: vendorList = [], isLoading: loading, isError: error, refetch } = usePublicVendors();
   const [vendors, setVendors] = useState<VendorCardData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [monitoringVendor, setMonitoringVendor] = useState<string | null>(null);
 
+  // Fetch history for each vendor to enrich cards (TanStack Query replaces list fetch, 
+  // but per-vendor enrichment still needs useEffect since we can't call hooks dynamically)
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!vendorList.length) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    vendorService
-      .listPublicVendors()
-      .then(async (list) => {
-        if (cancelled) return;
-        // Fetch history for each vendor to get uptime
-        const enriched = await Promise.allSettled(
-          list.slice(0, 6).map(async (v) => {
-            try {
-              const history = await vendorService.getVendorHistory(v.vendor_name);
-              return { ...v, history };
-            } catch {
-              return { ...v, history: undefined };
-            }
-          })
-        );
-        if (cancelled) return;
-        const results = enriched
+    const enrich = async () => {
+      const enriched = await Promise.allSettled(
+        vendorList.slice(0, 6).map(async (v) => {
+          try {
+            const history = await vendorService.getVendorHistory(v.vendor_name);
+            return {
+              ...v,
+              uptime: history.uptime_percentage_24h,
+              latency: history.avg_latency_ms_24h,
+            };
+          } catch {
+            return { ...v };
+          }
+        })
+      );
+      if (cancelled) return;
+      setVendors(
+        enriched
           .filter((r) => r.status === "fulfilled")
-          .map((r) => (r as PromiseFulfilledResult<VendorCardData>).value);
-        setVendors(results);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Unable to load vendors.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
+          .map((r) => (r as PromiseFulfilledResult<VendorCardData>).value)
+      );
     };
-  }, [isAuthenticated]);
+
+    enrich();
+    return () => { cancelled = true; };
+  }, [vendorList]);
 
   const handleMonitor = (vendorName: string) => {
     setMonitoringVendor(vendorName);
@@ -147,9 +135,9 @@ export default function VendorsPage() {
       {error && (
         <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-4 flex items-start gap-3">
           <span className="w-2 h-2 rounded-full bg-[#DC2626] mt-1.5 shrink-0" />
-          <p className="text-sm text-[#FAFAFA] flex-1">{error}</p>
+          <p className="text-sm text-[#FAFAFA] flex-1">Unable to load vendors.</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="text-xs font-medium text-[#0891B2]"
           >
             Retry
@@ -163,8 +151,8 @@ export default function VendorsPage() {
           {vendors.map((vendor) => {
             const statusColor = vendorStatusColor(vendor);
             const statusLabel = vendorStatusLabel(vendor);
-            const uptime = vendor.history?.uptime_percentage_24h;
-            const latency = vendor.history?.avg_latency_ms_24h;
+            const uptime = vendor.uptime;
+            const latency = vendor.latency;
 
             return (
               <div

@@ -1,0 +1,28 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "external": {
+      "icon": {
+        "https://fastapi.tiangolo.com/img/favicon.png": {}
+      }
+    },
+    "html": "<html><head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css\">\n    <link rel=\"shortcut icon\" href=\"https://fastapi.tiangolo.com/img/favicon.png\">\n    <title>Reliastra MVP API - Swagger UI</title>\n    </head>\n    <body>\n    <div id=\"swagger-ui\"><div class=\"swagger-ui\"><div class=\"loading-container\"><div class=\"info\"><div class=\"loading-container\"><div class=\"loading\"></div></div></div></div></div></div>\n    <script src=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js\"></script>\n    <!-- `SwaggerUIBundle` is now available on the page -->\n    <script>\n    const ui = SwaggerUIBundle({\n        url: '/openapi.json',\n    \"dom_id\": \"#swagger-ui\",\n\"layout\": \"BaseLayout\",\n\"deepLinking\": true,\n\"showExtensions\": true,\n\"showCommonExtensions\": true,\noauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',\n    presets: [\n        SwaggerUIBundle.presets.apis,\n        SwaggerUIBundle.SwaggerUIStandalonePreset\n        ],\n    })\n    </script>\n    \n    \n    </body></html>",
+    "httpStatus": 200,
+    "httpStatusText": "OK",
+    "metadata": {
+      "viewport": "width=device-width, initial-scale=1.0"
+    },
+    "title": "Reliastra MVP API - Swagger UI",
+    "url": "https://api.zevcloud.app/docs",
+    "usage": {
+      "tokens": 297
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 297
+    }
+  },
+  "status": 200
+}

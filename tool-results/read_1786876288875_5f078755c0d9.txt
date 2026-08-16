@@ -1,0 +1,843 @@
+     1→"use client";
+     2→
+     3→import { useQueryClient } from "@tanstack/react-query";
+     4→import { useState } from "react";
+     5→import Link from "next/link";
+     6→import { useAuth } from "@/lib/auth-context";
+     7→import { formatDistanceToNow } from "date-fns";
+     8→import {
+     9→  useDashboardSummary,
+    10→  useLatencyData,
+    11→  useSlaDegradation,
+    12→  useRecentChecks,
+    13→  useIncidents,
+    14→  useBillingPlan,
+    15→  useClients,
+    16→} from "@/hooks/useApi";
+    17→import {
+    18→  AreaChart,
+    19→  Area,
+    20→  XAxis,
+    21→  YAxis,
+    22→  Tooltip,
+    23→  ResponsiveContainer,
+    24→} from "recharts";
+    25→import { cn } from "@/lib/utils";
+    26→import { getPlanConfig } from "@/lib/tierLimits";
+    27→import type { Plan } from "@/services/billingService";
+    28→import {
+    29→  Users,
+    30→  Layers,
+    31→  AlertTriangle,
+    32→  ShieldCheck,
+    33→  FileText,
+    34→  RefreshCw,
+    35→  ChevronRight,
+    36→  Activity,
+    37→  Zap,
+    38→  AlertCircle,
+    39→  Lock,
+    40→} from "lucide-react";
+    41→import { Skeleton } from "@/components/ui/skeleton";
+    42→import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
+    43→import {
+    44→  ConsoleCard,
+    45→  ConsoleCardBody,
+    46→  ConsoleCardHeader,
+    47→  StatusDot,
+    48→} from "@/components/dashboard/ConsoleLayout";
+    49→import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
+    50→import { EmptyState } from "@/components/dashboard/EmptyState";
+    51→
+    52→/* ─ Helpers ─ */
+    53→
+    54→const TIME_PILLS = [
+    55→  { label: "1h", hours: 1 },
+    56→  { label: "24h", hours: 24 },
+    57→  { label: "7d", hours: 168 },
+    58→  { label: "30d", hours: 720 },
+    59→] as const;
+    60→
+    61→function formatXAxisTick(timestamp: string): string {
+    62→  try {
+    63→    return new Date(timestamp).toLocaleTimeString([], {
+    64→      hour: "2-digit",
+    65→      minute: "2-digit",
+    66→      hour12: false,
+    67→    });
+    68→  } catch {
+    69→    return "";
+    70→  }
+    71→}
+    72→
+    73→function uptimeColor(pct: number | null | undefined): string {
+    74→  if (pct == null) return "#A1A1AA";
+    75→  if (pct >= 99.9) return "#16A34A";
+    76→  if (pct >= 99) return "#D97706";
+    77→  return "#DC2626";
+    78→}
+    79→
+    80→function slaColor(pct: number | null | undefined): string {
+    81→  if (pct == null) return "#A1A1AA";
+    82→  if (pct <= 0.1) return "#16A34A";
+    83→  if (pct <= 1) return "#D97706";
+    84→  return "#DC2626";
+    85→}
+    86→
+    87→function aggregateMedianLatency(
+    88→  data: { timestamp: string; latency_ms: number; region: string; dependency_id: string }[]
+    89→) {
+    90→  if (!data.length) return [];
+    91→
+    92→  // Group by timestamp, compute median latency per bucket
+    93→  const buckets = new Map<string, number[]>();
+    94→  for (const d of data) {
+    95→    const key = d.timestamp;
+    96→    if (!buckets.has(key)) buckets.set(key, []);
+    97→    buckets.get(key)!.push(d.latency_ms);
+    98→  }
+    99→
+   100→  return Array.from(buckets.entries())
+   101→    .sort(([a], [b]) => a.localeCompare(b))
+   102→    .map(([timestamp, latencies]) => {
+   103→      const sorted = [...latencies].sort((a, b) => a - b);
+   104→      const mid = Math.floor(sorted.length / 2);
+   105→      const median =
+   106→        sorted.length % 2 !== 0
+   107→          ? sorted[mid]
+   108→          : (sorted[mid - 1] + sorted[mid]) / 2;
+   109→      return { timestamp, latency_ms: Math.round(median * 100) / 100 };
+   110→    });
+   111→}
+   112→
+   113→/* ─ Latency Tooltip ─ */
+   114→
+   115→function LatencyTooltip({ active, payload, label }: any) {
+   116→  if (!active || !payload?.length) return null;
+   117→  const d = payload[0]?.payload;
+   118→  return (
+   119→    <div className="bg-[#1A1A20] border border-[rgba(255,255,255,0.12)] rounded-lg px-3 py-2 text-xs">
+   120→      <p className="text-[#52525B] mb-1">{new Date(d.timestamp).toLocaleTimeString()}</p>
+   121→      <p className="text-[#FAFAFA] font-mono">{d.latency_ms}ms</p>
+   122→      {d.region && <p className="text-[#52525B]">{d.region}</p>}
+   123→    </div>
+   124→  );
+   125→}
+   126→
+   127→/* ─ Skeletons ─ */
+   128→
+   129→function KpiCardSkeleton() {
+   130→  return (
+   131→    <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   132→      <div className="flex items-center gap-2 mb-2">
+   133→        <Skeleton className="h-4 w-4 rounded bg-[#1C1C22]" />
+   134→        <Skeleton className="h-3 w-20 bg-[#1C1C22]" />
+   135→      </div>
+   136→      <Skeleton className="h-8 w-16 mb-1.5 bg-[#1C1C22]" />
+   137→      <Skeleton className="h-3 w-28 bg-[#1C1C22]" />
+   138→    </div>
+   139→  );
+   140→}
+   141→
+   142→function SectionSkeleton() {
+   143→  return (
+   144→    <ConsoleCard>
+   145→      <ConsoleCardHeader>
+   146→        <Skeleton className="h-4 w-36 bg-[#1C1C22]" />
+   147→      </ConsoleCardHeader>
+   148→      <ConsoleCardBody>
+   149→        <div className="space-y-3">
+   150→          {Array.from({ length: 3 }).map((_, i) => (
+   151→            <Skeleton key={i} className="h-12 w-full bg-[#1C1C22]" />
+   152→          ))}
+   153→        </div>
+   154→      </ConsoleCardBody>
+   155→    </ConsoleCard>
+   156→  );
+   157→}
+   158→
+   159→/* ─ Incident Table Grid ─ */
+   160→
+   161→const INCIDENT_GRID_COLS = "grid-cols-[80px_1fr_120px_120px_40px]";
+   162→
+   163→/* ------------------------------------------------------------------------ */
+   164→
+   165→export default function DashboardPage() {
+   166→  const { currentOrg, isLoading: authLoading } = useAuth();
+   167→  const queryClient = useQueryClient();
+   168→
+   169→  /* ─ Time pill state for latency chart ─ */
+   170→  const [selectedHours, setSelectedHours] = useState<number>(24);
+   171→
+   172→  /* ─ TanStack Query hooks ─ */
+   173→  const summaryQuery = useDashboardSummary();
+   174→  const latencyQuery = useLatencyData(selectedHours);
+   175→  const slaQuery = useSlaDegradation();
+   176→  const recentChecksQuery = useRecentChecks(5);
+   177→  const incidentsQuery = useIncidents({ status: "open", limit: 5 });
+   178→  const billingQuery = useBillingPlan();
+   179→  const clientsQuery = useClients();
+   180→
+   181→  /* ─ Derived data ─ */
+   182→  const summary = summaryQuery.data;
+   183→  const incidents = incidentsQuery.data ?? [];
+   184→  const slaDegradation = slaQuery.data;
+   185→  const recentChecks = recentChecksQuery.data ?? [];
+   186→  const billingPlan = billingQuery.data;
+   187→  const clients = clientsQuery.data ?? [];
+   188→  const latencyData = latencyQuery.data ?? [];
+   189→
+   190→  const plan: Plan = billingPlan?.plan ?? "free";
+   191→  const isAgency = currentOrg?.has_agency_mode === true;
+   192→  const isFreePlan = plan === "free";
+   193→  const planConfig = getPlanConfig(plan);
+   194→  const depLimit = planConfig.limits.dependencies;
+   195→  const activeDeps = summary?.active_dependencies_count ?? 0;
+   196→  const atDepLimit =
+   197→    summary != null && isFinite(depLimit) && activeDeps >= depLimit;
+   198→  const openIncidentCount = incidents.length;
+   199→
+   200→  const chartData = aggregateMedianLatency(latencyData);
+   201→
+   202→  const isInitialLoading =
+   203→    authLoading ||
+   204→    summaryQuery.isLoading ||
+   205→    incidentsQuery.isLoading ||
+   206→    slaQuery.isLoading;
+   207→
+   208→  const anyError =
+   209→    summaryQuery.isError || incidentsQuery.isError || slaQuery.isError;
+   210→
+   211→  const lastUpdated =
+   212→    summaryQuery.dataUpdatedAt ||
+   213→    incidentsQuery.dataUpdatedAt ||
+   214→    Date.now();
+   215→
+   216→  /* ─ Refresh handler ─ */
+   217→  const handleRefresh = () => {
+   218→    queryClient.invalidateQueries();
+   219→  };
+   220→
+   221→  /* ─ Auth loading shell ─ */
+   222→  if (authLoading) {
+   223→    return (
+   224→      <div className="space-y-6">
+   225→        {/* Header skeleton */}
+   226→        <div className="flex items-start justify-between">
+   227→          <div>
+   228→            <Skeleton className="h-8 w-56 mb-2 bg-[#1C1C22]" />
+   229→            <Skeleton className="h-4 w-44 bg-[#1C1C22]" />
+   230→          </div>
+   231→          <Skeleton className="h-10 w-10 rounded-lg bg-[#1C1C22]" />
+   232→        </div>
+   233→
+   234→        {/* KPI skeletons */}
+   235→        <div
+   236→          className={cn(
+   237→            "grid grid-cols-2 gap-4",
+   238→            isAgency ? "lg:grid-cols-5" : "lg:grid-cols-5"
+   239→          )}
+   240→        >
+   241→          {Array.from({ length: 5 }).map((_, i) => (
+   242→            <KpiCardSkeleton key={i} />
+   243→          ))}
+   244→        </div>
+   245→
+   246→        {/* Two-column skeletons */}
+   247→        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+   248→          <SectionSkeleton />
+   249→          <div className="space-y-4">
+   250→            <SectionSkeleton />
+   251→            <SectionSkeleton />
+   252→          </div>
+   253→        </div>
+   254→      </div>
+   255→    );
+   256→  }
+   257→
+   258→  /* -------------------------------------------------------------------------- */
+   259→  return (
+   260→    <div className="space-y-6">
+   261→      {/* ─ Header ─ */}
+   262→      <div className="flex items-start justify-between">
+   263→        <div>
+   264→          <h1 className="text-2xl font-bold text-[#FAFAFA]">
+   265→            Operations overview
+   266→          </h1>
+   267→          <p className="text-sm text-[#52525B] mt-1">
+   268→            {currentOrg?.name || "Organization"}&nbsp;·&nbsp;Last updated{" "}
+   269→            {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+   270→          </p>
+   271→        </div>
+   272→        <button
+   273→          onClick={handleRefresh}
+   274→          className="p-2.5 rounded-lg bg-[#131318] border border-[rgba(255,255,255,0.08)] text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-[rgba(255,255,255,0.15)] transition-all disabled:opacity-50"
+   275→          aria-label="Refresh dashboard"
+   276→        >
+   277→          <RefreshCw
+   278→            className={cn(
+   279→              "w-4 h-4",
+   280→              (summaryQuery.isFetching || incidentsQuery.isFetching) &&
+   281→                "animate-spin"
+   282→            )}
+   283→          />
+   284→        </button>
+   285→      </div>
+   286→
+   287→      {/* ─ Upgrade Banner ─ */
+   288→      {(plan === "free" || plan === "starter") && summary && (
+   289→        <UpgradeBanner
+   290→          plan={plan}
+   291→          usage={activeDeps}
+   292→          limit={depLimit}
+   293→          resource="dependencies"
+   294→        />
+   295→      )}
+   296→
+   297→      {/* ─ Error Banner ─ */
+   298→      {anyError && (
+   299→        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.06)] px-5 py-4 flex items-start gap-3">
+   300→          <AlertCircle className="w-5 h-5 text-[#DC2626] mt-0.5 shrink-0" />
+   301→          <div className="flex-1">
+   302→            <p className="text-sm font-semibold text-[#FAFAFA]">
+   303→              Unable to load dashboard data.
+   304→            </p>
+   305→            <p className="text-xs text-[#A1A1AA] mt-0.5">
+   306→              Check that the backend is accessible and your session is valid.
+   307→            </p>
+   308→          </div>
+   309→          <button
+   310→            onClick={handleRefresh}
+   311→            className="text-xs font-semibold text-[#DC2626] hover:text-[#FAFAFA] transition-colors"
+   312→          >
+   313→            Retry
+   314→          </button>
+   315→        </div>
+   316→      )}
+   317→
+   318→      {/* ─ KPI Stats Row (2 → 5 cols) ─ */
+   319→      {isInitialLoading ? (
+   320→        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+   321→          {Array.from({ length: 5 }).map((_, i) => (
+   322→            <KpiCardSkeleton key={i} />
+   323→          ))}
+   324→        </div>
+   325→      ) : (
+   326→        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+   327→          {/* 1. Dependencies */}
+   328→          <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   329→            <div className="flex items-center gap-2">
+   330→              <Layers className="w-4 h-4 text-[#52525B]" />
+   331→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   332→                Dependencies
+   333→              </span>
+   334→              {atDepLimit && (
+   335→                <span className="text-[10px] font-semibold text-[#DC2626] bg-[rgba(220,38,38,0.12)] px-2 py-0.5 rounded-full">
+   336→                  At limit
+   337→                </span>
+   338→              )}
+   339→            </div>
+   340→            <p
+   341→              className={cn(
+   342→                "text-2xl font-semibold font-mono mt-2",
+   343→                atDepLimit ? "text-[#DC2626]" : "text-[#FAFAFA]"
+   344→              )}
+   345→            >
+   346→              {summary?.active_dependencies_count ?? 0}
+   347→            </p>
+   348→            <p className="text-xs text-[#52525B] mt-1">
+   349→              of {depLimit === Infinity ? "\u221E" : depLimit} allowed
+   350→            </p>
+   351→          </div>
+   352→
+   353→          {/* 2. Open Incidents */}
+   354→          <div
+   355→            className={cn(
+   356→              "bg-[#131318] rounded-xl border p-5 transition-colors",
+   357→              openIncidentCount > 0
+   358→                ? "border-[rgba(220,38,38,0.2)]"
+   359→                : "border-[rgba(255,255,255,0.08)]"
+   360→            )}
+   361→          >
+   362→            <div className="flex items-center gap-2">
+   363→              <AlertTriangle
+   364→                className={cn(
+   365→                  "w-4 h-4",
+   366→                  openIncidentCount > 0
+   367→                    ? "text-[#DC2626] animate-pulse"
+   368→                    : "text-[#52525B]"
+   369→                )}
+   370→              />
+   371→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   372→                Open Incidents
+   373→              </span>
+   374→            </div>
+   375→            <p className="text-2xl font-semibold font-mono text-[#FAFAFA] mt-2">
+   376→              {openIncidentCount}
+   377→            </p>
+   378→            <p className="text-xs text-[#52525B] mt-1">
+   379→              {openIncidentCount > 0 ? "requiring attention" : "all clear"}
+   380→            </p>
+   381→          </div>
+   382→
+   383→          {/* 3. Overall Uptime */}
+   384→          <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   385→            <div className="flex items-center gap-2">
+   386→              <Zap className="w-4 h-4 text-[#52525B]" />
+   387→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   388→                Overall Uptime
+   389→              </span>
+   390→            </div>
+   391→            <p
+   392→              className="text-2xl font-semibold font-mono mt-2"
+   393→              style={{
+   394→                color: uptimeColor(
+   395→                  summary?.overall_uptime_percentage
+   396→                ),
+   397→              }}
+   398→            >
+   399→              {summary?.overall_uptime_percentage != null
+   400→                ? `${summary.overall_uptime_percentage.toFixed(2)}%`
+   401→                : "—"}
+   402→            </p>
+   403→            <p className="text-xs text-[#52525B] mt-1">across all deps</p>
+   404→          </div>
+   405→
+   406→          {/* 4. Evidence */}
+   407→          {isFreePlan ? (
+   408→            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   409→              <div className="flex items-center gap-2">
+   410→                <FileText className="w-4 h-4 text-[#52525B]" />
+   411→                <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   412→                  Evidence
+   413→                </span>
+   414→                <Lock className="w-3 h-3 text-[#52525B]" />
+   415→              </div>
+   416→              <p className="text-2xl font-semibold font-mono text-[#FAFAFA] mt-2">
+   417→                —
+   418→              </p>
+   419→              <p className="text-xs text-[#52525B] mt-1">
+   420→                Upgrade to generate
+   421→              </p>
+   422→            </div>
+   423→          ) : (
+   424→            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   425→              <div className="flex items-center gap-2">
+   426→                <FileText className="w-4 h-4 text-[#52525B]" />
+   427→                <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   428→                  Evidence
+   429→                </span>
+   430→              </div>
+   431→              <p className="text-2xl font-semibold font-mono text-[#FAFAFA] mt-2">
+   432→                {incidents.filter((i) => i.evidence_report_id !== null).length}
+   433→              </p>
+   434→              <p className="text-xs text-[#52525B] mt-1">
+   435→                reports generated
+   436→              </p>
+   437→            </div>
+   438→          )}
+   439→
+   440→          {/* 5. SLA Degradation */}
+   441→          <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5">
+   442→            <div className="flex items-center gap-2">
+   443→              <ShieldCheck className="w-4 h-4 text-[#52525B]" />
+   444→              <span className="text-[11px] uppercase tracking-wider text-[#52525B]">
+   445→                SLA
+   446→              </span>
+   447→            </div>
+   448→            <p
+   449→              className="text-2xl font-semibold font-mono mt-2"
+   450→              style={{
+   451→                color: slaColor(
+   452→                  slaDegradation?.total_degradation_pct
+   453→                ),
+   454→              }}
+   455→            >
+   456→              {slaDegradation?.total_degradation_pct != null
+   457→                ? `${slaDegradation.total_degradation_pct.toFixed(2)}%`
+   458→                : "—"}
+   459→            </p>
+   460→            <p className="text-xs text-[#52525B] mt-1">degradation (30d)</p>
+   461→          </div>
+   462→        </div>
+   463→      )}
+   464→
+   465→      {/* ─ Active Incidents ─ */}
+   466→      <div>
+   467→        <div className="flex items-center justify-between mb-4">
+   468→          <h2 className="text-lg font-semibold text-[#FAFAFA]">
+   469→            Active incidents
+   470→          </h2>
+   471→          <Link
+   472→            href="/incidents"
+   473→            className="text-sm text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors flex items-center gap-1"
+   474→          >
+   475→            View all
+   476→            <ChevronRight className="w-4 h-4" />
+   477→          </Link>
+   478→        </div>
+   479→
+   480→        {incidentsQuery.isLoading ? (
+   481→          <ConsoleCard>
+   482→            <ConsoleCardBody>
+   483→              <div className="space-y-3">
+   484→                {Array.from({ length: 3 }).map((_, i) => (
+   485→                  <Skeleton key={i} className="h-14 w-full bg-[#1C1C22]" />
+   486→                ))}
+   487→              </div>
+   488→            </ConsoleCardBody>
+   489→          </ConsoleCard>
+   490→        ) : incidents.length > 0 ? (
+   491→          <ConsoleCard>
+   492→            {/* Table header */}
+   493→            <div
+   494→              className={cn(
+   495→                "px-5 py-3 grid gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)]",
+   496→                INCIDENT_GRID_COLS
+   497→              )}
+   498→            >
+   499→              <span>Severity</span>
+   500→              <span>Title</span>
+   501→              <span>Dependency</span>
+   502→              <span>Opened</span>
+   503→              <span />
+   504→            </div>
+   505→
+   506→            {/* Rows */}
+   507→            {incidents.slice(0, 5).map((inc, index) => (
+   508→              <div
+   509→                key={inc.id}
+   510→                className="px-5 py-3.5 grid gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center group"
+   511→                style={{
+   512→                  gridTemplateColumns: "80px 1fr 120px 120px 40px",
+   513→                }}
+   514→              >
+   515→                <SeverityBadge severity={inc.severity} />
+   516→                <Link
+   517→                  href={`/incidents/${inc.id}`}
+   518→                  className="text-sm font-medium text-[#FAFAFA] hover:text-[#67E8F9] transition-colors truncate block"
+   519→                >
+   520→                  {inc.description || `Incident ${inc.id.slice(0, 8)}`}
+   521→                </Link>
+   522→                <span className="font-mono text-xs text-[#A1A1AA] truncate">
+   523→                  {inc.dependency_id.slice(0, 12)}
+   524→                </span>
+   525→                <span className="text-xs text-[#52525B]">
+   526→                  {formatDistanceToNow(new Date(inc.started_at), {
+   527→                    addSuffix: true,
+   528→                  })}
+   529→                </span>
+   530→                <Link
+   531→                  href={`/incidents/${inc.id}`}
+   532→                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+   533→                >
+   534→                  <ChevronRight className="w-3.5 h-3.5 text-[#52525B] hover:text-[#FAFAFA]" />
+   535→                </Link>
+   536→              </div>
+   537→            ))}
+   538→          </ConsoleCard>
+   539→        ) : (
+   540→          <EmptyState
+   541→            icon={ShieldCheck}
+   542→            title="All systems operational"
+   543→            description="No active incidents. Last check: just now."
+   544→            variant="success"
+   545→          />
+   546→        )}
+   547→      </div>
+   548→
+   549→      {/* ─ Two-Column Layout (65/35) ─ */}
+   550→      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+   551→        {/* ─ Left: Latency Trends Chart ─ */}
+   552→        {latencyQuery.isLoading ? (
+   553→          <ConsoleCard>
+   554→            <ConsoleCardHeader>
+   555→              <Skeleton className="h-4 w-32 bg-[#1C1C22]" />
+   556→            </ConsoleCardHeader>
+   557→            <ConsoleCardBody>
+   558→              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+   559→                <Skeleton className="h-16 w-16 rounded-xl bg-[#1C1C22]" />
+   560→                <Skeleton className="h-4 w-64 bg-[#1C1C22]" />
+   561→                <Skeleton className="h-4 w-48 bg-[#1C1C22]" />
+   562→              </div>
+   563→            </ConsoleCardBody>
+   564→          </ConsoleCard>
+   565→        ) : chartData.length > 0 ? (
+   566→          <ConsoleCard>
+   567→            <ConsoleCardHeader className="flex items-center justify-between">
+   568→              <span className="text-sm font-semibold text-[#FAFAFA]">
+   569→                Latency trends
+   570→              </span>
+   571→              <div className="flex gap-1">
+   572→                {TIME_PILLS.map((pill) => (
+   573→                  <button
+   574→                    key={pill.label}
+   575→                    onClick={() => setSelectedHours(pill.hours)}
+   576→                    className={cn(
+   577→                      "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+   578→                      selectedHours === pill.hours
+   579→                        ? "bg-[rgba(8,145,178,0.15)] text-[#0891B2]"
+   580→                        : "text-[#52525B] hover:text-[#A1A1AA] hover:bg-[rgba(255,255,255,0.04)]"
+   581→                    )}
+   582→                  >
+   583→                    {pill.label}
+   584→                  </button>
+   585→                ))}
+   586→              </div>
+   587→            </ConsoleCardHeader>
+   588→            <ConsoleCardBody className="px-2 pb-2">
+   589→              <ResponsiveContainer width="100%" height={220}>
+   590→                <AreaChart
+   591→                  data={chartData}
+   592→                  margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+   593→                >
+   594→                  <defs>
+   595→                    <linearGradient
+   596→                      id="latencyGradient"
+   597→                      x1="0"
+   598→                      y1="0"
+   599→                      x2="0"
+   600→                      y2="1"
+   601→                    >
+   602→                      <stop
+   603→                        offset="0%"
+   604→                        stopColor="rgba(8,145,178,0.15)"
+   605→                        stopOpacity={1}
+   606→                      />
+   607→                      <stop
+   608→                        offset="100%"
+   609→                        stopColor="rgba(8,145,178,0)"
+   610→                        stopOpacity={1}
+   611→                      />
+   612→                    </linearGradient>
+   613→                  </defs>
+   614→                  <XAxis
+   615→                    dataKey="timestamp"
+   616→                    tickFormatter={formatXAxisTick}
+   617→                    tick={{
+   618→                      fontSize: 11,
+   619→                      fill: "#52525B",
+   620→                    }}
+   621→                    tickLine={false}
+   622→                    axisLine={false}
+   623→                    minTickGap={60}
+   624→                  />
+   625→                  <YAxis
+   626→                    domain={["auto", "auto"]}
+   627→                    hide
+   628→                  />
+   629→                  <Tooltip
+   630→                    content={<LatencyTooltip />}
+   631→                    cursor={{
+   632→                      stroke: "rgba(255,255,255,0.06)",
+   633→                      strokeWidth: 1,
+   634→                    }}
+   635→                  />
+   636→                  <Area
+   637→                    type="monotone"
+   638→                    dataKey="latency_ms"
+   639→                    stroke="#0891B2"
+   640→                    strokeWidth={1.5}
+   641→                    fill="url(#latencyGradient)"
+   642→                    isAnimationActive={false}
+   643→                  />
+   644→                </AreaChart>
+   645→              </ResponsiveContainer>
+   646→            </ConsoleCardBody>
+   647→          </ConsoleCard>
+   648→        ) : (
+   649→          <ConsoleCard>
+   650→            <ConsoleCardHeader className="flex items-center justify-between">
+   651→              <span className="text-sm font-semibold text-[#FAFAFA]">
+   652→                Latency trends
+   653→              </span>
+   654→              <div className="flex gap-1">
+   655→                {TIME_PILLS.map((pill) => (
+   656→                  <button
+   657→                    key={pill.label}
+   658→                    onClick={() => setSelectedHours(pill.hours)}
+   659→                    className={cn(
+   660→                      "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+   661→                      selectedHours === pill.hours
+   662→                        ? "bg-[rgba(8,145,178,0.15)] text-[#0891B2]"
+   663→                        : "text-[#52525B] hover:text-[#A1A1AA] hover:bg-[rgba(255,255,255,0.04)]"
+   664→                    )}
+   665→                  >
+   666→                    {pill.label}
+   667→                  </button>
+   668→                ))}
+   669→              </div>
+   670→            </ConsoleCardHeader>
+   671→            <ConsoleCardBody>
+   672→              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+   673→                <div className="w-16 h-16 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
+   674→                  <Activity
+   675→                    className="w-8 h-8 text-[#52525B]"
+   676→                    strokeWidth={1.5}
+   677→                  />
+   678→                </div>
+   679→                <p className="text-sm text-[#A1A1AA] text-center max-w-sm">
+   680→                  Latency data will appear once checks begin
+   681→                </p>
+   682→                {summary && summary.active_dependencies_count === 0 && (
+   683→                  <Link
+   684→                    href="/dependencies"
+   685→                    className="inline-flex items-center bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white hover:shadow-lg transition-all mt-2"
+   686→                  >
+   687→                    Add your first dependency
+   688→                  </Link>
+   689→                )}
+   690→              </div>
+   691→            </ConsoleCardBody>
+   692→          </ConsoleCard>
+   693→        )}
+   694→
+   695→        {/* ─ Right Column ─ */}
+   696→        <div className="space-y-4">
+   697→          {/* SLA Card */}
+   698→          {slaQuery.isLoading ? (
+   699→            <ConsoleCard>
+   700→              <ConsoleCardBody>
+   701→                <div className="flex flex-col items-center py-6 space-y-3">
+   702→                  <Skeleton className="h-8 w-8 rounded-lg bg-[#1C1C22]" />
+   703→                  <Skeleton className="h-10 w-28 bg-[#1C1C22]" />
+   704→                  <Skeleton className="h-3 w-32 bg-[#1C1C22]" />
+   705→                </div>
+   706→              </ConsoleCardBody>
+   707→            </ConsoleCard>
+   708→          ) : (
+   709→            <ConsoleCard>
+   710→              <ConsoleCardBody className="flex flex-col items-center text-center py-8">
+   711→                <ShieldCheck
+   712→                  className={cn(
+   713→                    "w-8 h-8 mb-3",
+   714→                    slaColor(slaDegradation?.total_degradation_pct)
+   715→                  )}
+   716→                  strokeWidth={1.5}
+   717→                />
+   718→                <span
+   719→                  className="font-mono text-3xl font-semibold"
+   720→                  style={{
+   721→                    color: slaColor(
+   722→                      slaDegradation?.total_degradation_pct
+   723→                    ),
+   724→                  }}
+   725→                >
+   726→                  {slaDegradation?.total_degradation_pct != null
+   727→                    ? `${slaDegradation.total_degradation_pct.toFixed(2)}%`
+   728→                    : "—"}
+   729→                </span>
+   730→                <span className="text-xs text-[#52525B] mt-2 uppercase tracking-wider">
+   731→                  30-day degradation
+   732→                </span>
+   733→                {(slaDegradation?.affected_services ?? 0) > 0 && (
+   734→                  <span className="text-xs text-[#A1A1AA] mt-1">
+   735→                    {slaDegradation!.affected_services} service
+   736→                    {slaDegradation!.affected_services !== 1 && "s"}{" "}
+   737→                    affected
+   738→                  </span>
+   739→                )}
+   740→              </ConsoleCardBody>
+   741→            </ConsoleCard>
+   742→          )}
+   743→
+   744→          {/* Recent Checks Card */}
+   745→          {recentChecksQuery.isLoading ? (
+   746→            <ConsoleCard>
+   747→              <ConsoleCardHeader>
+   748→                <Skeleton className="h-4 w-28 bg-[#1C1C22]" />
+   749→              </ConsoleCardHeader>
+   750→              <ConsoleCardBody>
+   751→                <div className="space-y-3">
+   752→                  {Array.from({ length: 4 }).map((_, i) => (
+   753→                    <Skeleton key={i} className="h-10 w-full bg-[#1C1C22]" />
+   754→                  ))}
+   755→                </div>
+   756→              </ConsoleCardBody>
+   757→            </ConsoleCard>
+   758→          ) : (
+   759→            <ConsoleCard>
+   760→              <ConsoleCardHeader>
+   761→                <span className="text-sm font-semibold text-[#FAFAFA]">
+   762→                  Recent checks
+   763→                </span>
+   764→              </ConsoleCardHeader>
+   765→              <ConsoleCardBody>
+   766→                {recentChecks.length > 0 ? (
+   767→                  <div className="space-y-0">
+   768→                    {recentChecks.map((check) => (
+   769→                      <div
+   770→                        key={check.id}
+   771→                        className="flex items-center gap-3 py-2.5 border-b border-[rgba(255,255,255,0.05)] last:border-b-0"
+   772→                      >
+   773→                        <StatusDot
+   774→                          status={check.is_up ? "operational" : "down"}
+   775→                          pulse={!check.is_up}
+   776→                        />
+   777→                        <span className="text-sm text-[#FAFAFA] flex-1 truncate font-mono text-xs">
+   778→                          {check.dependency_id.slice(0, 12)}
+   779→                        </span>
+   780→                        <span className="font-mono text-xs text-[#A1A1AA]">
+   781→                          {check.latency_ms}ms
+   782→                        </span>
+   783→                        <span className="text-xs text-[#52525B] shrink-0">
+   784→                          {formatDistanceToNow(
+   785→                            new Date(check.executed_at),
+   786→                            { addSuffix: true }
+   787→                          )}
+   788→                        </span>
+   789→                      </div>
+   790→                    ))}
+   791→                  </div>
+   792→                ) : (
+   793→                  <p className="text-sm text-[#52525B] text-center py-8">
+   794→                    No checks recorded yet
+   795→                  </p>
+   796→                )}
+   797→              </ConsoleCardBody>
+   798→            </ConsoleCard>
+   799→          )}
+   800→        </div>
+   801→      </div>
+   802→
+   803→      {/* ─ Quick Actions Bar ─ */}
+   804→      <div className="flex gap-3 mt-8">
+   805→        <Link
+   806→          href="/dependencies"
+   807→          className="inline-flex items-center bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white hover:shadow-lg transition-all"
+   808→        >
+   809→          Add dependency
+   810→        </Link>
+   811→        <Link
+   812→          href="/incidents"
+   813→          className="inline-flex items-center bg-[#131318] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] px-5 py-2.5 rounded-lg text-sm font-semibold hover:border-[rgba(255,255,255,0.15)] transition-all"
+   814→        >
+   815→          View incidents
+   816→        </Link>
+   817→
+   818→        {isFreePlan ? (
+   819→          <div className="relative group">
+   820→            <button
+   821→              disabled
+   822→              className="inline-flex items-center bg-[rgba(8,145,178,0.3)] text-[rgba(255,255,255,0.4)] px-5 py-2.5 rounded-lg text-sm font-semibold cursor-not-allowed"
+   823→            >
+   824→              Generate report
+   825→              <Lock className="w-3.5 h-3.5 ml-2" />
+   826→            </button>
+   827→            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1A1A22] border border-[rgba(255,255,255,0.1)] rounded-lg text-xs text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-10">
+   828→              Upgrade to Starter to generate reports
+   829→            </div>
+   830→          </div>
+   831→        ) : (
+   832→          <Link
+   833→            href="/evidence"
+   834→            className="inline-flex items-center bg-[#0891B2] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0E7490] transition-all"
+   835→          >
+   836→            Generate report
+   837→          </Link>
+   838→        )}
+   839→      </div>
+   840→    </div>
+   841→  );
+   842→}
+   843→

@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
-import {
-  dependencyService,
-  type Dependency,
-  type DependencyHistory,
-} from "@/services/dependencyService";
-import { billingService } from "@/services/billingService";
+import { dependencyService, type Dependency, type DependencyHistory } from "@/services/dependencyService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -27,6 +22,14 @@ import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { getPlanConfig } from "@/lib/tierLimits";
 import type { Plan } from "@/services/billingService";
+import {
+  useDependencies,
+  useDependencyHistory,
+  useCreateDependency,
+  useUpdateDependency,
+  useDeleteDependency,
+  useBillingPlan,
+} from "@/hooks/useApi";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -49,7 +52,6 @@ type StatusBadgeType = "operational" | "degraded" | "down" | "unknown";
 
 function deriveStatus(dep: Dependency): StatusBadgeType {
   if (!dep.is_active) return "unknown";
-  // If no recent check info, treat as unknown. In a real app you'd check last check result.
   return "operational";
 }
 
@@ -96,12 +98,17 @@ function formatUptime(pct: number | null): string {
 export default function DependenciesPage() {
   const { user } = useAuth();
 
-  // Data
-  const [dependencies, setDependencies] = useState<Dependency[]>([]);
+  // TanStack Query hooks
+  const { data: dependencies = [], isLoading: loading, isError: error, refetch } = useDependencies();
+  const { data: billingPlan } = useBillingPlan();
+  const createMutation = useCreateDependency();
+  const updateMutation = useUpdateDependency();
+  const deleteMutation = useDeleteDependency();
+
+  const plan = (billingPlan?.plan || "free") as Plan;
+
+  // History state (fetched on-demand per dependency)
   const [historyMap, setHistoryMap] = useState<Record<string, DependencyHistory>>({});
-  const [plan, setPlan] = useState<Plan>("free");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -111,16 +118,13 @@ export default function DependenciesPage() {
   const [formInterval, setFormInterval] = useState(60);
   const [formRegions, setFormRegions] = useState<string[]>(["us-east"]);
   const [formEndpointError, setFormEndpointError] = useState("");
-  const [creating, setCreating] = useState(false);
 
   // Actions
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // ── Fetch ────────────────────────────────────────────────────────────────
+  // ── Derived ──────────────────────────────────────────────────────────────
 
   const planConfig = getPlanConfig(plan);
   const depLimit = planConfig.limits.dependencies;
@@ -129,41 +133,15 @@ export default function DependenciesPage() {
   const atLimit = dependencies.length >= depLimit;
   const isFreeOrStarter = plan === "free" || plan === "starter";
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [deps, billing] = await Promise.all([
-        dependencyService.list(),
-        billingService.getPlan(),
-      ]);
-      setDependencies(deps);
-      setPlan(billing.plan);
-    } catch {
-      setError("Unable to load dependencies. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchHistory = useCallback(async (id: string) => {
-    try {
-      const history = await dependencyService.getHistory(id);
-      setHistoryMap((prev) => ({ ...prev, [id]: history }));
-    } catch {
-      // Silently ignore history fetch failures
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   // Fetch history for all deps once they load
   useEffect(() => {
     dependencies.forEach((dep) => {
       if (!historyMap[dep.id]) {
-        fetchHistory(dep.id);
+        dependencyService.getHistory(dep.id).then((history) => {
+          setHistoryMap((prev) => ({ ...prev, [dep.id]: history }));
+        }).catch(() => {
+          // silently ignore
+        });
       }
     });
   }, [dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -205,9 +183,8 @@ export default function DependenciesPage() {
       return;
     }
     setFormEndpointError("");
-    setCreating(true);
     try {
-      await dependencyService.create({
+      await createMutation.mutateAsync({
         name: formName.trim(),
         endpoint_url: formEndpoint.trim(),
         expected_status_codes: [formExpectedStatus],
@@ -215,46 +192,29 @@ export default function DependenciesPage() {
         regions: formRegions,
       });
       setModalOpen(false);
-      fetchData();
     } catch {
       setFormEndpointError("Failed to create dependency. Please try again.");
-    } finally {
-      setCreating(false);
     }
   };
 
   const handleToggle = async (dep: Dependency) => {
     setActiveMenuId(null);
-    setTogglingId(dep.id);
     try {
-      await dependencyService.update(dep.id, { is_active: !dep.is_active });
-      setDependencies((prev) =>
-        prev.map((d) =>
-          d.id === dep.id ? { ...d, is_active: !dep.is_active } : d
-        )
-      );
+      await updateMutation.mutateAsync({
+        id: dep.id,
+        data: { is_active: !dep.is_active },
+      });
     } catch {
       // Silently ignore
-    } finally {
-      setTogglingId(null);
     }
   };
 
   const handleDelete = async (id: string) => {
     setActiveMenuId(null);
-    setDeletingId(id);
     try {
-      await dependencyService.delete(id);
-      setDependencies((prev) => prev.filter((d) => d.id !== id));
-      setHistoryMap((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
+      await deleteMutation.mutateAsync(id);
     } catch {
       // Silently ignore
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -307,9 +267,9 @@ export default function DependenciesPage() {
         {error && (
           <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-5 py-4 flex items-start gap-3">
             <div className="w-2 h-2 rounded-full bg-[#DC2626] mt-1.5 shrink-0" />
-            <p className="text-sm text-[#FAFAFA]">{error}</p>
+            <p className="text-sm text-[#FAFAFA]">Unable to load dependencies. Please try again.</p>
             <button
-              onClick={fetchData}
+              onClick={() => refetch()}
               className="text-xs font-medium text-[#0891B2] ml-auto shrink-0 hover:underline"
             >
               Retry
@@ -456,7 +416,7 @@ export default function DependenciesPage() {
                         <button
                           className={cn(
                             "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors",
-                            togglingId === dep.id && "opacity-50 pointer-events-none"
+                            updateMutation.isPending && "opacity-50 pointer-events-none"
                           )}
                           onClick={() => handleToggle(dep)}
                         >
@@ -476,7 +436,7 @@ export default function DependenciesPage() {
                         <button
                           className={cn(
                             "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#DC2626] hover:bg-[rgba(220,38,38,0.08)] transition-colors",
-                            deletingId === dep.id && "opacity-50 pointer-events-none"
+                            deleteMutation.isPending && "opacity-50 pointer-events-none"
                           )}
                           onClick={() => handleDelete(dep.id)}
                         >
@@ -658,15 +618,15 @@ export default function DependenciesPage() {
                 <div className="relative">
                   <button
                     onClick={handleCreate}
-                    disabled={creating || atLimit}
+                    disabled={createMutation.isPending || atLimit}
                     className={cn(
                       "bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2",
-                      atLimit || creating
+                      atLimit || createMutation.isPending
                         ? "opacity-40 cursor-not-allowed"
                         : "hover:bg-white hover:shadow-lg"
                     )}
                   >
-                    {creating ? (
+                    {createMutation.isPending ? (
                       <span className="inline-flex items-center gap-2">
                         <span className="w-3.5 h-3.5 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
                         Adding…

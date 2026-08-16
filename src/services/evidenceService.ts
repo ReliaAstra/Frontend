@@ -117,4 +117,11 @@ export const evidenceService = {
     );
     return res.data;
   },
+
+  async regenerate(reportId: string): Promise<EvidenceDetail> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.post<EvidenceDetail>(`/orgs/${orgId}/evidence/${reportId}/regenerate`);
+    return res.data;
+  },
 };

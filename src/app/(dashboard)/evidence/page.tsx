@@ -1,9 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
-import { billingService } from "@/services/billingService";
+import { type EvidenceDetail } from "@/services/evidenceService";
+import { evidenceService } from "@/services/evidenceService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -12,6 +11,7 @@ import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLa
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { LockedFeature } from "@/components/dashboard/LockedFeature";
 import { getPlanConfig } from "@/lib/tierLimits";
+import { useEvidence, useBillingPlan } from "@/hooks/useApi";
 
 const statusStyles: Record<string, { label: string; color: string; bg: string }> = {
   verified: {
@@ -51,27 +51,11 @@ const strengthStyles: Record<string, { label: string; color: string; bg: string 
 
 export default function EvidencePage() {
   const { isLoading: authLoading, currentOrg } = useAuth();
-  const [evidence, setEvidence] = useState<EvidenceDetail[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPlan, setCurrentPlan] = useState<string>("free");
 
-  useEffect(() => {
-    if (authLoading) return;
-    setLoading(true);
-    setError(null);
+  const { data: evidence = [], isLoading: loading, isError: error } = useEvidence();
+  const { data: billingPlan } = useBillingPlan();
 
-    Promise.all([evidenceService.list(), billingService.getPlan()])
-      .then(([evData, planData]) => {
-        setEvidence(Array.isArray(evData) ? evData : []);
-        setCurrentPlan(planData.plan);
-      })
-      .catch(() => {
-        setError("Unable to load evidence records.");
-        setEvidence([]);
-      })
-      .finally(() => setLoading(false));
-  }, [authLoading]);
+  const currentPlan = billingPlan?.plan || "free";
 
   if (authLoading) {
     return (
@@ -100,7 +84,7 @@ export default function EvidencePage() {
       {/* Error */}
       {error && (
         <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
-          <p className="text-sm text-[#DC2626]">{error}</p>
+          <p className="text-sm text-[#DC2626]">Unable to load evidence records.</p>
         </div>
       )}
 

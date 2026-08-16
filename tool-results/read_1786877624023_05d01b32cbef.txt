@@ -1,0 +1,1001 @@
+     1→RELIASTRA MVP API v0.1.0 - COMPLETE ENDPOINT EXTRACTION
+     2→59 endpoints | 86 schemas | Auth: Bearer token (HTTPBearer)
+     3→Global security: empty (auth is per-endpoint via "security: [{"HTTPBearer": []}]" field)
+     4→
+     5→=== SHARED ERROR SCHEMA: HTTPValidationError (all 422 responses) ===
+     6→{
+     7→  detail: Array<{
+     8→    loc: Array<string | integer>,  // required
+     9→    msg: string,                     // required
+    10→    type: string,                    // required
+    11→    input?: any,
+    12→    ctx?: Record<string, any>
+    13→  }>
+    14→}
+    15→
+    16→=== NOTE: All 422 responses use HTTPValidationError above. Omitted from individual endpoints for brevity. ===
+    17→
+    18→
+    19→######## AUTH ENDPOINTS (12) ########
+    20→
+    21→POST /v1/auth/forgot-password
+    22→  Summary: Forgot Password
+    23→  Auth Required: False
+    24→  Request Body:
+    25→    Content-Type: application/json, Required: True
+    26→    Schema: {
+    27→      "properties": {
+    28→            "email": {
+    29→                  "type": "string", 
+    30→                  "format": "email", 
+    31→                  "title": "Email"
+    32→            }
+    33→      }, 
+    34→      "type": "object", 
+    35→      "required": [
+    36→            "email"
+    37→      ], 
+    38→      "title": "ForgotPasswordRequest"
+    39→}
+    40→  Responses:
+    41→    200: Successful Response
+    42→      Schema: {
+    43→        "additionalProperties": true, 
+    44→        "type": "object", 
+    45→        "title": "Response Forgot Password V1 Auth Forgot Password Post"
+    46→}
+    47→    422: Validation Error -> HTTPValidationError (see above)
+    48→
+    49→POST /v1/auth/github
+    50→  Summary: Github Auth Callback
+    51→  Auth Required: False
+    52→  Request Body:
+    53→    Content-Type: application/json, Required: True
+    54→    Schema: {
+    55→      "properties": {
+    56→            "code": {
+    57→                  "type": "string", 
+    58→                  "title": "Code"
+    59→            }, 
+    60→            "state": {
+    61→                  "anyOf": [
+    62→                        {
+    63→                              "type": "string"
+    64→                        }, 
+    65→                        {
+    66→                              "type": "null"
+    67→                        }
+    68→                  ], 
+    69→                  "title": "State"
+    70→            }
+    71→      }, 
+    72→      "type": "object", 
+    73→      "required": [
+    74→            "code"
+    75→      ], 
+    76→      "title": "GitHubAuthRequest"
+    77→}
+    78→  Responses:
+    79→    200: Successful Response
+    80→      Schema: {
+    81→        "properties": {
+    82→                "access_token": {
+    83→                        "type": "string", 
+    84→                        "title": "Access Token"
+    85→                }, 
+    86→                "refresh_token": {
+    87→                        "type": "string", 
+    88→                        "title": "Refresh Token"
+    89→                }, 
+    90→                "token_type": {
+    91→                        "type": "string", 
+    92→                        "title": "Token Type", 
+    93→                        "default": "bearer"
+    94→                }, 
+    95→                "expires_in": {
+    96→                        "type": "integer", 
+    97→                        "title": "Expires In"
+    98→                }, 
+    99→                "is_new_user": {
+   100→                        "type": "boolean", 
+   101→                        "title": "Is New User", 
+   102→                        "default": false
+   103→                }, 
+   104→                "user_id": {
+   105→                        "type": "string", 
+   106→                        "format": "uuid", 
+   107→                        "title": "User Id"
+   108→                }, 
+   109→                "email": {
+   110→                        "type": "string", 
+   111→                        "title": "Email"
+   112→                }, 
+   113→                "full_name": {
+   114→                        "type": "string", 
+   115→                        "title": "Full Name"
+   116→                }
+   117→        }, 
+   118→        "type": "object", 
+   119→        "required": [
+   120→                "access_token", 
+   121→                "refresh_token", 
+   122→                "expires_in", 
+   123→                "user_id", 
+   124→                "email", 
+   125→                "full_name"
+   126→        ], 
+   127→        "title": "OAuthAuthResponse", 
+   128→        "description": "Shared response for both Google and GitHub OAuth."
+   129→}
+   130→    422: Validation Error -> HTTPValidationError (see above)
+   131→
+   132→GET /v1/auth/github/url
+   133→  Summary: Get Github Auth Url
+   134→  Auth Required: False
+   135→  Responses:
+   136→    200: Successful Response
+   137→      Schema: {
+   138→        "properties": {
+   139→                "authorization_url": {
+   140→                        "type": "string", 
+   141→                        "title": "Authorization Url"
+   142→                }, 
+   143→                "state": {
+   144→                        "type": "string", 
+   145→                        "title": "State"
+   146→                }
+   147→        }, 
+   148→        "type": "object", 
+   149→        "required": [
+   150→                "authorization_url", 
+   151→                "state"
+   152→        ], 
+   153→        "title": "GitHubAuthUrlResponse"
+   154→}
+   155→
+   156→POST /v1/auth/google
+   157→  Summary: Google Auth Callback
+   158→  Auth Required: False
+   159→  Request Body:
+   160→    Content-Type: application/json, Required: True
+   161→    Schema: {
+   162→      "properties": {
+   163→            "code": {
+   164→                  "type": "string", 
+   165→                  "title": "Code"
+   166→            }, 
+   167→            "state": {
+   168→                  "anyOf": [
+   169→                        {
+   170→                              "type": "string"
+   171→                        }, 
+   172→                        {
+   173→                              "type": "null"
+   174→                        }
+   175→                  ], 
+   176→                  "title": "State"
+   177→            }
+   178→      }, 
+   179→      "type": "object", 
+   180→      "required": [
+   181→            "code"
+   182→      ], 
+   183→      "title": "GoogleAuthRequest"
+   184→}
+   185→  Responses:
+   186→    200: Successful Response
+   187→      Schema: {
+   188→        "properties": {
+   189→                "access_token": {
+   190→                        "type": "string", 
+   191→                        "title": "Access Token"
+   192→                }, 
+   193→                "refresh_token": {
+   194→                        "type": "string", 
+   195→                        "title": "Refresh Token"
+   196→                }, 
+   197→                "token_type": {
+   198→                        "type": "string", 
+   199→                        "title": "Token Type", 
+   200→                        "default": "bearer"
+   201→                }, 
+   202→                "expires_in": {
+   203→                        "type": "integer", 
+   204→                        "title": "Expires In"
+   205→                }, 
+   206→                "is_new_user": {
+   207→                        "type": "boolean", 
+   208→                        "title": "Is New User", 
+   209→                        "default": false
+   210→                }, 
+   211→                "user_id": {
+   212→                        "type": "string", 
+   213→                        "format": "uuid", 
+   214→                        "title": "User Id"
+   215→                }, 
+   216→                "email": {
+   217→                        "type": "string", 
+   218→                        "title": "Email"
+   219→                }, 
+   220→                "full_name": {
+   221→                        "type": "string", 
+   222→                        "title": "Full Name"
+   223→                }
+   224→        }, 
+   225→        "type": "object", 
+   226→        "required": [
+   227→                "access_token", 
+   228→                "refresh_token", 
+   229→                "expires_in", 
+   230→                "user_id", 
+   231→                "email", 
+   232→                "full_name"
+   233→        ], 
+   234→        "title": "OAuthAuthResponse", 
+   235→        "description": "Shared response for both Google and GitHub OAuth."
+   236→}
+   237→    422: Validation Error -> HTTPValidationError (see above)
+   238→
+   239→GET /v1/auth/google/url
+   240→  Summary: Get Google Auth Url
+   241→  Auth Required: False
+   242→  Responses:
+   243→    200: Successful Response
+   244→      Schema: {
+   245→        "properties": {
+   246→                "authorization_url": {
+   247→                        "type": "string", 
+   248→                        "title": "Authorization Url"
+   249→                }, 
+   250→                "state": {
+   251→                        "type": "string", 
+   252→                        "title": "State"
+   253→                }
+   254→        }, 
+   255→        "type": "object", 
+   256→        "required": [
+   257→                "authorization_url", 
+   258→                "state"
+   259→        ], 
+   260→        "title": "GoogleAuthUrlResponse"
+   261→}
+   262→
+   263→POST /v1/auth/login
+   264→  Summary: Login
+   265→  Auth Required: False
+   266→  Request Body:
+   267→    Content-Type: application/json, Required: True
+   268→    Schema: {
+   269→      "properties": {
+   270→            "email": {
+   271→                  "type": "string", 
+   272→                  "format": "email", 
+   273→                  "title": "Email"
+   274→            }, 
+   275→            "password": {
+   276→                  "type": "string", 
+   277→                  "title": "Password"
+   278→            }
+   279→      }, 
+   280→      "type": "object", 
+   281→      "required": [
+   282→            "email", 
+   283→            "password"
+   284→      ], 
+   285→      "title": "LoginRequest"
+   286→}
+   287→  Responses:
+   288→    200: Successful Response
+   289→      Schema: {
+   290→        "properties": {
+   291→                "access_token": {
+   292→                        "type": "string", 
+   293→                        "title": "Access Token"
+   294→                }, 
+   295→                "refresh_token": {
+   296→                        "type": "string", 
+   297→                        "title": "Refresh Token"
+   298→                }, 
+   299→                "token_type": {
+   300→                        "type": "string", 
+   301→                        "title": "Token Type", 
+   302→                        "default": "bearer"
+   303→                }, 
+   304→                "expires_in": {
+   305→                        "type": "integer", 
+   306→                        "title": "Expires In"
+   307→                }
+   308→        }, 
+   309→        "type": "object", 
+   310→        "required": [
+   311→                "access_token", 
+   312→                "refresh_token", 
+   313→                "expires_in"
+   314→        ], 
+   315→        "title": "TokenResponse"
+   316→}
+   317→    422: Validation Error -> HTTPValidationError (see above)
+   318→
+   319→POST /v1/auth/logout
+   320→  Summary: Logout
+   321→  Auth Required: False
+   322→  Request Body:
+   323→    Content-Type: application/json, Required: True
+   324→    Schema: {
+   325→      "properties": {
+   326→            "refresh_token": {
+   327→                  "type": "string", 
+   328→                  "title": "Refresh Token"
+   329→            }
+   330→      }, 
+   331→      "type": "object", 
+   332→      "required": [
+   333→            "refresh_token"
+   334→      ], 
+   335→      "title": "LogoutRequest"
+   336→}
+   337→  Responses:
+   338→    204: Successful Response
+   339→      Body: empty
+   340→    422: Validation Error -> HTTPValidationError (see above)
+   341→
+   342→POST /v1/auth/refresh
+   343→  Summary: Refresh Token
+   344→  Auth Required: False
+   345→  Request Body:
+   346→    Content-Type: application/json, Required: True
+   347→    Schema: {
+   348→      "properties": {
+   349→            "refresh_token": {
+   350→                  "type": "string", 
+   351→                  "title": "Refresh Token"
+   352→            }
+   353→      }, 
+   354→      "type": "object", 
+   355→      "required": [
+   356→            "refresh_token"
+   357→      ], 
+   358→      "title": "RefreshRequest"
+   359→}
+   360→  Responses:
+   361→    200: Successful Response
+   362→      Schema: {
+   363→        "properties": {
+   364→                "access_token": {
+   365→                        "type": "string", 
+   366→                        "title": "Access Token"
+   367→                }, 
+   368→                "refresh_token": {
+   369→                        "type": "string", 
+   370→                        "title": "Refresh Token"
+   371→                }, 
+   372→                "token_type": {
+   373→                        "type": "string", 
+   374→                        "title": "Token Type", 
+   375→                        "default": "bearer"
+   376→                }, 
+   377→                "expires_in": {
+   378→                        "type": "integer", 
+   379→                        "title": "Expires In"
+   380→                }
+   381→        }, 
+   382→        "type": "object", 
+   383→        "required": [
+   384→                "access_token", 
+   385→                "refresh_token", 
+   386→                "expires_in"
+   387→        ], 
+   388→        "title": "TokenResponse"
+   389→}
+   390→    422: Validation Error -> HTTPValidationError (see above)
+   391→
+   392→POST /v1/auth/register
+   393→  Summary: Register
+   394→  Auth Required: False
+   395→  Request Body:
+   396→    Content-Type: application/json, Required: True
+   397→    Schema: {
+   398→      "properties": {
+   399→            "email": {
+   400→                  "type": "string", 
+   401→                  "format": "email", 
+   402→                  "title": "Email"
+   403→            }, 
+   404→            "password": {
+   405→                  "type": "string", 
+   406→                  "title": "Password"
+   407→            }, 
+   408→            "full_name": {
+   409→                  "type": "string", 
+   410→                  "title": "Full Name"
+   411→            }, 
+   412→            "org_name": {
+   413→                  "anyOf": [
+   414→                        {
+   415→                              "type": "string"
+   416→                        }, 
+   417→                        {
+   418→                              "type": "null"
+   419→                        }
+   420→                  ], 
+   421→                  "title": "Org Name"
+   422→            }
+   423→      }, 
+   424→      "type": "object", 
+   425→      "required": [
+   426→            "email", 
+   427→            "password", 
+   428→            "full_name"
+   429→      ], 
+   430→      "title": "RegisterRequest"
+   431→}
+   432→  Responses:
+   433→    201: Successful Response
+   434→      Schema: {
+   435→        "properties": {
+   436→                "access_token": {
+   437→                        "type": "string", 
+   438→                        "title": "Access Token"
+   439→                }, 
+   440→                "refresh_token": {
+   441→                        "type": "string", 
+   442→                        "title": "Refresh Token"
+   443→                }, 
+   444→                "token_type": {
+   445→                        "type": "string", 
+   446→                        "title": "Token Type", 
+   447→                        "default": "bearer"
+   448→                }, 
+   449→                "expires_in": {
+   450→                        "type": "integer", 
+   451→                        "title": "Expires In"
+   452→                }
+   453→        }, 
+   454→        "type": "object", 
+   455→        "required": [
+   456→                "access_token", 
+   457→                "refresh_token", 
+   458→                "expires_in"
+   459→        ], 
+   460→        "title": "TokenResponse"
+   461→}
+   462→    422: Validation Error -> HTTPValidationError (see above)
+   463→
+   464→POST /v1/auth/reset-password
+   465→  Summary: Reset Password
+   466→  Auth Required: False
+   467→  Request Body:
+   468→    Content-Type: application/json, Required: True
+   469→    Schema: {
+   470→      "properties": {
+   471→            "token": {
+   472→                  "type": "string", 
+   473→                  "title": "Token"
+   474→            }, 
+   475→            "new_password": {
+   476→                  "type": "string", 
+   477→                  "title": "New Password"
+   478→            }
+   479→      }, 
+   480→      "type": "object", 
+   481→      "required": [
+   482→            "token", 
+   483→            "new_password"
+   484→      ], 
+   485→      "title": "ResetPasswordRequest"
+   486→}
+   487→  Responses:
+   488→    200: Successful Response
+   489→      Schema: {
+   490→        "properties": {
+   491→                "message": {
+   492→                        "type": "string", 
+   493→                        "title": "Message"
+   494→                }
+   495→        }, 
+   496→        "type": "object", 
+   497→        "required": [
+   498→                "message"
+   499→        ], 
+   500→        "title": "ResetPasswordResponse"
+   501→}
+   502→    422: Validation Error -> HTTPValidationError (see above)
+   503→
+   504→POST /v1/auth/send-verification
+   505→  Summary: Send Verification Email
+   506→  Auth Required: False
+   507→  Request Body:
+   508→    Content-Type: application/json, Required: True
+   509→    Schema: {
+   510→      "properties": {
+   511→            "email": {
+   512→                  "type": "string", 
+   513→                  "format": "email", 
+   514→                  "title": "Email"
+   515→            }
+   516→      }, 
+   517→      "type": "object", 
+   518→      "required": [
+   519→            "email"
+   520→      ], 
+   521→      "title": "SendVerificationRequest"
+   522→}
+   523→  Responses:
+   524→    200: Successful Response
+   525→      Schema: {
+   526→        "additionalProperties": true, 
+   527→        "type": "object", 
+   528→        "title": "Response Send Verification Email V1 Auth Send Verification Post"
+   529→}
+   530→    422: Validation Error -> HTTPValidationError (see above)
+   531→
+   532→POST /v1/auth/verify-email
+   533→  Summary: Verify Email
+   534→  Auth Required: False
+   535→  Request Body:
+   536→    Content-Type: application/json, Required: True
+   537→    Schema: {
+   538→      "properties": {
+   539→            "token": {
+   540→                  "type": "string", 
+   541→                  "title": "Token"
+   542→            }
+   543→      }, 
+   544→      "type": "object", 
+   545→      "required": [
+   546→            "token"
+   547→      ], 
+   548→      "title": "VerifyEmailRequest"
+   549→}
+   550→  Responses:
+   551→    200: Successful Response
+   552→      Schema: {
+   553→        "properties": {
+   554→                "message": {
+   555→                        "type": "string", 
+   556→                        "title": "Message"
+   557→                }, 
+   558→                "is_email_verified": {
+   559→                        "type": "boolean", 
+   560→                        "title": "Is Email Verified"
+   561→                }
+   562→        }, 
+   563→        "type": "object", 
+   564→        "required": [
+   565→                "message", 
+   566→                "is_email_verified"
+   567→        ], 
+   568→        "title": "VerifyEmailResponse"
+   569→}
+   570→    422: Validation Error -> HTTPValidationError (see above)
+   571→
+   572→######## DASHBOARD ENDPOINTS (6) ########
+   573→
+   574→GET /v1/orgs/{org_id}/dashboard/dependency-health
+   575→  Summary: Get Dependency Health
+   576→  Auth Required: True
+   577→  Parameters:
+   578→    org_id (in: path, required: True)
+   579→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   580→  Responses:
+   581→    200: Successful Response
+   582→      Schema: {
+   583→        "type": "array", 
+   584→        "items": {
+   585→                "properties": {
+   586→                        "dependency_id": {
+   587→                                "type": "string", 
+   588→                                "format": "uuid", 
+   589→                                "title": "Dependency Id"
+   590→                        }, 
+   591→                        "name": {
+   592→                                "type": "string", 
+   593→                                "title": "Name"
+   594→                        }, 
+   595→                        "endpoint_url": {
+   596→                                "type": "string", 
+   597→                                "title": "Endpoint Url"
+   598→                        }, 
+   599→                        "current_status": {
+   600→                                "type": "string", 
+   601→                                "title": "Current Status"
+   602→                        }, 
+   603→                        "uptime_percentage_24h": {
+   604→                                "type": "number", 
+   605→                                "title": "Uptime Percentage 24H"
+   606→                        }, 
+   607→                        "avg_latency_ms_24h": {
+   608→                                "type": "number", 
+   609→                                "title": "Avg Latency Ms 24H"
+   610→                        }
+   611→                }, 
+   612→                "type": "object", 
+   613→                "required": [
+   614→                        "dependency_id", 
+   615→                        "name", 
+   616→                        "endpoint_url", 
+   617→                        "current_status", 
+   618→                        "uptime_percentage_24h", 
+   619→                        "avg_latency_ms_24h"
+   620→                ], 
+   621→                "title": "DependencyHealthResponse"
+   622→        }, 
+   623→        "title": "Response Get Dependency Health V1 Orgs  Org Id  Dashboard Dependency Health Get"
+   624→}
+   625→    422: Validation Error -> HTTPValidationError (see above)
+   626→
+   627→GET /v1/orgs/{org_id}/dashboard/incident-timeline
+   628→  Summary: Get Incident Timeline
+   629→  Auth Required: True
+   630→  Parameters:
+   631→    org_id (in: path, required: True)
+   632→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   633→  Responses:
+   634→    200: Successful Response
+   635→      Schema: {
+   636→        "type": "array", 
+   637→        "items": {
+   638→                "properties": {
+   639→                        "id": {
+   640→                                "type": "string", 
+   641→                                "format": "uuid", 
+   642→                                "title": "Id"
+   643→                        }, 
+   644→                        "org_id": {
+   645→                                "type": "string", 
+   646→                                "format": "uuid", 
+   647→                                "title": "Org Id"
+   648→                        }, 
+   649→                        "dependency_id": {
+   650→                                "type": "string", 
+   651→                                "format": "uuid", 
+   652→                                "title": "Dependency Id"
+   653→                        }, 
+   654→                        "started_at": {
+   655→                                "type": "string", 
+   656→                                "format": "date-time", 
+   657→                                "title": "Started At"
+   658→                        }, 
+   659→                        "resolved_at": {
+   660→                                "anyOf": [
+   661→                                        {
+   662→                                                "type": "string", 
+   663→                                                "format": "date-time"
+   664→                                        }, 
+   665→                                        {
+   666→                                                "type": "null"
+   667→                                        }
+   668→                                ], 
+   669→                                "title": "Resolved At"
+   670→                        }, 
+   671→                        "severity": {
+   672→                                "type": "string", 
+   673→                                "title": "Severity"
+   674→                        }, 
+   675→                        "status": {
+   676→                                "type": "string", 
+   677→                                "title": "Status"
+   678→                        }, 
+   679→                        "root_cause": {
+   680→                                "type": "string", 
+   681→                                "title": "Root Cause"
+   682→                        }, 
+   683→                        "description": {
+   684→                                "anyOf": [
+   685→                                        {
+   686→                                                "type": "string"
+   687→                                        }, 
+   688→                                        {
+   689→                                                "type": "null"
+   690→                                        }
+   691→                                ], 
+   692→                                "title": "Description"
+   693→                        }, 
+   694→                        "evidence_report_id": {
+   695→                                "anyOf": [
+   696→                                        {
+   697→                                                "type": "string", 
+   698→                                                "format": "uuid"
+   699→                                        }, 
+   700→                                        {
+   701→                                                "type": "null"
+   702→                                        }
+   703→                                ], 
+   704→                                "title": "Evidence Report Id"
+   705→                        }, 
+   706→                        "created_at": {
+   707→                                "type": "string", 
+   708→                                "format": "date-time", 
+   709→                                "title": "Created At"
+   710→                        }, 
+   711→                        "updated_at": {
+   712→                                "type": "string", 
+   713→                                "format": "date-time", 
+   714→                                "title": "Updated At"
+   715→                        }, 
+   716→                        "correlations": {
+   717→                                "items": {
+   718→                                        "properties": {
+   719→                                                "id": {
+   720→                                                        "type": "string", 
+   721→                                                        "format": "uuid", 
+   722→                                                        "title": "Id"
+   723→                                                }, 
+   724→                                                "incident_id": {
+   725→                                                        "type": "string", 
+   726→                                                        "format": "uuid", 
+   727→                                                        "title": "Incident Id"
+   728→                                                }, 
+   729→                                                "correlated_dependency_id": {
+   730→                                                        "type": "string", 
+   731→                                                        "format": "uuid", 
+   732→                                                        "title": "Correlated Dependency Id"
+   733→                                                }, 
+   734→                                                "correlation_confidence": {
+   735→                                                        "type": "number", 
+   736→                                                        "title": "Correlation Confidence"
+   737→                                                }, 
+   738→                                                "time_window_seconds": {
+   739→                                                        "type": "integer", 
+   740→                                                        "title": "Time Window Seconds"
+   741→                                                }, 
+   742→                                                "correlation_method": {
+   743→                                                        "type": "string", 
+   744→                                                        "title": "Correlation Method"
+   745→                                                }, 
+   746→                                                "created_at": {
+   747→                                                        "type": "string", 
+   748→                                                        "format": "date-time", 
+   749→                                                        "title": "Created At"
+   750→                                                }
+   751→                                        }, 
+   752→                                        "type": "object", 
+   753→                                        "required": [
+   754→                                                "id", 
+   755→                                                "incident_id", 
+   756→                                                "correlated_dependency_id", 
+   757→                                                "correlation_confidence", 
+   758→                                                "time_window_seconds", 
+   759→                                                "correlation_method", 
+   760→                                                "created_at"
+   761→                                        ], 
+   762→                                        "title": "IncidentCorrelationResponse"
+   763→                                }, 
+   764→                                "type": "array", 
+   765→                                "title": "Correlations", 
+   766→                                "default": []
+   767→                        }
+   768→                }, 
+   769→                "type": "object", 
+   770→                "required": [
+   771→                        "id", 
+   772→                        "org_id", 
+   773→                        "dependency_id", 
+   774→                        "started_at", 
+   775→                        "severity", 
+   776→                        "status", 
+   777→                        "root_cause", 
+   778→                        "created_at", 
+   779→                        "updated_at"
+   780→                ], 
+   781→                "title": "IncidentDetailResponse"
+   782→        }, 
+   783→        "title": "Response Get Incident Timeline V1 Orgs  Org Id  Dashboard Incident Timeline Get"
+   784→}
+   785→    422: Validation Error -> HTTPValidationError (see above)
+   786→
+   787→GET /v1/orgs/{org_id}/dashboard/latency
+   788→  Summary: Get Latency Timeseries
+   789→  Auth Required: True
+   790→  Parameters:
+   791→    org_id (in: path, required: True)
+   792→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   793→    hours (in: query, required: False)
+   794→      Schema: {"type": "integer", "maximum": 2160, "minimum": 1, "default": 24, "title": "Hours"}
+   795→  Responses:
+   796→    200: Successful Response
+   797→      Schema: {
+   798→        "type": "array", 
+   799→        "items": {
+   800→                "properties": {
+   801→                        "timestamp": {
+   802→                                "type": "string", 
+   803→                                "format": "date-time", 
+   804→                                "title": "Timestamp"
+   805→                        }, 
+   806→                        "region": {
+   807→                                "type": "string", 
+   808→                                "title": "Region"
+   809→                        }, 
+   810→                        "latency_ms": {
+   811→                                "type": "number", 
+   812→                                "title": "Latency Ms"
+   813→                        }, 
+   814→                        "dependency_id": {
+   815→                                "anyOf": [
+   816→                                        {
+   817→                                                "type": "string", 
+   818→                                                "format": "uuid"
+   819→                                        }, 
+   820→                                        {
+   821→                                                "type": "null"
+   822→                                        }
+   823→                                ], 
+   824→                                "title": "Dependency Id"
+   825→                        }
+   826→                }, 
+   827→                "type": "object", 
+   828→                "required": [
+   829→                        "timestamp", 
+   830→                        "region", 
+   831→                        "latency_ms"
+   832→                ], 
+   833→                "title": "LatencyPointResponse"
+   834→        }, 
+   835→        "title": "Response Get Latency Timeseries V1 Orgs  Org Id  Dashboard Latency Get"
+   836→}
+   837→    422: Validation Error -> HTTPValidationError (see above)
+   838→
+   839→GET /v1/orgs/{org_id}/dashboard/sla-degradation
+   840→  Summary: Get Sla Degradation
+   841→  Auth Required: True
+   842→  Parameters:
+   843→    org_id (in: path, required: True)
+   844→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   845→    period_days (in: query, required: False)
+   846→      Schema: {"type": "integer", "maximum": 365, "minimum": 1, "default": 30, "title": "Period Days"}
+   847→  Responses:
+   848→    200: Successful Response
+   849→      Schema: {
+   850→        "properties": {
+   851→                "total_degradation_pct": {
+   852→                        "type": "number", 
+   853→                        "title": "Total Degradation Pct"
+   854→                }, 
+   855→                "affected_services": {
+   856→                        "type": "integer", 
+   857→                        "title": "Affected Services"
+   858→                }, 
+   859→                "period": {
+   860→                        "type": "string", 
+   861→                        "title": "Period"
+   862→                }
+   863→        }, 
+   864→        "type": "object", 
+   865→        "required": [
+   866→                "total_degradation_pct", 
+   867→                "affected_services", 
+   868→                "period"
+   869→        ], 
+   870→        "title": "SLADegradationResponse"
+   871→}
+   872→    422: Validation Error -> HTTPValidationError (see above)
+   873→
+   874→GET /v1/orgs/{org_id}/dashboard/summary
+   875→  Summary: Get Dashboard Summary
+   876→  Auth Required: True
+   877→  Parameters:
+   878→    org_id (in: path, required: True)
+   879→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   880→  Responses:
+   881→    200: Successful Response
+   882→      Schema: {
+   883→        "properties": {
+   884→                "active_dependencies_count": {
+   885→                        "type": "integer", 
+   886→                        "title": "Active Dependencies Count"
+   887→                }, 
+   888→                "open_incidents_count": {
+   889→                        "type": "integer", 
+   890→                        "title": "Open Incidents Count"
+   891→                }, 
+   892→                "overall_uptime_percentage": {
+   893→                        "type": "number", 
+   894→                        "title": "Overall Uptime Percentage"
+   895→                }, 
+   896→                "alerts_today_count": {
+   897→                        "type": "integer", 
+   898→                        "title": "Alerts Today Count"
+   899→                }
+   900→        }, 
+   901→        "type": "object", 
+   902→        "required": [
+   903→                "active_dependencies_count", 
+   904→                "open_incidents_count", 
+   905→                "overall_uptime_percentage", 
+   906→                "alerts_today_count"
+   907→        ], 
+   908→        "title": "DashboardSummaryResponse"
+   909→}
+   910→    422: Validation Error -> HTTPValidationError (see above)
+   911→
+   912→GET /v1/orgs/{org_id}/dashboard/vendor-status
+   913→  Summary: Get Vendor Status
+   914→  Auth Required: True
+   915→  Parameters:
+   916→    org_id (in: path, required: True)
+   917→      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+   918→  Responses:
+   919→    200: Successful Response
+   920→      Schema: {
+   921→        "type": "array", 
+   922→        "items": {
+   923→                "properties": {
+   924→                        "id": {
+   925→                                "type": "string", 
+   926→                                "format": "uuid", 
+   927→                                "title": "Id"
+   928→                        }, 
+   929→                        "vendor_name": {
+   930→                                "type": "string", 
+   931→                                "title": "Vendor Name"
+   932→                        }, 
+   933→                        "display_name": {
+   934→                                "type": "string", 
+   935→                                "title": "Display Name"
+   936→                        }, 
+   937→                        "category": {
+   938→                                "type": "string", 
+   939→                                "title": "Category"
+   940→                        }, 
+   941→                        "is_public": {
+   942→                                "type": "boolean", 
+   943→                                "title": "Is Public"
+   944→                        }, 
+   945→                        "last_check_at": {
+   946→                                "anyOf": [
+   947→                                        {
+   948→                                                "type": "string", 
+   949→                                                "format": "date-time"
+   950→                                        }, 
+   951→                                        {
+   952→                                                "type": "null"
+   953→                                        }
+   954→                                ], 
+   955→                                "title": "Last Check At"
+   956→                        }, 
+   957→                        "created_at": {
+   958→                                "type": "string", 
+   959→                                "format": "date-time", 
+   960→                                "title": "Created At"
+   961→                        }, 
+   962→                        "updated_at": {
+   963→                                "type": "string", 
+   964→                                "format": "date-time", 
+   965→                                "title": "Updated At"
+   966→                        }, 
+   967→                        "recent_status": {
+   968→                                "type": "string", 
+   969→                                "title": "Recent Status", 
+   970→                                "default": "unknown"
+   971→                        }, 
+   972→                        "endpoints": {
+   973→                                "items": {
+   974→                                        "properties": {
+   975→                                                "id": {
+   976→                                                        "type": "string", 
+   977→                                                        "format": "uuid", 
+   978→                                                        "title": "Id"
+   979→                                                }, 
+   980→                                                "endpoint_url": {
+   981→                                                        "type": "string", 
+   982→                                                        "title": "Endpoint Url"
+   983→                                                }, 
+   984→                                                "regions": {
+   985→                                                        "items": {
+   986→                                                                "type": "string"
+   987→                                                        }, 
+   988→                                                        "type": "array", 
+   989→                                                        "title": "Regions"
+   990→                                                }, 
+   991→                                                "health_status": {
+   992→                                                        "type": "string", 
+   993→                                                        "title": "Health Status"
+   994→                                                }, 
+   995→                                                "is_active": {
+   996→                                                        "type": "boolean", 
+   997→                                                        "title": "Is Active"
+   998→                                                }, 
+   999→                                                "last_check_at": {
+  1000→                                                        "anyOf": [
+  1001→

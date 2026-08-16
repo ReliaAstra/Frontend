@@ -1,0 +1,654 @@
+######## NOTIFICATIONS ENDPOINTS (6) ########
+
+--- GET /v1/orgs/{org_id}/notifications/configs ---
+Summary: List Alert Configs
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                  },
+                  "org_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Org Id"
+                  },
+                  "channel_type": {
+                        "type": "string",
+                        "title": "Channel Type"
+                  },
+                  "is_active": {
+                        "type": "boolean",
+                        "title": "Is Active"
+                  },
+                  "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                  },
+                  "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "id",
+                  "org_id",
+                  "channel_type",
+                  "is_active",
+                  "created_at",
+                  "updated_at"
+            ],
+            "title": "AlertConfigResponse"
+      },
+      "title": "Response List Alert Configs V1 Orgs  Org Id  Notifications Configs Get"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/orgs/{org_id}/notifications/configs ---
+Summary: Create Alert Config
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "channel_type": {
+            "type": "string",
+            "enum": [
+                "email",
+                "slack",
+                "pagerduty",
+                "webhook"
+            ],
+            "title": "ChannelType"
+        },
+        "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+        },
+        "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+        }
+    },
+    "type": "object",
+    "required": [
+        "channel_type",
+        "config"
+    ],
+    "title": "AlertConfigCreateRequest"
+}
+Responses:
+  201: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "channel_type": {
+                  "type": "string",
+                  "title": "Channel Type"
+            },
+            "is_active": {
+                  "type": "boolean",
+                  "title": "Is Active"
+            },
+            "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Created At"
+            },
+            "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Updated At"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "org_id",
+            "channel_type",
+            "is_active",
+            "created_at",
+            "updated_at"
+      ],
+      "title": "AlertConfigResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- DELETE /v1/orgs/{org_id}/notifications/configs/{config_id} ---
+Summary: Delete Alert Config
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  config_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Config Id"}
+Responses:
+  204: Successful Response
+    Body: empty
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/notifications/configs/{config_id} ---
+Summary: Get Alert Config
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  config_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Config Id"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "channel_type": {
+                  "type": "string",
+                  "title": "Channel Type"
+            },
+            "is_active": {
+                  "type": "boolean",
+                  "title": "Is Active"
+            },
+            "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Created At"
+            },
+            "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Updated At"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "org_id",
+            "channel_type",
+            "is_active",
+            "created_at",
+            "updated_at"
+      ],
+      "title": "AlertConfigResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- PATCH /v1/orgs/{org_id}/notifications/configs/{config_id} ---
+Summary: Update Alert Config
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  config_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Config Id"}
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "channel_type": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "enum": [
+                        "email",
+                        "slack",
+                        "pagerduty",
+                        "webhook"
+                    ],
+                    "title": "ChannelType"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "config": {
+            "anyOf": [
+                {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Config"
+        },
+        "is_active": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Is Active"
+        }
+    },
+    "type": "object",
+    "title": "AlertConfigUpdateRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "channel_type": {
+                  "type": "string",
+                  "title": "Channel Type"
+            },
+            "is_active": {
+                  "type": "boolean",
+                  "title": "Is Active"
+            },
+            "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Created At"
+            },
+            "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Updated At"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "org_id",
+            "channel_type",
+            "is_active",
+            "created_at",
+            "updated_at"
+      ],
+      "title": "AlertConfigResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/orgs/{org_id}/notifications/test ---
+Summary: Send Test Notification
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "config_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Config Id"
+        }
+    },
+    "type": "object",
+    "required": [
+        "config_id"
+    ],
+    "title": "AlertTestRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "success": {
+                  "type": "boolean",
+                  "title": "Success"
+            },
+            "message": {
+                  "type": "string",
+                  "title": "Message"
+            }
+      },
+      "type": "object",
+      "required": [
+            "success",
+            "message"
+      ],
+      "title": "AlertTestResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}

@@ -75,7 +75,7 @@ export function useRecentChecks(limit?: number) {
   return orgQuery(
     ["dashboard", "recent-checks", { limit }],
     () => dashboardService.getRecentChecks(limit),
-    { staleTime: STALE_30S },
+    { staleTime: STALE_30S, refetchInterval: 10_000 }, // Auto-refetch every 10s for live check results
   );
 }
 
@@ -189,6 +189,7 @@ export function useIncidents(params?: { status?: string; severity?: string; limi
         params?.limit,
       ),
     enabled: orgReady(),
+    refetchInterval: 15_000, // Auto-refetch every 15s for live incident notifications
   });
 }
 

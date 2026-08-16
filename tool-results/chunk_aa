@@ -1,0 +1,1000 @@
+RELIASTRA MVP API v0.1.0 - COMPLETE ENDPOINT EXTRACTION
+59 endpoints | 86 schemas | Auth: Bearer token (HTTPBearer)
+Global security: empty (auth is per-endpoint via "security: [{"HTTPBearer": []}]" field)
+
+=== SHARED ERROR SCHEMA: HTTPValidationError (all 422 responses) ===
+{
+  detail: Array<{
+    loc: Array<string | integer>,  // required
+    msg: string,                     // required
+    type: string,                    // required
+    input?: any,
+    ctx?: Record<string, any>
+  }>
+}
+
+=== NOTE: All 422 responses use HTTPValidationError above. Omitted from individual endpoints for brevity. ===
+
+
+######## AUTH ENDPOINTS (12) ########
+
+POST /v1/auth/forgot-password
+  Summary: Forgot Password
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "email": {
+                  "type": "string", 
+                  "format": "email", 
+                  "title": "Email"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "email"
+      ], 
+      "title": "ForgotPasswordRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "additionalProperties": true, 
+        "type": "object", 
+        "title": "Response Forgot Password V1 Auth Forgot Password Post"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/github
+  Summary: Github Auth Callback
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "code": {
+                  "type": "string", 
+                  "title": "Code"
+            }, 
+            "state": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "State"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "code"
+      ], 
+      "title": "GitHubAuthRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "access_token": {
+                        "type": "string", 
+                        "title": "Access Token"
+                }, 
+                "refresh_token": {
+                        "type": "string", 
+                        "title": "Refresh Token"
+                }, 
+                "token_type": {
+                        "type": "string", 
+                        "title": "Token Type", 
+                        "default": "bearer"
+                }, 
+                "expires_in": {
+                        "type": "integer", 
+                        "title": "Expires In"
+                }, 
+                "is_new_user": {
+                        "type": "boolean", 
+                        "title": "Is New User", 
+                        "default": false
+                }, 
+                "user_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "User Id"
+                }, 
+                "email": {
+                        "type": "string", 
+                        "title": "Email"
+                }, 
+                "full_name": {
+                        "type": "string", 
+                        "title": "Full Name"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "access_token", 
+                "refresh_token", 
+                "expires_in", 
+                "user_id", 
+                "email", 
+                "full_name"
+        ], 
+        "title": "OAuthAuthResponse", 
+        "description": "Shared response for both Google and GitHub OAuth."
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/auth/github/url
+  Summary: Get Github Auth Url
+  Auth Required: False
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "authorization_url": {
+                        "type": "string", 
+                        "title": "Authorization Url"
+                }, 
+                "state": {
+                        "type": "string", 
+                        "title": "State"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "authorization_url", 
+                "state"
+        ], 
+        "title": "GitHubAuthUrlResponse"
+}
+
+POST /v1/auth/google
+  Summary: Google Auth Callback
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "code": {
+                  "type": "string", 
+                  "title": "Code"
+            }, 
+            "state": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "State"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "code"
+      ], 
+      "title": "GoogleAuthRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "access_token": {
+                        "type": "string", 
+                        "title": "Access Token"
+                }, 
+                "refresh_token": {
+                        "type": "string", 
+                        "title": "Refresh Token"
+                }, 
+                "token_type": {
+                        "type": "string", 
+                        "title": "Token Type", 
+                        "default": "bearer"
+                }, 
+                "expires_in": {
+                        "type": "integer", 
+                        "title": "Expires In"
+                }, 
+                "is_new_user": {
+                        "type": "boolean", 
+                        "title": "Is New User", 
+                        "default": false
+                }, 
+                "user_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "User Id"
+                }, 
+                "email": {
+                        "type": "string", 
+                        "title": "Email"
+                }, 
+                "full_name": {
+                        "type": "string", 
+                        "title": "Full Name"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "access_token", 
+                "refresh_token", 
+                "expires_in", 
+                "user_id", 
+                "email", 
+                "full_name"
+        ], 
+        "title": "OAuthAuthResponse", 
+        "description": "Shared response for both Google and GitHub OAuth."
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/auth/google/url
+  Summary: Get Google Auth Url
+  Auth Required: False
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "authorization_url": {
+                        "type": "string", 
+                        "title": "Authorization Url"
+                }, 
+                "state": {
+                        "type": "string", 
+                        "title": "State"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "authorization_url", 
+                "state"
+        ], 
+        "title": "GoogleAuthUrlResponse"
+}
+
+POST /v1/auth/login
+  Summary: Login
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "email": {
+                  "type": "string", 
+                  "format": "email", 
+                  "title": "Email"
+            }, 
+            "password": {
+                  "type": "string", 
+                  "title": "Password"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "email", 
+            "password"
+      ], 
+      "title": "LoginRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "access_token": {
+                        "type": "string", 
+                        "title": "Access Token"
+                }, 
+                "refresh_token": {
+                        "type": "string", 
+                        "title": "Refresh Token"
+                }, 
+                "token_type": {
+                        "type": "string", 
+                        "title": "Token Type", 
+                        "default": "bearer"
+                }, 
+                "expires_in": {
+                        "type": "integer", 
+                        "title": "Expires In"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "access_token", 
+                "refresh_token", 
+                "expires_in"
+        ], 
+        "title": "TokenResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/logout
+  Summary: Logout
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "refresh_token": {
+                  "type": "string", 
+                  "title": "Refresh Token"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "refresh_token"
+      ], 
+      "title": "LogoutRequest"
+}
+  Responses:
+    204: Successful Response
+      Body: empty
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/refresh
+  Summary: Refresh Token
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "refresh_token": {
+                  "type": "string", 
+                  "title": "Refresh Token"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "refresh_token"
+      ], 
+      "title": "RefreshRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "access_token": {
+                        "type": "string", 
+                        "title": "Access Token"
+                }, 
+                "refresh_token": {
+                        "type": "string", 
+                        "title": "Refresh Token"
+                }, 
+                "token_type": {
+                        "type": "string", 
+                        "title": "Token Type", 
+                        "default": "bearer"
+                }, 
+                "expires_in": {
+                        "type": "integer", 
+                        "title": "Expires In"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "access_token", 
+                "refresh_token", 
+                "expires_in"
+        ], 
+        "title": "TokenResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/register
+  Summary: Register
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "email": {
+                  "type": "string", 
+                  "format": "email", 
+                  "title": "Email"
+            }, 
+            "password": {
+                  "type": "string", 
+                  "title": "Password"
+            }, 
+            "full_name": {
+                  "type": "string", 
+                  "title": "Full Name"
+            }, 
+            "org_name": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Org Name"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "email", 
+            "password", 
+            "full_name"
+      ], 
+      "title": "RegisterRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "access_token": {
+                        "type": "string", 
+                        "title": "Access Token"
+                }, 
+                "refresh_token": {
+                        "type": "string", 
+                        "title": "Refresh Token"
+                }, 
+                "token_type": {
+                        "type": "string", 
+                        "title": "Token Type", 
+                        "default": "bearer"
+                }, 
+                "expires_in": {
+                        "type": "integer", 
+                        "title": "Expires In"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "access_token", 
+                "refresh_token", 
+                "expires_in"
+        ], 
+        "title": "TokenResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/reset-password
+  Summary: Reset Password
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "token": {
+                  "type": "string", 
+                  "title": "Token"
+            }, 
+            "new_password": {
+                  "type": "string", 
+                  "title": "New Password"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "token", 
+            "new_password"
+      ], 
+      "title": "ResetPasswordRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "message": {
+                        "type": "string", 
+                        "title": "Message"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "message"
+        ], 
+        "title": "ResetPasswordResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/send-verification
+  Summary: Send Verification Email
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "email": {
+                  "type": "string", 
+                  "format": "email", 
+                  "title": "Email"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "email"
+      ], 
+      "title": "SendVerificationRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "additionalProperties": true, 
+        "type": "object", 
+        "title": "Response Send Verification Email V1 Auth Send Verification Post"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/auth/verify-email
+  Summary: Verify Email
+  Auth Required: False
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "token": {
+                  "type": "string", 
+                  "title": "Token"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "token"
+      ], 
+      "title": "VerifyEmailRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "message": {
+                        "type": "string", 
+                        "title": "Message"
+                }, 
+                "is_email_verified": {
+                        "type": "boolean", 
+                        "title": "Is Email Verified"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "message", 
+                "is_email_verified"
+        ], 
+        "title": "VerifyEmailResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## DASHBOARD ENDPOINTS (6) ########
+
+GET /v1/orgs/{org_id}/dashboard/dependency-health
+  Summary: Get Dependency Health
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "dependency_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Dependency Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "endpoint_url": {
+                                "type": "string", 
+                                "title": "Endpoint Url"
+                        }, 
+                        "current_status": {
+                                "type": "string", 
+                                "title": "Current Status"
+                        }, 
+                        "uptime_percentage_24h": {
+                                "type": "number", 
+                                "title": "Uptime Percentage 24H"
+                        }, 
+                        "avg_latency_ms_24h": {
+                                "type": "number", 
+                                "title": "Avg Latency Ms 24H"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "dependency_id", 
+                        "name", 
+                        "endpoint_url", 
+                        "current_status", 
+                        "uptime_percentage_24h", 
+                        "avg_latency_ms_24h"
+                ], 
+                "title": "DependencyHealthResponse"
+        }, 
+        "title": "Response Get Dependency Health V1 Orgs  Org Id  Dashboard Dependency Health Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dashboard/incident-timeline
+  Summary: Get Incident Timeline
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "dependency_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Dependency Id"
+                        }, 
+                        "started_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Started At"
+                        }, 
+                        "resolved_at": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "date-time"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Resolved At"
+                        }, 
+                        "severity": {
+                                "type": "string", 
+                                "title": "Severity"
+                        }, 
+                        "status": {
+                                "type": "string", 
+                                "title": "Status"
+                        }, 
+                        "root_cause": {
+                                "type": "string", 
+                                "title": "Root Cause"
+                        }, 
+                        "description": {
+                                "anyOf": [
+                                        {
+                                                "type": "string"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Description"
+                        }, 
+                        "evidence_report_id": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "uuid"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Evidence Report Id"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }, 
+                        "correlations": {
+                                "items": {
+                                        "properties": {
+                                                "id": {
+                                                        "type": "string", 
+                                                        "format": "uuid", 
+                                                        "title": "Id"
+                                                }, 
+                                                "incident_id": {
+                                                        "type": "string", 
+                                                        "format": "uuid", 
+                                                        "title": "Incident Id"
+                                                }, 
+                                                "correlated_dependency_id": {
+                                                        "type": "string", 
+                                                        "format": "uuid", 
+                                                        "title": "Correlated Dependency Id"
+                                                }, 
+                                                "correlation_confidence": {
+                                                        "type": "number", 
+                                                        "title": "Correlation Confidence"
+                                                }, 
+                                                "time_window_seconds": {
+                                                        "type": "integer", 
+                                                        "title": "Time Window Seconds"
+                                                }, 
+                                                "correlation_method": {
+                                                        "type": "string", 
+                                                        "title": "Correlation Method"
+                                                }, 
+                                                "created_at": {
+                                                        "type": "string", 
+                                                        "format": "date-time", 
+                                                        "title": "Created At"
+                                                }
+                                        }, 
+                                        "type": "object", 
+                                        "required": [
+                                                "id", 
+                                                "incident_id", 
+                                                "correlated_dependency_id", 
+                                                "correlation_confidence", 
+                                                "time_window_seconds", 
+                                                "correlation_method", 
+                                                "created_at"
+                                        ], 
+                                        "title": "IncidentCorrelationResponse"
+                                }, 
+                                "type": "array", 
+                                "title": "Correlations", 
+                                "default": []
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "org_id", 
+                        "dependency_id", 
+                        "started_at", 
+                        "severity", 
+                        "status", 
+                        "root_cause", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "IncidentDetailResponse"
+        }, 
+        "title": "Response Get Incident Timeline V1 Orgs  Org Id  Dashboard Incident Timeline Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dashboard/latency
+  Summary: Get Latency Timeseries
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    hours (in: query, required: False)
+      Schema: {"type": "integer", "maximum": 2160, "minimum": 1, "default": 24, "title": "Hours"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "timestamp": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Timestamp"
+                        }, 
+                        "region": {
+                                "type": "string", 
+                                "title": "Region"
+                        }, 
+                        "latency_ms": {
+                                "type": "number", 
+                                "title": "Latency Ms"
+                        }, 
+                        "dependency_id": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "uuid"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Dependency Id"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "timestamp", 
+                        "region", 
+                        "latency_ms"
+                ], 
+                "title": "LatencyPointResponse"
+        }, 
+        "title": "Response Get Latency Timeseries V1 Orgs  Org Id  Dashboard Latency Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dashboard/sla-degradation
+  Summary: Get Sla Degradation
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    period_days (in: query, required: False)
+      Schema: {"type": "integer", "maximum": 365, "minimum": 1, "default": 30, "title": "Period Days"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "total_degradation_pct": {
+                        "type": "number", 
+                        "title": "Total Degradation Pct"
+                }, 
+                "affected_services": {
+                        "type": "integer", 
+                        "title": "Affected Services"
+                }, 
+                "period": {
+                        "type": "string", 
+                        "title": "Period"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "total_degradation_pct", 
+                "affected_services", 
+                "period"
+        ], 
+        "title": "SLADegradationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dashboard/summary
+  Summary: Get Dashboard Summary
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "active_dependencies_count": {
+                        "type": "integer", 
+                        "title": "Active Dependencies Count"
+                }, 
+                "open_incidents_count": {
+                        "type": "integer", 
+                        "title": "Open Incidents Count"
+                }, 
+                "overall_uptime_percentage": {
+                        "type": "number", 
+                        "title": "Overall Uptime Percentage"
+                }, 
+                "alerts_today_count": {
+                        "type": "integer", 
+                        "title": "Alerts Today Count"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "active_dependencies_count", 
+                "open_incidents_count", 
+                "overall_uptime_percentage", 
+                "alerts_today_count"
+        ], 
+        "title": "DashboardSummaryResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dashboard/vendor-status
+  Summary: Get Vendor Status
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "vendor_name": {
+                                "type": "string", 
+                                "title": "Vendor Name"
+                        }, 
+                        "display_name": {
+                                "type": "string", 
+                                "title": "Display Name"
+                        }, 
+                        "category": {
+                                "type": "string", 
+                                "title": "Category"
+                        }, 
+                        "is_public": {
+                                "type": "boolean", 
+                                "title": "Is Public"
+                        }, 
+                        "last_check_at": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "date-time"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Last Check At"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }, 
+                        "recent_status": {
+                                "type": "string", 
+                                "title": "Recent Status", 
+                                "default": "unknown"
+                        }, 
+                        "endpoints": {
+                                "items": {
+                                        "properties": {
+                                                "id": {
+                                                        "type": "string", 
+                                                        "format": "uuid", 
+                                                        "title": "Id"
+                                                }, 
+                                                "endpoint_url": {
+                                                        "type": "string", 
+                                                        "title": "Endpoint Url"
+                                                }, 
+                                                "regions": {
+                                                        "items": {
+                                                                "type": "string"
+                                                        }, 
+                                                        "type": "array", 
+                                                        "title": "Regions"
+                                                }, 
+                                                "health_status": {
+                                                        "type": "string", 
+                                                        "title": "Health Status"
+                                                }, 
+                                                "is_active": {
+                                                        "type": "boolean", 
+                                                        "title": "Is Active"
+                                                }, 
+                                                "last_check_at": {
+                                                        "anyOf": [

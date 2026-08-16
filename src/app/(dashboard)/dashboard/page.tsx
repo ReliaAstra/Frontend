@@ -13,14 +13,7 @@ import {
   useIncidents,
   useBillingPlan,
 } from "@/hooks/useApi";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { AdvancedLatencyChart } from "@/components/dashboard/AdvancedLatencyChart";
 import { cn } from "@/lib/utils";
 import { getPlanConfig } from "@/lib/tierLimits";
 import {
@@ -44,6 +37,7 @@ import {
   ConsoleCardHeader,
   StatusDot,
 } from "@/components/dashboard/ConsoleLayout";
+import { useDependencies } from "@/hooks/useApi";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 
@@ -165,6 +159,12 @@ export default function DashboardPage() {
   const recentChecks = useRecentChecks(8);
   const incidents = useIncidents({ status: "open", limit: 5 });
   const billing = useBillingPlan();
+  const { data: allDependencies } = useDependencies();
+
+  // Map dependencies for chart filter
+  const dependencyOptions = allDependencies
+    ? allDependencies.map((d) => ({ id: d.id, name: d.name }))
+    : [];
 
   const planConfig = billing.data
     ? getPlanConfig(billing.data.plan)
@@ -180,7 +180,7 @@ export default function DashboardPage() {
     incidents.isError ||
     billing.isError;
 
-  const chartData = aggregateMedianLatency(latency.data);
+  const chartData = latency.data; // Raw data — AdvancedLatencyChart handles aggregation
 
   function handleRefresh() {
     setIsRefreshing(true);
@@ -426,72 +426,12 @@ export default function DashboardPage() {
                 </div>
               </ConsoleCardHeader>
               <ConsoleCardBody>
-                {latency.isLoading ? (
-                  <div className="flex items-center justify-center h-[220px]">
-                    <Skeleton className="w-full h-full rounded" />
-                  </div>
-                ) : !chartData || chartData.length === 0 ? (
-                  <div className="flex items-center justify-center h-[220px]">
-                    <p className="text-sm text-[#52525B]">
-                      No latency data available for this time range.
-                    </p>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart data={chartData}>
-                      <XAxis
-                        dataKey="timestamp"
-                        tickFormatter={(v) =>
-                          new Date(v).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        }
-                        stroke="#52525B"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fontSize: 11, fill: "#52525B" }}
-                      />
-                      <YAxis
-                        stroke="#52525B"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fontSize: 11, fill: "#52525B" }}
-                        width={40}
-                      />
-                      <Tooltip content={<LatencyTooltip />} />
-                      <defs>
-                        <linearGradient
-                          id="latencyGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="#0891B2"
-                            stopOpacity={0.15}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor="#0891B2"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <Area
-                        type="monotone"
-                        dataKey="latency_ms"
-                        stroke="#0891B2"
-                        strokeWidth={2}
-                        fill="url(#latencyGradient)"
-                        isAnimationActive={false}
-                        dot={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+                <AdvancedLatencyChart
+                  data={chartData}
+                  isLoading={latency.isLoading}
+                  dependencies={dependencyOptions}
+                  height={220}
+                />
               </ConsoleCardBody>
             </ConsoleCard>
           </div>

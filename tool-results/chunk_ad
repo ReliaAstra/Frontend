@@ -1,0 +1,1000 @@
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "channel_type": {
+                        "type": "string", 
+                        "title": "Channel Type"
+                }, 
+                "is_active": {
+                        "type": "boolean", 
+                        "title": "Is Active"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "channel_type", 
+                "is_active", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "AlertConfigResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+DELETE /v1/orgs/{org_id}/notifications/configs/{config_id}
+  Summary: Delete Alert Config
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    config_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Config Id"}
+  Responses:
+    204: Successful Response
+      Body: empty
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/notifications/configs/{config_id}
+  Summary: Get Alert Config
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    config_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Config Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "channel_type": {
+                        "type": "string", 
+                        "title": "Channel Type"
+                }, 
+                "is_active": {
+                        "type": "boolean", 
+                        "title": "Is Active"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "channel_type", 
+                "is_active", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "AlertConfigResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+PATCH /v1/orgs/{org_id}/notifications/configs/{config_id}
+  Summary: Update Alert Config
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    config_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Config Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "channel_type": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "enum": [
+                                    "email", 
+                                    "slack", 
+                                    "pagerduty", 
+                                    "webhook"
+                              ], 
+                              "title": "ChannelType"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ]
+            }, 
+            "config": {
+                  "anyOf": [
+                        {
+                              "additionalProperties": true, 
+                              "type": "object"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Config"
+            }, 
+            "is_active": {
+                  "anyOf": [
+                        {
+                              "type": "boolean"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Is Active"
+            }
+      }, 
+      "type": "object", 
+      "title": "AlertConfigUpdateRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "channel_type": {
+                        "type": "string", 
+                        "title": "Channel Type"
+                }, 
+                "is_active": {
+                        "type": "boolean", 
+                        "title": "Is Active"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "channel_type", 
+                "is_active", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "AlertConfigResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/notifications/test
+  Summary: Send Test Notification
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "config_id": {
+                  "type": "string", 
+                  "format": "uuid", 
+                  "title": "Config Id"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "config_id"
+      ], 
+      "title": "AlertTestRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "success": {
+                        "type": "boolean", 
+                        "title": "Success"
+                }, 
+                "message": {
+                        "type": "string", 
+                        "title": "Message"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "success", 
+                "message"
+        ], 
+        "title": "AlertTestResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## VENDORS ENDPOINTS (5) ########
+
+GET /v1/public/vendors/{vendor_name}
+  Summary: Get Public Vendor
+  Auth Required: False
+  Parameters:
+    vendor_name (in: path, required: True)
+      Schema: {"type": "string", "title": "Vendor Name"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "vendor_name": {
+                        "type": "string", 
+                        "title": "Vendor Name"
+                }, 
+                "display_name": {
+                        "type": "string", 
+                        "title": "Display Name"
+                }, 
+                "category": {
+                        "type": "string", 
+                        "title": "Category"
+                }, 
+                "is_public": {
+                        "type": "boolean", 
+                        "title": "Is Public"
+                }, 
+                "last_check_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Last Check At"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }, 
+                "recent_status": {
+                        "type": "string", 
+                        "title": "Recent Status", 
+                        "default": "unknown"
+                }, 
+                "endpoints": {
+                        "items": {
+                                "properties": {
+                                        "id": {
+                                                "type": "string", 
+                                                "format": "uuid", 
+                                                "title": "Id"
+                                        }, 
+                                        "endpoint_url": {
+                                                "type": "string", 
+                                                "title": "Endpoint Url"
+                                        }, 
+                                        "regions": {
+                                                "items": {
+                                                        "type": "string"
+                                                }, 
+                                                "type": "array", 
+                                                "title": "Regions"
+                                        }, 
+                                        "health_status": {
+                                                "type": "string", 
+                                                "title": "Health Status"
+                                        }, 
+                                        "is_active": {
+                                                "type": "boolean", 
+                                                "title": "Is Active"
+                                        }, 
+                                        "last_check_at": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "string", 
+                                                                "format": "date-time"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "Last Check At"
+                                        }
+                                }, 
+                                "type": "object", 
+                                "required": [
+                                        "id", 
+                                        "endpoint_url", 
+                                        "regions", 
+                                        "health_status", 
+                                        "is_active"
+                                ], 
+                                "title": "VendorEndpointResponse"
+                        }, 
+                        "type": "array", 
+                        "title": "Endpoints"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "vendor_name", 
+                "display_name", 
+                "category", 
+                "is_public", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "VendorDetailResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/public/vendors/{vendor_name}/history
+  Summary: Get Public Vendor History
+  Auth Required: False
+  Parameters:
+    vendor_name (in: path, required: True)
+      Schema: {"type": "string", "title": "Vendor Name"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "vendor_name": {
+                        "type": "string", 
+                        "title": "Vendor Name"
+                }, 
+                "uptime_percentage_24h": {
+                        "type": "number", 
+                        "title": "Uptime Percentage 24H"
+                }, 
+                "avg_latency_ms_24h": {
+                        "type": "number", 
+                        "title": "Avg Latency Ms 24H"
+                }, 
+                "recent_checks_count": {
+                        "type": "integer", 
+                        "title": "Recent Checks Count"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "vendor_name", 
+                "uptime_percentage_24h", 
+                "avg_latency_ms_24h", 
+                "recent_checks_count"
+        ], 
+        "title": "VendorHistoryResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/public/vendors/{vendor_name}/incidents
+  Summary: Get Vendor Incidents
+  Auth Required: False
+  Parameters:
+    vendor_name (in: path, required: True)
+      Schema: {"type": "string", "title": "Vendor Name"}
+    limit (in: query, required: False)
+      Schema: {"type": "integer", "maximum": 100, "minimum": 1, "default": 50, "title": "Limit"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "vendor_name": {
+                        "type": "string", 
+                        "title": "Vendor Name"
+                }, 
+                "incidents": {
+                        "items": {
+                                "properties": {
+                                        "incident_id": {
+                                                "type": "string", 
+                                                "format": "uuid", 
+                                                "title": "Incident Id"
+                                        }, 
+                                        "dependency_name": {
+                                                "type": "string", 
+                                                "title": "Dependency Name"
+                                        }, 
+                                        "started_at": {
+                                                "type": "string", 
+                                                "format": "date-time", 
+                                                "title": "Started At"
+                                        }, 
+                                        "resolved_at": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "string", 
+                                                                "format": "date-time"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "Resolved At"
+                                        }, 
+                                        "severity": {
+                                                "type": "string", 
+                                                "title": "Severity"
+                                        }, 
+                                        "status": {
+                                                "type": "string", 
+                                                "title": "Status"
+                                        }, 
+                                        "duration_seconds": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "number"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "Duration Seconds"
+                                        }
+                                }, 
+                                "type": "object", 
+                                "required": [
+                                        "incident_id", 
+                                        "dependency_name", 
+                                        "started_at", 
+                                        "resolved_at", 
+                                        "severity", 
+                                        "status", 
+                                        "duration_seconds"
+                                ], 
+                                "title": "VendorIncidentResponse"
+                        }, 
+                        "type": "array", 
+                        "title": "Incidents"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "vendor_name", 
+                "incidents"
+        ], 
+        "title": "VendorIncidentsResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/public/vendors/{vendor_name}/metrics
+  Summary: Get Vendor Metrics
+  Auth Required: False
+  Parameters:
+    vendor_name (in: path, required: True)
+      Schema: {"type": "string", "title": "Vendor Name"}
+    window (in: query, required: False)
+      Schema: {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Window"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "vendor_name": {
+                        "type": "string", 
+                        "title": "Vendor Name"
+                }, 
+                "metrics": {
+                        "additionalProperties": {
+                                "properties": {
+                                        "window": {
+                                                "type": "string", 
+                                                "title": "Window"
+                                        }, 
+                                        "total_observations": {
+                                                "type": "integer", 
+                                                "title": "Total Observations"
+                                        }, 
+                                        "uptime_percentage": {
+                                                "type": "number", 
+                                                "title": "Uptime Percentage"
+                                        }, 
+                                        "avg_latency_ms": {
+                                                "type": "number", 
+                                                "title": "Avg Latency Ms"
+                                        }, 
+                                        "p95_latency_ms": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "number"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "P95 Latency Ms"
+                                        }
+                                }, 
+                                "type": "object", 
+                                "required": [
+                                        "window", 
+                                        "total_observations", 
+                                        "uptime_percentage", 
+                                        "avg_latency_ms"
+                                ], 
+                                "title": "VendorWindowMetrics"
+                        }, 
+                        "type": "object", 
+                        "title": "Metrics"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "vendor_name", 
+                "metrics"
+        ], 
+        "title": "VendorMetricsResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/public/vendors/{vendor_name}/timeline
+  Summary: Get Vendor Timeline
+  Auth Required: False
+  Parameters:
+    vendor_name (in: path, required: True)
+      Schema: {"type": "string", "title": "Vendor Name"}
+    window (in: query, required: False)
+      Schema: {"type": "string", "default": "24h", "title": "Window"}
+    resolution (in: query, required: False)
+      Schema: {"type": "string", "default": "auto", "title": "Resolution"}
+    region (in: query, required: False)
+      Schema: {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Region"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "vendor_name": {
+                        "type": "string", 
+                        "title": "Vendor Name"
+                }, 
+                "window": {
+                        "type": "string", 
+                        "title": "Window"
+                }, 
+                "resolution": {
+                        "type": "string", 
+                        "title": "Resolution"
+                }, 
+                "region": {
+                        "type": "string", 
+                        "title": "Region"
+                }, 
+                "from": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "From"
+                }, 
+                "to": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "To"
+                }, 
+                "current": {
+                        "properties": {
+                                "timestamp": {
+                                        "anyOf": [
+                                                {
+                                                        "type": "string", 
+                                                        "format": "date-time"
+                                                }, 
+                                                {
+                                                        "type": "null"
+                                                }
+                                        ], 
+                                        "title": "Timestamp"
+                                }, 
+                                "latency_ms": {
+                                        "anyOf": [
+                                                {
+                                                        "type": "number"
+                                                }, 
+                                                {
+                                                        "type": "null"
+                                                }
+                                        ], 
+                                        "title": "Latency Ms"
+                                }, 
+                                "status_code": {
+                                        "anyOf": [
+                                                {
+                                                        "type": "integer"
+                                                }, 
+                                                {
+                                                        "type": "null"
+                                                }
+                                        ], 
+                                        "title": "Status Code"
+                                }, 
+                                "is_up": {
+                                        "anyOf": [
+                                                {
+                                                        "type": "boolean"
+                                                }, 
+                                                {
+                                                        "type": "null"
+                                                }
+                                        ], 
+                                        "title": "Is Up"
+                                }
+                        }, 
+                        "type": "object", 
+                        "title": "TimelineCurrent", 
+                        "description": "The most recent observation for a vendor, independent of the window."
+                }, 
+                "points": {
+                        "items": {
+                                "properties": {
+                                        "timestamp": {
+                                                "type": "string", 
+                                                "format": "date-time", 
+                                                "title": "Timestamp"
+                                        }, 
+                                        "avg_latency_ms": {
+                                                "type": "number", 
+                                                "title": "Avg Latency Ms"
+                                        }, 
+                                        "status_code": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "integer"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "Status Code"
+                                        }, 
+                                        "is_up": {
+                                                "type": "boolean", 
+                                                "title": "Is Up"
+                                        }, 
+                                        "observation_count": {
+                                                "type": "integer", 
+                                                "title": "Observation Count"
+                                        }, 
+                                        "incident_id": {
+                                                "anyOf": [
+                                                        {
+                                                                "type": "string", 
+                                                                "format": "uuid"
+                                                        }, 
+                                                        {
+                                                                "type": "null"
+                                                        }
+                                                ], 
+                                                "title": "Incident Id"
+                                        }
+                                }, 
+                                "type": "object", 
+                                "required": [
+                                        "timestamp", 
+                                        "avg_latency_ms", 
+                                        "status_code", 
+                                        "is_up", 
+                                        "observation_count"
+                                ], 
+                                "title": "TimelineBucket", 
+                                "description": "A single aggregated time bucket in the vendor timeline."
+                        }, 
+                        "type": "array", 
+                        "title": "Points"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "vendor_name", 
+                "window", 
+                "resolution", 
+                "region", 
+                "from", 
+                "to", 
+                "current"
+        ], 
+        "title": "VendorTimelineResponse", 
+        "description": "Full response for GET /v1/public/vendors/{vendor_name}/timeline."
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## OTHER ENDPOINTS (26) ########
+
+GET /health
+  Summary: Health Check
+  Auth Required: False
+  Responses:
+    200: Successful Response
+      Schema: {
+        "additionalProperties": true, 
+        "type": "object", 
+        "title": "Response Health Check Health Get"
+}
+
+GET /v1/orgs
+  Summary: List My Organizations
+  Auth Required: True
+  Responses:
+    200: Successful Response
+      Schema: {
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "slug": {
+                                "type": "string", 
+                                "title": "Slug"
+                        }, 
+                        "plan": {
+                                "type": "string", 
+                                "title": "Plan"
+                        }, 
+                        "has_agency_mode": {
+                                "type": "boolean", 
+                                "title": "Has Agency Mode", 
+                                "default": false
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "name", 
+                        "slug", 
+                        "plan", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "OrganizationResponse"
+        }, 
+        "type": "array", 
+        "title": "Response List My Organizations V1 Orgs Get"
+}
+
+POST /v1/orgs
+  Summary: Create Organization
+  Auth Required: True
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "type": "string", 
+                  "title": "Name"
+            }, 
+            "slug": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Slug"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "name"
+      ], 
+      "title": "OrganizationCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "slug": {
+                        "type": "string", 
+                        "title": "Slug"
+                }, 
+                "plan": {
+                        "type": "string", 
+                        "title": "Plan"
+                }, 
+                "has_agency_mode": {
+                        "type": "boolean", 
+                        "title": "Has Agency Mode", 
+                        "default": false
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "name", 
+                "slug", 
+                "plan", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "OrganizationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}
+  Summary: Get Organization
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "slug": {
+                        "type": "string", 
+                        "title": "Slug"
+                }, 
+                "plan": {
+                        "type": "string", 
+                        "title": "Plan"
+                }, 
+                "has_agency_mode": {
+                        "type": "boolean", 
+                        "title": "Has Agency Mode", 
+                        "default": false
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "name", 
+                "slug", 
+                "plan", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "OrganizationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+PATCH /v1/orgs/{org_id}
+  Summary: Update Organization
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Name"
+            }, 
+            "plan": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "enum": [
+                                    "free", 
+                                    "starter", 
+                                    "standard", 
+                                    "professional", 
+                                    "agency"
+                              ], 
+                              "title": "Plan"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ]
+            }
+      }, 
+      "type": "object", 
+      "title": "OrganizationUpdateRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"

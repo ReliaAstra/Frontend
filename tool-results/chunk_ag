@@ -1,0 +1,36 @@
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "email", 
+                "full_name", 
+                "is_active", 
+                "is_superuser", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "UserResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/verify/{verification_id}
+  Summary: Verify Evidence
+  Auth Required: False
+  Parameters:
+    verification_id (in: path, required: True)
+      Schema: {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_-]+$", "title": "Verification Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "object", 
+        "additionalProperties": true, 
+        "title": "Response Verify Evidence V1 Verify  Verification Id  Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)

@@ -1,0 +1,282 @@
+######## CLIENTS ENDPOINTS (2) ########
+
+--- GET /v1/orgs/{org_id}/clients/{client_id}/applications ---
+Summary: List Applications
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  client_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Client Id"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                  },
+                  "org_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Org Id"
+                  },
+                  "client_id": {
+                        "anyOf": [
+                              {
+                                    "type": "string",
+                                    "format": "uuid"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Client Id"
+                  },
+                  "name": {
+                        "type": "string",
+                        "title": "Name"
+                  },
+                  "description": {
+                        "anyOf": [
+                              {
+                                    "type": "string"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Description"
+                  },
+                  "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                  },
+                  "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "id",
+                  "org_id",
+                  "client_id",
+                  "name",
+                  "description",
+                  "created_at",
+                  "updated_at"
+            ],
+            "title": "ApplicationResponse"
+      },
+      "title": "Response List Applications V1 Orgs  Org Id  Clients  Client Id  Applications Get"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/orgs/{org_id}/clients/{client_id}/applications ---
+Summary: Create Application
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  client_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Client Id"}
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name"
+        },
+        "description": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Description"
+        }
+    },
+    "type": "object",
+    "required": [
+        "name"
+    ],
+    "title": "ApplicationCreateRequest"
+}
+Responses:
+  201: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "client_id": {
+                  "anyOf": [
+                        {
+                              "type": "string",
+                              "format": "uuid"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Client Id"
+            },
+            "name": {
+                  "type": "string",
+                  "title": "Name"
+            },
+            "description": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Description"
+            },
+            "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Created At"
+            },
+            "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Updated At"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "org_id",
+            "client_id",
+            "name",
+            "description",
+            "created_at",
+            "updated_at"
+      ],
+      "title": "ApplicationResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}

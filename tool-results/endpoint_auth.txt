@@ -1,0 +1,1052 @@
+######## AUTH ENDPOINTS (12) ########
+
+--- POST /v1/auth/forgot-password ---
+Summary: Forgot Password
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+        }
+    },
+    "type": "object",
+    "required": [
+        "email"
+    ],
+    "title": "ForgotPasswordRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Response Forgot Password V1 Auth Forgot Password Post"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/github ---
+Summary: Github Auth Callback
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "code": {
+            "type": "string",
+            "title": "Code"
+        },
+        "state": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "State"
+        }
+    },
+    "type": "object",
+    "required": [
+        "code"
+    ],
+    "title": "GitHubAuthRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "access_token": {
+                  "type": "string",
+                  "title": "Access Token"
+            },
+            "refresh_token": {
+                  "type": "string",
+                  "title": "Refresh Token"
+            },
+            "token_type": {
+                  "type": "string",
+                  "title": "Token Type",
+                  "default": "bearer"
+            },
+            "expires_in": {
+                  "type": "integer",
+                  "title": "Expires In"
+            },
+            "is_new_user": {
+                  "type": "boolean",
+                  "title": "Is New User",
+                  "default": false
+            },
+            "user_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "User Id"
+            },
+            "email": {
+                  "type": "string",
+                  "title": "Email"
+            },
+            "full_name": {
+                  "type": "string",
+                  "title": "Full Name"
+            }
+      },
+      "type": "object",
+      "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in",
+            "user_id",
+            "email",
+            "full_name"
+      ],
+      "title": "OAuthAuthResponse",
+      "description": "Shared response for both Google and GitHub OAuth."
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/auth/github/url ---
+Summary: Get Github Auth Url
+Auth Required: False
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "authorization_url": {
+                  "type": "string",
+                  "title": "Authorization Url"
+            },
+            "state": {
+                  "type": "string",
+                  "title": "State"
+            }
+      },
+      "type": "object",
+      "required": [
+            "authorization_url",
+            "state"
+      ],
+      "title": "GitHubAuthUrlResponse"
+}
+
+--- POST /v1/auth/google ---
+Summary: Google Auth Callback
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "code": {
+            "type": "string",
+            "title": "Code"
+        },
+        "state": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "State"
+        }
+    },
+    "type": "object",
+    "required": [
+        "code"
+    ],
+    "title": "GoogleAuthRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "access_token": {
+                  "type": "string",
+                  "title": "Access Token"
+            },
+            "refresh_token": {
+                  "type": "string",
+                  "title": "Refresh Token"
+            },
+            "token_type": {
+                  "type": "string",
+                  "title": "Token Type",
+                  "default": "bearer"
+            },
+            "expires_in": {
+                  "type": "integer",
+                  "title": "Expires In"
+            },
+            "is_new_user": {
+                  "type": "boolean",
+                  "title": "Is New User",
+                  "default": false
+            },
+            "user_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "User Id"
+            },
+            "email": {
+                  "type": "string",
+                  "title": "Email"
+            },
+            "full_name": {
+                  "type": "string",
+                  "title": "Full Name"
+            }
+      },
+      "type": "object",
+      "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in",
+            "user_id",
+            "email",
+            "full_name"
+      ],
+      "title": "OAuthAuthResponse",
+      "description": "Shared response for both Google and GitHub OAuth."
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/auth/google/url ---
+Summary: Get Google Auth Url
+Auth Required: False
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "authorization_url": {
+                  "type": "string",
+                  "title": "Authorization Url"
+            },
+            "state": {
+                  "type": "string",
+                  "title": "State"
+            }
+      },
+      "type": "object",
+      "required": [
+            "authorization_url",
+            "state"
+      ],
+      "title": "GoogleAuthUrlResponse"
+}
+
+--- POST /v1/auth/login ---
+Summary: Login
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+        },
+        "password": {
+            "type": "string",
+            "title": "Password"
+        }
+    },
+    "type": "object",
+    "required": [
+        "email",
+        "password"
+    ],
+    "title": "LoginRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "access_token": {
+                  "type": "string",
+                  "title": "Access Token"
+            },
+            "refresh_token": {
+                  "type": "string",
+                  "title": "Refresh Token"
+            },
+            "token_type": {
+                  "type": "string",
+                  "title": "Token Type",
+                  "default": "bearer"
+            },
+            "expires_in": {
+                  "type": "integer",
+                  "title": "Expires In"
+            }
+      },
+      "type": "object",
+      "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in"
+      ],
+      "title": "TokenResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/logout ---
+Summary: Logout
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+        }
+    },
+    "type": "object",
+    "required": [
+        "refresh_token"
+    ],
+    "title": "LogoutRequest"
+}
+Responses:
+  204: Successful Response
+    Body: empty
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/refresh ---
+Summary: Refresh Token
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+        }
+    },
+    "type": "object",
+    "required": [
+        "refresh_token"
+    ],
+    "title": "RefreshRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "access_token": {
+                  "type": "string",
+                  "title": "Access Token"
+            },
+            "refresh_token": {
+                  "type": "string",
+                  "title": "Refresh Token"
+            },
+            "token_type": {
+                  "type": "string",
+                  "title": "Token Type",
+                  "default": "bearer"
+            },
+            "expires_in": {
+                  "type": "integer",
+                  "title": "Expires In"
+            }
+      },
+      "type": "object",
+      "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in"
+      ],
+      "title": "TokenResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/register ---
+Summary: Register
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+        },
+        "password": {
+            "type": "string",
+            "title": "Password"
+        },
+        "full_name": {
+            "type": "string",
+            "title": "Full Name"
+        },
+        "org_name": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Org Name"
+        }
+    },
+    "type": "object",
+    "required": [
+        "email",
+        "password",
+        "full_name"
+    ],
+    "title": "RegisterRequest"
+}
+Responses:
+  201: Successful Response
+    Schema: {
+      "properties": {
+            "access_token": {
+                  "type": "string",
+                  "title": "Access Token"
+            },
+            "refresh_token": {
+                  "type": "string",
+                  "title": "Refresh Token"
+            },
+            "token_type": {
+                  "type": "string",
+                  "title": "Token Type",
+                  "default": "bearer"
+            },
+            "expires_in": {
+                  "type": "integer",
+                  "title": "Expires In"
+            }
+      },
+      "type": "object",
+      "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in"
+      ],
+      "title": "TokenResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/reset-password ---
+Summary: Reset Password
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "token": {
+            "type": "string",
+            "title": "Token"
+        },
+        "new_password": {
+            "type": "string",
+            "title": "New Password"
+        }
+    },
+    "type": "object",
+    "required": [
+        "token",
+        "new_password"
+    ],
+    "title": "ResetPasswordRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "message": {
+                  "type": "string",
+                  "title": "Message"
+            }
+      },
+      "type": "object",
+      "required": [
+            "message"
+      ],
+      "title": "ResetPasswordResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/send-verification ---
+Summary: Send Verification Email
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+        }
+    },
+    "type": "object",
+    "required": [
+        "email"
+    ],
+    "title": "SendVerificationRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Response Send Verification Email V1 Auth Send Verification Post"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/auth/verify-email ---
+Summary: Verify Email
+Auth Required: False
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "token": {
+            "type": "string",
+            "title": "Token"
+        }
+    },
+    "type": "object",
+    "required": [
+        "token"
+    ],
+    "title": "VerifyEmailRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "message": {
+                  "type": "string",
+                  "title": "Message"
+            },
+            "is_email_verified": {
+                  "type": "boolean",
+                  "title": "Is Email Verified"
+            }
+      },
+      "type": "object",
+      "required": [
+            "message",
+            "is_email_verified"
+      ],
+      "title": "VerifyEmailResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}

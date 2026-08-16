@@ -1,0 +1,1000 @@
+                }, 
+                "slug": {
+                        "type": "string", 
+                        "title": "Slug"
+                }, 
+                "plan": {
+                        "type": "string", 
+                        "title": "Plan"
+                }, 
+                "has_agency_mode": {
+                        "type": "boolean", 
+                        "title": "Has Agency Mode", 
+                        "default": false
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "name", 
+                "slug", 
+                "plan", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "OrganizationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/ai-providers
+  Summary: List Ai Providers
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "organization_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Organization Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "provider_type": {
+                                "type": "string", 
+                                "title": "Provider Type"
+                        }, 
+                        "endpoint_url": {
+                                "type": "string", 
+                                "title": "Endpoint Url"
+                        }, 
+                        "model_name": {
+                                "type": "string", 
+                                "title": "Model Name"
+                        }, 
+                        "is_default": {
+                                "type": "boolean", 
+                                "title": "Is Default"
+                        }, 
+                        "max_tokens": {
+                                "type": "integer", 
+                                "title": "Max Tokens"
+                        }, 
+                        "temperature": {
+                                "type": "number", 
+                                "title": "Temperature"
+                        }, 
+                        "enabled": {
+                                "type": "boolean", 
+                                "title": "Enabled"
+                        }, 
+                        "has_api_key": {
+                                "type": "boolean", 
+                                "title": "Has Api Key", 
+                                "default": false
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "organization_id", 
+                        "name", 
+                        "provider_type", 
+                        "endpoint_url", 
+                        "model_name", 
+                        "is_default", 
+                        "max_tokens", 
+                        "temperature", 
+                        "enabled", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "AIProviderResponse"
+        }, 
+        "title": "Response List Ai Providers V1 Orgs  Org Id  Ai Providers Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/ai-providers
+  Summary: Create Ai Provider
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "type": "string", 
+                  "maxLength": 100, 
+                  "minLength": 1, 
+                  "title": "Name"
+            }, 
+            "provider_type": {
+                  "type": "string", 
+                  "enum": [
+                        "openai_compatible", 
+                        "anthropic", 
+                        "google"
+                  ], 
+                  "title": "Provider Type"
+            }, 
+            "endpoint_url": {
+                  "type": "string", 
+                  "maxLength": 500, 
+                  "minLength": 1, 
+                  "title": "Endpoint Url"
+            }, 
+            "api_key": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "format": "password", 
+                              "writeOnly": true
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Api Key"
+            }, 
+            "model_name": {
+                  "type": "string", 
+                  "maxLength": 100, 
+                  "minLength": 1, 
+                  "title": "Model Name"
+            }, 
+            "is_default": {
+                  "type": "boolean", 
+                  "title": "Is Default", 
+                  "default": false
+            }, 
+            "max_tokens": {
+                  "type": "integer", 
+                  "maximum": 100000.0, 
+                  "minimum": 1.0, 
+                  "title": "Max Tokens", 
+                  "default": 4096
+            }, 
+            "temperature": {
+                  "type": "number", 
+                  "maximum": 2.0, 
+                  "minimum": 0.0, 
+                  "title": "Temperature", 
+                  "default": 0.3
+            }, 
+            "enabled": {
+                  "type": "boolean", 
+                  "title": "Enabled", 
+                  "default": true
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "name", 
+            "provider_type", 
+            "endpoint_url", 
+            "model_name"
+      ], 
+      "title": "AIProviderCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "organization_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Organization Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "provider_type": {
+                        "type": "string", 
+                        "title": "Provider Type"
+                }, 
+                "endpoint_url": {
+                        "type": "string", 
+                        "title": "Endpoint Url"
+                }, 
+                "model_name": {
+                        "type": "string", 
+                        "title": "Model Name"
+                }, 
+                "is_default": {
+                        "type": "boolean", 
+                        "title": "Is Default"
+                }, 
+                "max_tokens": {
+                        "type": "integer", 
+                        "title": "Max Tokens"
+                }, 
+                "temperature": {
+                        "type": "number", 
+                        "title": "Temperature"
+                }, 
+                "enabled": {
+                        "type": "boolean", 
+                        "title": "Enabled"
+                }, 
+                "has_api_key": {
+                        "type": "boolean", 
+                        "title": "Has Api Key", 
+                        "default": false
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "organization_id", 
+                "name", 
+                "provider_type", 
+                "endpoint_url", 
+                "model_name", 
+                "is_default", 
+                "max_tokens", 
+                "temperature", 
+                "enabled", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "AIProviderResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+DELETE /v1/orgs/{org_id}/ai-providers/{provider_id}
+  Summary: Delete Ai Provider
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    provider_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Provider Id"}
+  Responses:
+    204: Successful Response
+      Body: empty
+    422: Validation Error -> HTTPValidationError (see above)
+
+PATCH /v1/orgs/{org_id}/ai-providers/{provider_id}
+  Summary: Update Ai Provider
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    provider_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Provider Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "maxLength": 100, 
+                              "minLength": 1
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Name"
+            }, 
+            "provider_type": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "enum": [
+                                    "openai_compatible", 
+                                    "anthropic", 
+                                    "google"
+                              ]
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Provider Type"
+            }, 
+            "endpoint_url": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "maxLength": 500
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Endpoint Url"
+            }, 
+            "api_key": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "format": "password", 
+                              "writeOnly": true
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Api Key"
+            }, 
+            "model_name": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "maxLength": 100, 
+                              "minLength": 1
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Model Name"
+            }, 
+            "is_default": {
+                  "anyOf": [
+                        {
+                              "type": "boolean"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Is Default"
+            }, 
+            "max_tokens": {
+                  "anyOf": [
+                        {
+                              "type": "integer", 
+                              "maximum": 100000.0, 
+                              "minimum": 1.0
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Max Tokens"
+            }, 
+            "temperature": {
+                  "anyOf": [
+                        {
+                              "type": "number", 
+                              "maximum": 2.0, 
+                              "minimum": 0.0
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Temperature"
+            }, 
+            "enabled": {
+                  "anyOf": [
+                        {
+                              "type": "boolean"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Enabled"
+            }
+      }, 
+      "type": "object", 
+      "title": "AIProviderUpdateRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "organization_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Organization Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "provider_type": {
+                        "type": "string", 
+                        "title": "Provider Type"
+                }, 
+                "endpoint_url": {
+                        "type": "string", 
+                        "title": "Endpoint Url"
+                }, 
+                "model_name": {
+                        "type": "string", 
+                        "title": "Model Name"
+                }, 
+                "is_default": {
+                        "type": "boolean", 
+                        "title": "Is Default"
+                }, 
+                "max_tokens": {
+                        "type": "integer", 
+                        "title": "Max Tokens"
+                }, 
+                "temperature": {
+                        "type": "number", 
+                        "title": "Temperature"
+                }, 
+                "enabled": {
+                        "type": "boolean", 
+                        "title": "Enabled"
+                }, 
+                "has_api_key": {
+                        "type": "boolean", 
+                        "title": "Has Api Key", 
+                        "default": false
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "organization_id", 
+                "name", 
+                "provider_type", 
+                "endpoint_url", 
+                "model_name", 
+                "is_default", 
+                "max_tokens", 
+                "temperature", 
+                "enabled", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "AIProviderResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/api-keys
+  Summary: List Api Keys
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "prefix": {
+                                "type": "string", 
+                                "title": "Prefix"
+                        }, 
+                        "scopes": {
+                                "items": {
+                                        "type": "string"
+                                }, 
+                                "type": "array", 
+                                "title": "Scopes"
+                        }, 
+                        "last_used_at": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "date-time"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Last Used At"
+                        }, 
+                        "expires_at": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "date-time"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Expires At"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "org_id", 
+                        "name", 
+                        "prefix", 
+                        "scopes", 
+                        "created_at"
+                ], 
+                "title": "ApiKeyResponse"
+        }, 
+        "title": "Response List Api Keys V1 Orgs  Org Id  Api Keys Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/api-keys
+  Summary: Create Api Key
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "type": "string", 
+                  "title": "Name"
+            }, 
+            "scopes": {
+                  "items": {
+                        "type": "string"
+                  }, 
+                  "type": "array", 
+                  "title": "Scopes", 
+                  "default": [
+                        "read:checks", 
+                        "write:dependencies", 
+                        "read:incidents", 
+                        "read:evidence"
+                  ]
+            }, 
+            "expires_at": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "format": "date-time"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Expires At"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "name"
+      ], 
+      "title": "ApiKeyCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "prefix": {
+                        "type": "string", 
+                        "title": "Prefix"
+                }, 
+                "scopes": {
+                        "items": {
+                                "type": "string"
+                        }, 
+                        "type": "array", 
+                        "title": "Scopes"
+                }, 
+                "last_used_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Last Used At"
+                }, 
+                "expires_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Expires At"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "full_key": {
+                        "type": "string", 
+                        "title": "Full Key"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "name", 
+                "prefix", 
+                "scopes", 
+                "created_at", 
+                "full_key"
+        ], 
+        "title": "ApiKeyCreateResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+DELETE /v1/orgs/{org_id}/api-keys/{key_id}
+  Summary: Revoke Api Key
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    key_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Key Id"}
+  Responses:
+    204: Successful Response
+      Body: empty
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/checks/recent
+  Summary: List Recent Check Results
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    limit (in: query, required: False)
+      Schema: {"type": "integer", "maximum": 100, "minimum": 1, "default": 50, "title": "Limit"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "dependency_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Dependency Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "region": {
+                                "type": "string", 
+                                "title": "Region"
+                        }, 
+                        "executed_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Executed At"
+                        }, 
+                        "latency_ms": {
+                                "type": "number", 
+                                "title": "Latency Ms"
+                        }, 
+                        "status_code": {
+                                "anyOf": [
+                                        {
+                                                "type": "integer"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Status Code"
+                        }, 
+                        "is_up": {
+                                "type": "boolean", 
+                                "title": "Is Up"
+                        }, 
+                        "error_message": {
+                                "anyOf": [
+                                        {
+                                                "type": "string"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Error Message"
+                        }, 
+                        "quorum_confirmed": {
+                                "type": "boolean", 
+                                "title": "Quorum Confirmed"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "dependency_id", 
+                        "org_id", 
+                        "region", 
+                        "executed_at", 
+                        "latency_ms", 
+                        "is_up", 
+                        "quorum_confirmed"
+                ], 
+                "title": "CheckResultResponse"
+        }, 
+        "title": "Response List Recent Check Results V1 Orgs  Org Id  Checks Recent Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/clients
+  Summary: List Clients
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "description": {
+                                "anyOf": [
+                                        {
+                                                "type": "string"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Description"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "org_id", 
+                        "name", 
+                        "description", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "ClientResponse"
+        }, 
+        "title": "Response List Clients V1 Orgs  Org Id  Clients Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/clients
+  Summary: Create Client
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "type": "string", 
+                  "maxLength": 150, 
+                  "minLength": 1, 
+                  "title": "Name"
+            }, 
+            "description": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "maxLength": 500
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Description"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "name"
+      ], 
+      "title": "ClientCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "description": {
+                        "anyOf": [
+                                {
+                                        "type": "string"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Description"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "name", 
+                "description", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "ClientResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/dependencies
+  Summary: List Dependencies
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    limit (in: query, required: False)
+      Schema: {"type": "integer", "maximum": 100, "minimum": 1, "default": 50, "title": "Limit"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 

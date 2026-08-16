@@ -1,0 +1,848 @@
+######## DASHBOARD ENDPOINTS (6) ########
+
+--- GET /v1/orgs/{org_id}/dashboard/dependency-health ---
+Summary: Get Dependency Health
+OperationId: get_dependency_health_v1_orgs__org_id__dashboard_dependency_health_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "dependency_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Dependency Id"
+                  },
+                  "name": {
+                        "type": "string",
+                        "title": "Name"
+                  },
+                  "endpoint_url": {
+                        "type": "string",
+                        "title": "Endpoint Url"
+                  },
+                  "current_status": {
+                        "type": "string",
+                        "title": "Current Status"
+                  },
+                  "uptime_percentage_24h": {
+                        "type": "number",
+                        "title": "Uptime Percentage 24H"
+                  },
+                  "avg_latency_ms_24h": {
+                        "type": "number",
+                        "title": "Avg Latency Ms 24H"
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "dependency_id",
+                  "name",
+                  "endpoint_url",
+                  "current_status",
+                  "uptime_percentage_24h",
+                  "avg_latency_ms_24h"
+            ],
+            "title": "DependencyHealthResponse"
+      },
+      "title": "Response Get Dependency Health V1 Orgs  Org Id  Dashboard Dependency Health Get"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/dashboard/incident-timeline ---
+Summary: Get Incident Timeline
+OperationId: get_incident_timeline_v1_orgs__org_id__dashboard_incident_timeline_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                  },
+                  "org_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Org Id"
+                  },
+                  "dependency_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Dependency Id"
+                  },
+                  "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Started At"
+                  },
+                  "resolved_at": {
+                        "anyOf": [
+                              {
+                                    "type": "string",
+                                    "format": "date-time"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Resolved At"
+                  },
+                  "severity": {
+                        "type": "string",
+                        "title": "Severity"
+                  },
+                  "status": {
+                        "type": "string",
+                        "title": "Status"
+                  },
+                  "root_cause": {
+                        "type": "string",
+                        "title": "Root Cause"
+                  },
+                  "description": {
+                        "anyOf": [
+                              {
+                                    "type": "string"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Description"
+                  },
+                  "evidence_report_id": {
+                        "anyOf": [
+                              {
+                                    "type": "string",
+                                    "format": "uuid"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Evidence Report Id"
+                  },
+                  "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                  },
+                  "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                  },
+                  "correlations": {
+                        "items": {
+                              "properties": {
+                                    "id": {
+                                          "type": "string",
+                                          "format": "uuid",
+                                          "title": "Id"
+                                    },
+                                    "incident_id": {
+                                          "type": "string",
+                                          "format": "uuid",
+                                          "title": "Incident Id"
+                                    },
+                                    "correlated_dependency_id": {
+                                          "type": "string",
+                                          "format": "uuid",
+                                          "title": "Correlated Dependency Id"
+                                    },
+                                    "correlation_confidence": {
+                                          "type": "number",
+                                          "title": "Correlation Confidence"
+                                    },
+                                    "time_window_seconds": {
+                                          "type": "integer",
+                                          "title": "Time Window Seconds"
+                                    },
+                                    "correlation_method": {
+                                          "type": "string",
+                                          "title": "Correlation Method"
+                                    },
+                                    "created_at": {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "title": "Created At"
+                                    }
+                              },
+                              "type": "object",
+                              "required": [
+                                    "id",
+                                    "incident_id",
+                                    "correlated_dependency_id",
+                                    "correlation_confidence",
+                                    "time_window_seconds",
+                                    "correlation_method",
+                                    "created_at"
+                              ],
+                              "title": "IncidentCorrelationResponse"
+                        },
+                        "type": "array",
+                        "title": "Correlations",
+                        "default": []
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "id",
+                  "org_id",
+                  "dependency_id",
+                  "started_at",
+                  "severity",
+                  "status",
+                  "root_cause",
+                  "created_at",
+                  "updated_at"
+            ],
+            "title": "IncidentDetailResponse"
+      },
+      "title": "Response Get Incident Timeline V1 Orgs  Org Id  Dashboard Incident Timeline Get"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/dashboard/latency ---
+Summary: Get Latency Timeseries
+OperationId: get_latency_timeseries_v1_orgs__org_id__dashboard_latency_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+  - hours (in: query, required: False)
+    Schema: {
+    "type": "integer",
+    "maximum": 2160,
+    "minimum": 1,
+    "default": 24,
+    "title": "Hours"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Timestamp"
+                  },
+                  "region": {
+                        "type": "string",
+                        "title": "Region"
+                  },
+                  "latency_ms": {
+                        "type": "number",
+                        "title": "Latency Ms"
+                  },
+                  "dependency_id": {
+                        "anyOf": [
+                              {
+                                    "type": "string",
+                                    "format": "uuid"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Dependency Id"
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "timestamp",
+                  "region",
+                  "latency_ms"
+            ],
+            "title": "LatencyPointResponse"
+      },
+      "title": "Response Get Latency Timeseries V1 Orgs  Org Id  Dashboard Latency Get"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/dashboard/sla-degradation ---
+Summary: Get Sla Degradation
+OperationId: get_sla_degradation_v1_orgs__org_id__dashboard_sla_degradation_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+  - period_days (in: query, required: False)
+    Schema: {
+    "type": "integer",
+    "maximum": 365,
+    "minimum": 1,
+    "default": 30,
+    "title": "Period Days"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "total_degradation_pct": {
+                  "type": "number",
+                  "title": "Total Degradation Pct"
+            },
+            "affected_services": {
+                  "type": "integer",
+                  "title": "Affected Services"
+            },
+            "period": {
+                  "type": "string",
+                  "title": "Period"
+            }
+      },
+      "type": "object",
+      "required": [
+            "total_degradation_pct",
+            "affected_services",
+            "period"
+      ],
+      "title": "SLADegradationResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/dashboard/summary ---
+Summary: Get Dashboard Summary
+OperationId: get_dashboard_summary_v1_orgs__org_id__dashboard_summary_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "active_dependencies_count": {
+                  "type": "integer",
+                  "title": "Active Dependencies Count"
+            },
+            "open_incidents_count": {
+                  "type": "integer",
+                  "title": "Open Incidents Count"
+            },
+            "overall_uptime_percentage": {
+                  "type": "number",
+                  "title": "Overall Uptime Percentage"
+            },
+            "alerts_today_count": {
+                  "type": "integer",
+                  "title": "Alerts Today Count"
+            }
+      },
+      "type": "object",
+      "required": [
+            "active_dependencies_count",
+            "open_incidents_count",
+            "overall_uptime_percentage",
+            "alerts_today_count"
+      ],
+      "title": "DashboardSummaryResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/dashboard/vendor-status ---
+Summary: Get Vendor Status
+OperationId: get_vendor_status_v1_orgs__org_id__dashboard_vendor_status_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "type": "array",
+      "items": {
+            "properties": {
+                  "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                  },
+                  "vendor_name": {
+                        "type": "string",
+                        "title": "Vendor Name"
+                  },
+                  "display_name": {
+                        "type": "string",
+                        "title": "Display Name"
+                  },
+                  "category": {
+                        "type": "string",
+                        "title": "Category"
+                  },
+                  "is_public": {
+                        "type": "boolean",
+                        "title": "Is Public"
+                  },
+                  "last_check_at": {
+                        "anyOf": [
+                              {
+                                    "type": "string",
+                                    "format": "date-time"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Last Check At"
+                  },
+                  "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                  },
+                  "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                  },
+                  "recent_status": {
+                        "type": "string",
+                        "title": "Recent Status",
+                        "default": "unknown"
+                  },
+                  "endpoints": {
+                        "items": {
+                              "properties": {
+                                    "id": {
+                                          "type": "string",
+                                          "format": "uuid",
+                                          "title": "Id"
+                                    },
+                                    "endpoint_url": {
+                                          "type": "string",
+                                          "title": "Endpoint Url"
+                                    },
+                                    "regions": {
+                                          "items": {
+                                                "type": "string"
+                                          },
+                                          "type": "array",
+                                          "title": "Regions"
+                                    },
+                                    "health_status": {
+                                          "type": "string",
+                                          "title": "Health Status"
+                                    },
+                                    "is_active": {
+                                          "type": "boolean",
+                                          "title": "Is Active"
+                                    },
+                                    "last_check_at": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string",
+                                                      "format": "date-time"
+                                                },
+                                                {
+                                                      "type": "null"
+                                                }
+                                          ],
+                                          "title": "Last Check At"
+                                    }
+                              },
+                              "type": "object",
+                              "required": [
+                                    "id",
+                                    "endpoint_url",
+                                    "regions",
+                                    "health_status",
+                                    "is_active"
+                              ],
+                              "title": "VendorEndpointResponse"
+                        },
+                        "type": "array",
+                        "title": "Endpoints"
+                  }
+            },
+            "type": "object",
+            "required": [
+                  "id",
+                  "vendor_name",
+                  "display_name",
+                  "category",
+                  "is_public",
+                  "created_at",
+                  "updated_at"
+            ],
+            "title": "VendorDetailResponse"
+      },
+      "title": "Response Get Vendor Status V1 Orgs  Org Id  Dashboard Vendor Status Get"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+

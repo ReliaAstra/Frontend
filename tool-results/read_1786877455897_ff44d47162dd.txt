@@ -1,0 +1,1052 @@
+     1→######## AUTH ENDPOINTS (12) ########
+     2→
+     3→--- POST /v1/auth/forgot-password ---
+     4→Summary: Forgot Password
+     5→Auth Required: False
+     6→Request Body:
+     7→  Content-Type: application/json, Required: True
+     8→  Schema: {
+     9→    "properties": {
+    10→        "email": {
+    11→            "type": "string",
+    12→            "format": "email",
+    13→            "title": "Email"
+    14→        }
+    15→    },
+    16→    "type": "object",
+    17→    "required": [
+    18→        "email"
+    19→    ],
+    20→    "title": "ForgotPasswordRequest"
+    21→}
+    22→Responses:
+    23→  200: Successful Response
+    24→    Schema: {
+    25→      "additionalProperties": true,
+    26→      "type": "object",
+    27→      "title": "Response Forgot Password V1 Auth Forgot Password Post"
+    28→}
+    29→  422: Validation Error
+    30→    Schema: {
+    31→      "properties": {
+    32→            "detail": {
+    33→                  "items": {
+    34→                        "properties": {
+    35→                              "loc": {
+    36→                                    "items": {
+    37→                                          "anyOf": [
+    38→                                                {
+    39→                                                      "type": "string"
+    40→                                                },
+    41→                                                {
+    42→                                                      "type": "integer"
+    43→                                                }
+    44→                                          ]
+    45→                                    },
+    46→                                    "type": "array",
+    47→                                    "title": "Location"
+    48→                              },
+    49→                              "msg": {
+    50→                                    "type": "string",
+    51→                                    "title": "Message"
+    52→                              },
+    53→                              "type": {
+    54→                                    "type": "string",
+    55→                                    "title": "Error Type"
+    56→                              },
+    57→                              "input": {
+    58→                                    "title": "Input"
+    59→                              },
+    60→                              "ctx": {
+    61→                                    "type": "object",
+    62→                                    "title": "Context"
+    63→                              }
+    64→                        },
+    65→                        "type": "object",
+    66→                        "required": [
+    67→                              "loc",
+    68→                              "msg",
+    69→                              "type"
+    70→                        ],
+    71→                        "title": "ValidationError"
+    72→                  },
+    73→                  "type": "array",
+    74→                  "title": "Detail"
+    75→            }
+    76→      },
+    77→      "type": "object",
+    78→      "title": "HTTPValidationError"
+    79→}
+    80→
+    81→--- POST /v1/auth/github ---
+    82→Summary: Github Auth Callback
+    83→Auth Required: False
+    84→Request Body:
+    85→  Content-Type: application/json, Required: True
+    86→  Schema: {
+    87→    "properties": {
+    88→        "code": {
+    89→            "type": "string",
+    90→            "title": "Code"
+    91→        },
+    92→        "state": {
+    93→            "anyOf": [
+    94→                {
+    95→                    "type": "string"
+    96→                },
+    97→                {
+    98→                    "type": "null"
+    99→                }
+   100→            ],
+   101→            "title": "State"
+   102→        }
+   103→    },
+   104→    "type": "object",
+   105→    "required": [
+   106→        "code"
+   107→    ],
+   108→    "title": "GitHubAuthRequest"
+   109→}
+   110→Responses:
+   111→  200: Successful Response
+   112→    Schema: {
+   113→      "properties": {
+   114→            "access_token": {
+   115→                  "type": "string",
+   116→                  "title": "Access Token"
+   117→            },
+   118→            "refresh_token": {
+   119→                  "type": "string",
+   120→                  "title": "Refresh Token"
+   121→            },
+   122→            "token_type": {
+   123→                  "type": "string",
+   124→                  "title": "Token Type",
+   125→                  "default": "bearer"
+   126→            },
+   127→            "expires_in": {
+   128→                  "type": "integer",
+   129→                  "title": "Expires In"
+   130→            },
+   131→            "is_new_user": {
+   132→                  "type": "boolean",
+   133→                  "title": "Is New User",
+   134→                  "default": false
+   135→            },
+   136→            "user_id": {
+   137→                  "type": "string",
+   138→                  "format": "uuid",
+   139→                  "title": "User Id"
+   140→            },
+   141→            "email": {
+   142→                  "type": "string",
+   143→                  "title": "Email"
+   144→            },
+   145→            "full_name": {
+   146→                  "type": "string",
+   147→                  "title": "Full Name"
+   148→            }
+   149→      },
+   150→      "type": "object",
+   151→      "required": [
+   152→            "access_token",
+   153→            "refresh_token",
+   154→            "expires_in",
+   155→            "user_id",
+   156→            "email",
+   157→            "full_name"
+   158→      ],
+   159→      "title": "OAuthAuthResponse",
+   160→      "description": "Shared response for both Google and GitHub OAuth."
+   161→}
+   162→  422: Validation Error
+   163→    Schema: {
+   164→      "properties": {
+   165→            "detail": {
+   166→                  "items": {
+   167→                        "properties": {
+   168→                              "loc": {
+   169→                                    "items": {
+   170→                                          "anyOf": [
+   171→                                                {
+   172→                                                      "type": "string"
+   173→                                                },
+   174→                                                {
+   175→                                                      "type": "integer"
+   176→                                                }
+   177→                                          ]
+   178→                                    },
+   179→                                    "type": "array",
+   180→                                    "title": "Location"
+   181→                              },
+   182→                              "msg": {
+   183→                                    "type": "string",
+   184→                                    "title": "Message"
+   185→                              },
+   186→                              "type": {
+   187→                                    "type": "string",
+   188→                                    "title": "Error Type"
+   189→                              },
+   190→                              "input": {
+   191→                                    "title": "Input"
+   192→                              },
+   193→                              "ctx": {
+   194→                                    "type": "object",
+   195→                                    "title": "Context"
+   196→                              }
+   197→                        },
+   198→                        "type": "object",
+   199→                        "required": [
+   200→                              "loc",
+   201→                              "msg",
+   202→                              "type"
+   203→                        ],
+   204→                        "title": "ValidationError"
+   205→                  },
+   206→                  "type": "array",
+   207→                  "title": "Detail"
+   208→            }
+   209→      },
+   210→      "type": "object",
+   211→      "title": "HTTPValidationError"
+   212→}
+   213→
+   214→--- GET /v1/auth/github/url ---
+   215→Summary: Get Github Auth Url
+   216→Auth Required: False
+   217→Responses:
+   218→  200: Successful Response
+   219→    Schema: {
+   220→      "properties": {
+   221→            "authorization_url": {
+   222→                  "type": "string",
+   223→                  "title": "Authorization Url"
+   224→            },
+   225→            "state": {
+   226→                  "type": "string",
+   227→                  "title": "State"
+   228→            }
+   229→      },
+   230→      "type": "object",
+   231→      "required": [
+   232→            "authorization_url",
+   233→            "state"
+   234→      ],
+   235→      "title": "GitHubAuthUrlResponse"
+   236→}
+   237→
+   238→--- POST /v1/auth/google ---
+   239→Summary: Google Auth Callback
+   240→Auth Required: False
+   241→Request Body:
+   242→  Content-Type: application/json, Required: True
+   243→  Schema: {
+   244→    "properties": {
+   245→        "code": {
+   246→            "type": "string",
+   247→            "title": "Code"
+   248→        },
+   249→        "state": {
+   250→            "anyOf": [
+   251→                {
+   252→                    "type": "string"
+   253→                },
+   254→                {
+   255→                    "type": "null"
+   256→                }
+   257→            ],
+   258→            "title": "State"
+   259→        }
+   260→    },
+   261→    "type": "object",
+   262→    "required": [
+   263→        "code"
+   264→    ],
+   265→    "title": "GoogleAuthRequest"
+   266→}
+   267→Responses:
+   268→  200: Successful Response
+   269→    Schema: {
+   270→      "properties": {
+   271→            "access_token": {
+   272→                  "type": "string",
+   273→                  "title": "Access Token"
+   274→            },
+   275→            "refresh_token": {
+   276→                  "type": "string",
+   277→                  "title": "Refresh Token"
+   278→            },
+   279→            "token_type": {
+   280→                  "type": "string",
+   281→                  "title": "Token Type",
+   282→                  "default": "bearer"
+   283→            },
+   284→            "expires_in": {
+   285→                  "type": "integer",
+   286→                  "title": "Expires In"
+   287→            },
+   288→            "is_new_user": {
+   289→                  "type": "boolean",
+   290→                  "title": "Is New User",
+   291→                  "default": false
+   292→            },
+   293→            "user_id": {
+   294→                  "type": "string",
+   295→                  "format": "uuid",
+   296→                  "title": "User Id"
+   297→            },
+   298→            "email": {
+   299→                  "type": "string",
+   300→                  "title": "Email"
+   301→            },
+   302→            "full_name": {
+   303→                  "type": "string",
+   304→                  "title": "Full Name"
+   305→            }
+   306→      },
+   307→      "type": "object",
+   308→      "required": [
+   309→            "access_token",
+   310→            "refresh_token",
+   311→            "expires_in",
+   312→            "user_id",
+   313→            "email",
+   314→            "full_name"
+   315→      ],
+   316→      "title": "OAuthAuthResponse",
+   317→      "description": "Shared response for both Google and GitHub OAuth."
+   318→}
+   319→  422: Validation Error
+   320→    Schema: {
+   321→      "properties": {
+   322→            "detail": {
+   323→                  "items": {
+   324→                        "properties": {
+   325→                              "loc": {
+   326→                                    "items": {
+   327→                                          "anyOf": [
+   328→                                                {
+   329→                                                      "type": "string"
+   330→                                                },
+   331→                                                {
+   332→                                                      "type": "integer"
+   333→                                                }
+   334→                                          ]
+   335→                                    },
+   336→                                    "type": "array",
+   337→                                    "title": "Location"
+   338→                              },
+   339→                              "msg": {
+   340→                                    "type": "string",
+   341→                                    "title": "Message"
+   342→                              },
+   343→                              "type": {
+   344→                                    "type": "string",
+   345→                                    "title": "Error Type"
+   346→                              },
+   347→                              "input": {
+   348→                                    "title": "Input"
+   349→                              },
+   350→                              "ctx": {
+   351→                                    "type": "object",
+   352→                                    "title": "Context"
+   353→                              }
+   354→                        },
+   355→                        "type": "object",
+   356→                        "required": [
+   357→                              "loc",
+   358→                              "msg",
+   359→                              "type"
+   360→                        ],
+   361→                        "title": "ValidationError"
+   362→                  },
+   363→                  "type": "array",
+   364→                  "title": "Detail"
+   365→            }
+   366→      },
+   367→      "type": "object",
+   368→      "title": "HTTPValidationError"
+   369→}
+   370→
+   371→--- GET /v1/auth/google/url ---
+   372→Summary: Get Google Auth Url
+   373→Auth Required: False
+   374→Responses:
+   375→  200: Successful Response
+   376→    Schema: {
+   377→      "properties": {
+   378→            "authorization_url": {
+   379→                  "type": "string",
+   380→                  "title": "Authorization Url"
+   381→            },
+   382→            "state": {
+   383→                  "type": "string",
+   384→                  "title": "State"
+   385→            }
+   386→      },
+   387→      "type": "object",
+   388→      "required": [
+   389→            "authorization_url",
+   390→            "state"
+   391→      ],
+   392→      "title": "GoogleAuthUrlResponse"
+   393→}
+   394→
+   395→--- POST /v1/auth/login ---
+   396→Summary: Login
+   397→Auth Required: False
+   398→Request Body:
+   399→  Content-Type: application/json, Required: True
+   400→  Schema: {
+   401→    "properties": {
+   402→        "email": {
+   403→            "type": "string",
+   404→            "format": "email",
+   405→            "title": "Email"
+   406→        },
+   407→        "password": {
+   408→            "type": "string",
+   409→            "title": "Password"
+   410→        }
+   411→    },
+   412→    "type": "object",
+   413→    "required": [
+   414→        "email",
+   415→        "password"
+   416→    ],
+   417→    "title": "LoginRequest"
+   418→}
+   419→Responses:
+   420→  200: Successful Response
+   421→    Schema: {
+   422→      "properties": {
+   423→            "access_token": {
+   424→                  "type": "string",
+   425→                  "title": "Access Token"
+   426→            },
+   427→            "refresh_token": {
+   428→                  "type": "string",
+   429→                  "title": "Refresh Token"
+   430→            },
+   431→            "token_type": {
+   432→                  "type": "string",
+   433→                  "title": "Token Type",
+   434→                  "default": "bearer"
+   435→            },
+   436→            "expires_in": {
+   437→                  "type": "integer",
+   438→                  "title": "Expires In"
+   439→            }
+   440→      },
+   441→      "type": "object",
+   442→      "required": [
+   443→            "access_token",
+   444→            "refresh_token",
+   445→            "expires_in"
+   446→      ],
+   447→      "title": "TokenResponse"
+   448→}
+   449→  422: Validation Error
+   450→    Schema: {
+   451→      "properties": {
+   452→            "detail": {
+   453→                  "items": {
+   454→                        "properties": {
+   455→                              "loc": {
+   456→                                    "items": {
+   457→                                          "anyOf": [
+   458→                                                {
+   459→                                                      "type": "string"
+   460→                                                },
+   461→                                                {
+   462→                                                      "type": "integer"
+   463→                                                }
+   464→                                          ]
+   465→                                    },
+   466→                                    "type": "array",
+   467→                                    "title": "Location"
+   468→                              },
+   469→                              "msg": {
+   470→                                    "type": "string",
+   471→                                    "title": "Message"
+   472→                              },
+   473→                              "type": {
+   474→                                    "type": "string",
+   475→                                    "title": "Error Type"
+   476→                              },
+   477→                              "input": {
+   478→                                    "title": "Input"
+   479→                              },
+   480→                              "ctx": {
+   481→                                    "type": "object",
+   482→                                    "title": "Context"
+   483→                              }
+   484→                        },
+   485→                        "type": "object",
+   486→                        "required": [
+   487→                              "loc",
+   488→                              "msg",
+   489→                              "type"
+   490→                        ],
+   491→                        "title": "ValidationError"
+   492→                  },
+   493→                  "type": "array",
+   494→                  "title": "Detail"
+   495→            }
+   496→      },
+   497→      "type": "object",
+   498→      "title": "HTTPValidationError"
+   499→}
+   500→
+   501→--- POST /v1/auth/logout ---
+   502→Summary: Logout
+   503→Auth Required: False
+   504→Request Body:
+   505→  Content-Type: application/json, Required: True
+   506→  Schema: {
+   507→    "properties": {
+   508→        "refresh_token": {
+   509→            "type": "string",
+   510→            "title": "Refresh Token"
+   511→        }
+   512→    },
+   513→    "type": "object",
+   514→    "required": [
+   515→        "refresh_token"
+   516→    ],
+   517→    "title": "LogoutRequest"
+   518→}
+   519→Responses:
+   520→  204: Successful Response
+   521→    Body: empty
+   522→  422: Validation Error
+   523→    Schema: {
+   524→      "properties": {
+   525→            "detail": {
+   526→                  "items": {
+   527→                        "properties": {
+   528→                              "loc": {
+   529→                                    "items": {
+   530→                                          "anyOf": [
+   531→                                                {
+   532→                                                      "type": "string"
+   533→                                                },
+   534→                                                {
+   535→                                                      "type": "integer"
+   536→                                                }
+   537→                                          ]
+   538→                                    },
+   539→                                    "type": "array",
+   540→                                    "title": "Location"
+   541→                              },
+   542→                              "msg": {
+   543→                                    "type": "string",
+   544→                                    "title": "Message"
+   545→                              },
+   546→                              "type": {
+   547→                                    "type": "string",
+   548→                                    "title": "Error Type"
+   549→                              },
+   550→                              "input": {
+   551→                                    "title": "Input"
+   552→                              },
+   553→                              "ctx": {
+   554→                                    "type": "object",
+   555→                                    "title": "Context"
+   556→                              }
+   557→                        },
+   558→                        "type": "object",
+   559→                        "required": [
+   560→                              "loc",
+   561→                              "msg",
+   562→                              "type"
+   563→                        ],
+   564→                        "title": "ValidationError"
+   565→                  },
+   566→                  "type": "array",
+   567→                  "title": "Detail"
+   568→            }
+   569→      },
+   570→      "type": "object",
+   571→      "title": "HTTPValidationError"
+   572→}
+   573→
+   574→--- POST /v1/auth/refresh ---
+   575→Summary: Refresh Token
+   576→Auth Required: False
+   577→Request Body:
+   578→  Content-Type: application/json, Required: True
+   579→  Schema: {
+   580→    "properties": {
+   581→        "refresh_token": {
+   582→            "type": "string",
+   583→            "title": "Refresh Token"
+   584→        }
+   585→    },
+   586→    "type": "object",
+   587→    "required": [
+   588→        "refresh_token"
+   589→    ],
+   590→    "title": "RefreshRequest"
+   591→}
+   592→Responses:
+   593→  200: Successful Response
+   594→    Schema: {
+   595→      "properties": {
+   596→            "access_token": {
+   597→                  "type": "string",
+   598→                  "title": "Access Token"
+   599→            },
+   600→            "refresh_token": {
+   601→                  "type": "string",
+   602→                  "title": "Refresh Token"
+   603→            },
+   604→            "token_type": {
+   605→                  "type": "string",
+   606→                  "title": "Token Type",
+   607→                  "default": "bearer"
+   608→            },
+   609→            "expires_in": {
+   610→                  "type": "integer",
+   611→                  "title": "Expires In"
+   612→            }
+   613→      },
+   614→      "type": "object",
+   615→      "required": [
+   616→            "access_token",
+   617→            "refresh_token",
+   618→            "expires_in"
+   619→      ],
+   620→      "title": "TokenResponse"
+   621→}
+   622→  422: Validation Error
+   623→    Schema: {
+   624→      "properties": {
+   625→            "detail": {
+   626→                  "items": {
+   627→                        "properties": {
+   628→                              "loc": {
+   629→                                    "items": {
+   630→                                          "anyOf": [
+   631→                                                {
+   632→                                                      "type": "string"
+   633→                                                },
+   634→                                                {
+   635→                                                      "type": "integer"
+   636→                                                }
+   637→                                          ]
+   638→                                    },
+   639→                                    "type": "array",
+   640→                                    "title": "Location"
+   641→                              },
+   642→                              "msg": {
+   643→                                    "type": "string",
+   644→                                    "title": "Message"
+   645→                              },
+   646→                              "type": {
+   647→                                    "type": "string",
+   648→                                    "title": "Error Type"
+   649→                              },
+   650→                              "input": {
+   651→                                    "title": "Input"
+   652→                              },
+   653→                              "ctx": {
+   654→                                    "type": "object",
+   655→                                    "title": "Context"
+   656→                              }
+   657→                        },
+   658→                        "type": "object",
+   659→                        "required": [
+   660→                              "loc",
+   661→                              "msg",
+   662→                              "type"
+   663→                        ],
+   664→                        "title": "ValidationError"
+   665→                  },
+   666→                  "type": "array",
+   667→                  "title": "Detail"
+   668→            }
+   669→      },
+   670→      "type": "object",
+   671→      "title": "HTTPValidationError"
+   672→}
+   673→
+   674→--- POST /v1/auth/register ---
+   675→Summary: Register
+   676→Auth Required: False
+   677→Request Body:
+   678→  Content-Type: application/json, Required: True
+   679→  Schema: {
+   680→    "properties": {
+   681→        "email": {
+   682→            "type": "string",
+   683→            "format": "email",
+   684→            "title": "Email"
+   685→        },
+   686→        "password": {
+   687→            "type": "string",
+   688→            "title": "Password"
+   689→        },
+   690→        "full_name": {
+   691→            "type": "string",
+   692→            "title": "Full Name"
+   693→        },
+   694→        "org_name": {
+   695→            "anyOf": [
+   696→                {
+   697→                    "type": "string"
+   698→                },
+   699→                {
+   700→                    "type": "null"
+   701→                }
+   702→            ],
+   703→            "title": "Org Name"
+   704→        }
+   705→    },
+   706→    "type": "object",
+   707→    "required": [
+   708→        "email",
+   709→        "password",
+   710→        "full_name"
+   711→    ],
+   712→    "title": "RegisterRequest"
+   713→}
+   714→Responses:
+   715→  201: Successful Response
+   716→    Schema: {
+   717→      "properties": {
+   718→            "access_token": {
+   719→                  "type": "string",
+   720→                  "title": "Access Token"
+   721→            },
+   722→            "refresh_token": {
+   723→                  "type": "string",
+   724→                  "title": "Refresh Token"
+   725→            },
+   726→            "token_type": {
+   727→                  "type": "string",
+   728→                  "title": "Token Type",
+   729→                  "default": "bearer"
+   730→            },
+   731→            "expires_in": {
+   732→                  "type": "integer",
+   733→                  "title": "Expires In"
+   734→            }
+   735→      },
+   736→      "type": "object",
+   737→      "required": [
+   738→            "access_token",
+   739→            "refresh_token",
+   740→            "expires_in"
+   741→      ],
+   742→      "title": "TokenResponse"
+   743→}
+   744→  422: Validation Error
+   745→    Schema: {
+   746→      "properties": {
+   747→            "detail": {
+   748→                  "items": {
+   749→                        "properties": {
+   750→                              "loc": {
+   751→                                    "items": {
+   752→                                          "anyOf": [
+   753→                                                {
+   754→                                                      "type": "string"
+   755→                                                },
+   756→                                                {
+   757→                                                      "type": "integer"
+   758→                                                }
+   759→                                          ]
+   760→                                    },
+   761→                                    "type": "array",
+   762→                                    "title": "Location"
+   763→                              },
+   764→                              "msg": {
+   765→                                    "type": "string",
+   766→                                    "title": "Message"
+   767→                              },
+   768→                              "type": {
+   769→                                    "type": "string",
+   770→                                    "title": "Error Type"
+   771→                              },
+   772→                              "input": {
+   773→                                    "title": "Input"
+   774→                              },
+   775→                              "ctx": {
+   776→                                    "type": "object",
+   777→                                    "title": "Context"
+   778→                              }
+   779→                        },
+   780→                        "type": "object",
+   781→                        "required": [
+   782→                              "loc",
+   783→                              "msg",
+   784→                              "type"
+   785→                        ],
+   786→                        "title": "ValidationError"
+   787→                  },
+   788→                  "type": "array",
+   789→                  "title": "Detail"
+   790→            }
+   791→      },
+   792→      "type": "object",
+   793→      "title": "HTTPValidationError"
+   794→}
+   795→
+   796→--- POST /v1/auth/reset-password ---
+   797→Summary: Reset Password
+   798→Auth Required: False
+   799→Request Body:
+   800→  Content-Type: application/json, Required: True
+   801→  Schema: {
+   802→    "properties": {
+   803→        "token": {
+   804→            "type": "string",
+   805→            "title": "Token"
+   806→        },
+   807→        "new_password": {
+   808→            "type": "string",
+   809→            "title": "New Password"
+   810→        }
+   811→    },
+   812→    "type": "object",
+   813→    "required": [
+   814→        "token",
+   815→        "new_password"
+   816→    ],
+   817→    "title": "ResetPasswordRequest"
+   818→}
+   819→Responses:
+   820→  200: Successful Response
+   821→    Schema: {
+   822→      "properties": {
+   823→            "message": {
+   824→                  "type": "string",
+   825→                  "title": "Message"
+   826→            }
+   827→      },
+   828→      "type": "object",
+   829→      "required": [
+   830→            "message"
+   831→      ],
+   832→      "title": "ResetPasswordResponse"
+   833→}
+   834→  422: Validation Error
+   835→    Schema: {
+   836→      "properties": {
+   837→            "detail": {
+   838→                  "items": {
+   839→                        "properties": {
+   840→                              "loc": {
+   841→                                    "items": {
+   842→                                          "anyOf": [
+   843→                                                {
+   844→                                                      "type": "string"
+   845→                                                },
+   846→                                                {
+   847→                                                      "type": "integer"
+   848→                                                }
+   849→                                          ]
+   850→                                    },
+   851→                                    "type": "array",
+   852→                                    "title": "Location"
+   853→                              },
+   854→                              "msg": {
+   855→                                    "type": "string",
+   856→                                    "title": "Message"
+   857→                              },
+   858→                              "type": {
+   859→                                    "type": "string",
+   860→                                    "title": "Error Type"
+   861→                              },
+   862→                              "input": {
+   863→                                    "title": "Input"
+   864→                              },
+   865→                              "ctx": {
+   866→                                    "type": "object",
+   867→                                    "title": "Context"
+   868→                              }
+   869→                        },
+   870→                        "type": "object",
+   871→                        "required": [
+   872→                              "loc",
+   873→                              "msg",
+   874→                              "type"
+   875→                        ],
+   876→                        "title": "ValidationError"
+   877→                  },
+   878→                  "type": "array",
+   879→                  "title": "Detail"
+   880→            }
+   881→      },
+   882→      "type": "object",
+   883→      "title": "HTTPValidationError"
+   884→}
+   885→
+   886→--- POST /v1/auth/send-verification ---
+   887→Summary: Send Verification Email
+   888→Auth Required: False
+   889→Request Body:
+   890→  Content-Type: application/json, Required: True
+   891→  Schema: {
+   892→    "properties": {
+   893→        "email": {
+   894→            "type": "string",
+   895→            "format": "email",
+   896→            "title": "Email"
+   897→        }
+   898→    },
+   899→    "type": "object",
+   900→    "required": [
+   901→        "email"
+   902→    ],
+   903→    "title": "SendVerificationRequest"
+   904→}
+   905→Responses:
+   906→  200: Successful Response
+   907→    Schema: {
+   908→      "additionalProperties": true,
+   909→      "type": "object",
+   910→      "title": "Response Send Verification Email V1 Auth Send Verification Post"
+   911→}
+   912→  422: Validation Error
+   913→    Schema: {
+   914→      "properties": {
+   915→            "detail": {
+   916→                  "items": {
+   917→                        "properties": {
+   918→                              "loc": {
+   919→                                    "items": {
+   920→                                          "anyOf": [
+   921→                                                {
+   922→                                                      "type": "string"
+   923→                                                },
+   924→                                                {
+   925→                                                      "type": "integer"
+   926→                                                }
+   927→                                          ]
+   928→                                    },
+   929→                                    "type": "array",
+   930→                                    "title": "Location"
+   931→                              },
+   932→                              "msg": {
+   933→                                    "type": "string",
+   934→                                    "title": "Message"
+   935→                              },
+   936→                              "type": {
+   937→                                    "type": "string",
+   938→                                    "title": "Error Type"
+   939→                              },
+   940→                              "input": {
+   941→                                    "title": "Input"
+   942→                              },
+   943→                              "ctx": {
+   944→                                    "type": "object",
+   945→                                    "title": "Context"
+   946→                              }
+   947→                        },
+   948→                        "type": "object",
+   949→                        "required": [
+   950→                              "loc",
+   951→                              "msg",
+   952→                              "type"
+   953→                        ],
+   954→                        "title": "ValidationError"
+   955→                  },
+   956→                  "type": "array",
+   957→                  "title": "Detail"
+   958→            }
+   959→      },
+   960→      "type": "object",
+   961→      "title": "HTTPValidationError"
+   962→}
+   963→
+   964→--- POST /v1/auth/verify-email ---
+   965→Summary: Verify Email
+   966→Auth Required: False
+   967→Request Body:
+   968→  Content-Type: application/json, Required: True
+   969→  Schema: {
+   970→    "properties": {
+   971→        "token": {
+   972→            "type": "string",
+   973→            "title": "Token"
+   974→        }
+   975→    },
+   976→    "type": "object",
+   977→    "required": [
+   978→        "token"
+   979→    ],
+   980→    "title": "VerifyEmailRequest"
+   981→}
+   982→Responses:
+   983→  200: Successful Response
+   984→    Schema: {
+   985→      "properties": {
+   986→            "message": {
+   987→                  "type": "string",
+   988→                  "title": "Message"
+   989→            },
+   990→            "is_email_verified": {
+   991→                  "type": "boolean",
+   992→                  "title": "Is Email Verified"
+   993→            }
+   994→      },
+   995→      "type": "object",
+   996→      "required": [
+   997→            "message",
+   998→            "is_email_verified"
+   999→      ],
+  1000→      "title": "VerifyEmailResponse"
+  1001→}
+  1002→  422: Validation Error
+  1003→    Schema: {
+  1004→      "properties": {
+  1005→            "detail": {
+  1006→                  "items": {
+  1007→                        "properties": {
+  1008→                              "loc": {
+  1009→                                    "items": {
+  1010→                                          "anyOf": [
+  1011→                                                {
+  1012→                                                      "type": "string"
+  1013→                                                },
+  1014→                                                {
+  1015→                                                      "type": "integer"
+  1016→                                                }
+  1017→                                          ]
+  1018→                                    },
+  1019→                                    "type": "array",
+  1020→                                    "title": "Location"
+  1021→                              },
+  1022→                              "msg": {
+  1023→                                    "type": "string",
+  1024→                                    "title": "Message"
+  1025→                              },
+  1026→                              "type": {
+  1027→                                    "type": "string",
+  1028→                                    "title": "Error Type"
+  1029→                              },
+  1030→                              "input": {
+  1031→                                    "title": "Input"
+  1032→                              },
+  1033→                              "ctx": {
+  1034→                                    "type": "object",
+  1035→                                    "title": "Context"
+  1036→                              }
+  1037→                        },
+  1038→                        "type": "object",
+  1039→                        "required": [
+  1040→                              "loc",
+  1041→                              "msg",
+  1042→                              "type"
+  1043→                        ],
+  1044→                        "title": "ValidationError"
+  1045→                  },
+  1046→                  "type": "array",
+  1047→                  "title": "Detail"
+  1048→            }
+  1049→      },
+  1050→      "type": "object",
+  1051→      "title": "HTTPValidationError"
+  1052→}

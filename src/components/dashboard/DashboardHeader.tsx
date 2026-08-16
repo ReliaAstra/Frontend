@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,10 +9,16 @@ import {
   ChevronRight,
   Menu,
   Zap,
+  X,
+  AlertTriangle,
+  Activity,
+  FileText,
+  Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { PAGE_TITLES } from "@/components/dashboard/DashboardSidebar";
+import { useRealtime, type RealtimeEvent } from "@/hooks/useRealtime";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -22,6 +28,40 @@ export interface DashboardHeaderProps {
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   onOpenMobileSidebar?: () => void;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Notification event item                                            */
+/* ------------------------------------------------------------------ */
+
+function NotifEventItem({ event }: { event: RealtimeEvent }) {
+  const iconMap: Record<string, { icon: typeof AlertTriangle; color: string }> = {
+    "incident.new": { icon: AlertTriangle, color: "#DC2626" },
+    "incident.resolved": { icon: Activity, color: "#16A34A" },
+    "incident.updated": { icon: AlertTriangle, color: "#D97706" },
+    "check.completed": { icon: Activity, color: "#0891B2" },
+    "dependency.down": { icon: AlertTriangle, color: "#DC2626" },
+    "dependency.recovered": { icon: Activity, color: "#16A34A" },
+    "evidence.generated": { icon: FileText, color: "#8B5CF6" },
+  };
+
+  const config = iconMap[event.type] || { icon: Activity, color: "#52525B" };
+  const Icon = config.icon;
+  const label = event.type.replace(".", " ").replace(/_/g, " ");
+
+  return (
+    <div className="px-4 py-2.5 flex items-start gap-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors border-b border-[rgba(255,255,255,0.03)] last:border-0">
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: `${config.color}15` }}>
+        <Icon className="w-3.5 h-3.5" style={{ color: config.color }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-[#FAFAFA] capitalize">{label}</p>
+        <p className="text-[10px] text-[#52525B] mt-0.5">
+          {new Date(event.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,6 +105,13 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const { user, currentOrg } = useAuth();
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+
+  // Real-time events
+  const { events, hasUnread, clearEvents, status: realtimeStatus } = useRealtime({
+    events: ["incident.new", "incident.resolved", "check.completed", "dependency.down", "dependency.recovered", "evidence.generated"],
+    interval: 8000,
+  });
 
   const crumbs = buildBreadcrumbs(pathname);
   const pageTitle = crumbs.length > 0 ? crumbs[crumbs.length - 1].label : "Dashboard";
@@ -144,15 +191,62 @@ export function DashboardHeader({
           </Link>
         )}
 
-        {/* Notification bell */}
-        <button
-          className="relative p-2 rounded-lg text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell className="w-[18px] h-[18px]" />
-          {/* Unread dot — static for now */}
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#0891B2]" />
-        </button>
+        {/* Notification bell with real-time events */}
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifPanel((v) => !v)}
+            className="relative p-2 rounded-lg text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+            aria-label="Notifications"
+          >
+            <Bell className="w-[18px] h-[18px]" />
+            {hasUnread && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#DC2626] animate-pulse-dot" />
+            )}
+          </button>
+
+          {/* Notification dropdown panel */}
+          {showNotifPanel && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowNotifPanel(false)} />
+              <div className="absolute right-0 top-full mt-2 w-80 bg-[#131318] border border-[rgba(255,255,255,0.08)] rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(255,255,255,0.06)]">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-[#FAFAFA]">Live Updates</h3>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                      realtimeStatus === "connected" || realtimeStatus === "polling"
+                        ? "bg-[rgba(22,163,74,0.15)] text-[#16A34A]"
+                        : "bg-[rgba(220,38,38,0.15)] text-[#DC2626]"
+                    )}>
+                      <Radio className="w-2.5 h-2.5" />
+                      {realtimeStatus === "connected" || realtimeStatus === "polling" ? "Live" : "Offline"}
+                    </span>
+                  </div>
+                  {hasUnread && (
+                    <button
+                      onClick={clearEvents}
+                      className="text-[11px] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-72 overflow-y-auto console-scroll">
+                  {events.length === 0 ? (
+                    <div className="px-4 py-6 text-center">
+                      <Activity className="w-8 h-8 text-[#52525B] mx-auto mb-2" />
+                      <p className="text-xs text-[#52525B]">No new events. Polling every 8s.</p>
+                    </div>
+                  ) : (
+                    events.slice(0, 15).map((event, i) => (
+                      <NotifEventItem key={`${event.timestamp}-${i}`} event={event} />
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* User avatar */}
         {user && (

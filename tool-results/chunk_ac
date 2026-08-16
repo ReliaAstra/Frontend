@@ -1,0 +1,1000 @@
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "incident_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Incident Id"
+                }, 
+                "correlated_dependency_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Correlated Dependency Id"
+                }, 
+                "correlation_confidence": {
+                        "type": "number", 
+                        "title": "Correlation Confidence"
+                }, 
+                "time_window_seconds": {
+                        "type": "integer", 
+                        "title": "Time Window Seconds"
+                }, 
+                "correlation_method": {
+                        "type": "string", 
+                        "title": "Correlation Method"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "incident_id", 
+                "correlated_dependency_id", 
+                "correlation_confidence", 
+                "time_window_seconds", 
+                "correlation_method", 
+                "created_at"
+        ], 
+        "title": "IncidentCorrelationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/incidents/{inc_id}/evidence
+  Summary: Get Incident Evidence
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    inc_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Inc Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "incident_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Incident Id"
+                }, 
+                "file_size_bytes": {
+                        "type": "integer", 
+                        "title": "File Size Bytes"
+                }, 
+                "checksum": {
+                        "type": "string", 
+                        "title": "Checksum"
+                }, 
+                "generated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Generated At"
+                }, 
+                "expires_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Expires At"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "incident_id", 
+                "file_size_bytes", 
+                "checksum", 
+                "generated_at", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "EvidenceReportResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## EVIDENCE ENDPOINTS (2) ########
+
+GET /v1/orgs/{org_id}/evidence/{report_id}
+  Summary: Get Evidence Report
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    report_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Report Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "incident_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Incident Id"
+                }, 
+                "file_size_bytes": {
+                        "type": "integer", 
+                        "title": "File Size Bytes"
+                }, 
+                "checksum": {
+                        "type": "string", 
+                        "title": "Checksum"
+                }, 
+                "generated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Generated At"
+                }, 
+                "expires_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Expires At"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }, 
+                "download_url": {
+                        "type": "string", 
+                        "title": "Download Url"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "incident_id", 
+                "file_size_bytes", 
+                "checksum", 
+                "generated_at", 
+                "created_at", 
+                "updated_at", 
+                "download_url"
+        ], 
+        "title": "EvidenceReportDownloadResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/evidence/{report_id}/regenerate
+  Summary: Regenerate Evidence Report
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    report_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Report Id"}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "incident_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Incident Id"
+                }, 
+                "file_size_bytes": {
+                        "type": "integer", 
+                        "title": "File Size Bytes"
+                }, 
+                "checksum": {
+                        "type": "string", 
+                        "title": "Checksum"
+                }, 
+                "generated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Generated At"
+                }, 
+                "expires_at": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Expires At"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "incident_id", 
+                "file_size_bytes", 
+                "checksum", 
+                "generated_at", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "EvidenceReportResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## CLIENTS ENDPOINTS (2) ########
+
+GET /v1/orgs/{org_id}/clients/{client_id}/applications
+  Summary: List Applications
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    client_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Client Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "client_id": {
+                                "anyOf": [
+                                        {
+                                                "type": "string", 
+                                                "format": "uuid"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Client Id"
+                        }, 
+                        "name": {
+                                "type": "string", 
+                                "title": "Name"
+                        }, 
+                        "description": {
+                                "anyOf": [
+                                        {
+                                                "type": "string"
+                                        }, 
+                                        {
+                                                "type": "null"
+                                        }
+                                ], 
+                                "title": "Description"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "org_id", 
+                        "client_id", 
+                        "name", 
+                        "description", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "ApplicationResponse"
+        }, 
+        "title": "Response List Applications V1 Orgs  Org Id  Clients  Client Id  Applications Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/clients/{client_id}/applications
+  Summary: Create Application
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    client_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Client Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "name": {
+                  "type": "string", 
+                  "maxLength": 150, 
+                  "minLength": 1, 
+                  "title": "Name"
+            }, 
+            "description": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "maxLength": 500
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Description"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "name"
+      ], 
+      "title": "ApplicationCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "client_id": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "uuid"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Client Id"
+                }, 
+                "name": {
+                        "type": "string", 
+                        "title": "Name"
+                }, 
+                "description": {
+                        "anyOf": [
+                                {
+                                        "type": "string"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Description"
+                }, 
+                "created_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Created At"
+                }, 
+                "updated_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Updated At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "client_id", 
+                "name", 
+                "description", 
+                "created_at", 
+                "updated_at"
+        ], 
+        "title": "ApplicationResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## BILLING ENDPOINTS (6) ########
+
+POST /v1/billing/verify
+  Summary: Verify Transaction
+  Auth Required: False
+  Parameters:
+    reference (in: query, required: True)
+      Schema: {"type": "string", "minLength": 1, "maxLength": 200, "title": "Reference"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "verified": {
+                        "type": "boolean", 
+                        "title": "Verified"
+                }, 
+                "plan": {
+                        "type": "string", 
+                        "title": "Plan"
+                }, 
+                "reference": {
+                        "type": "string", 
+                        "title": "Reference"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "verified", 
+                "plan", 
+                "reference"
+        ], 
+        "title": "VerifyTransactionResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/billing/webhook
+  Summary: Paystack Webhook
+  Auth Required: False
+  Parameters:
+    x-paystack-signature (in: header, required: False)
+      Schema: {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "X-Paystack-Signature"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "received": {
+                        "type": "boolean", 
+                        "title": "Received"
+                }, 
+                "event_type": {
+                        "type": "string", 
+                        "title": "Event Type"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "received", 
+                "event_type"
+        ], 
+        "title": "PaystackWebhookResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/billing/founding-spot/claim
+  Summary: Claim Founding Spot
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: False
+    Schema: {
+      "anyOf": [
+            {
+                  "properties": {
+                        "email": {
+                              "anyOf": [
+                                    {
+                                          "type": "string"
+                                    }, 
+                                    {
+                                          "type": "null"
+                                    }
+                              ], 
+                              "title": "Email"
+                        }
+                  }, 
+                  "type": "object", 
+                  "title": "ClaimFoundingSpotRequest", 
+                  "description": "Request body for claiming a founding customer spot."
+            }, 
+            {
+                  "type": "null"
+            }
+      ], 
+      "title": "Body"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "success": {
+                        "type": "boolean", 
+                        "title": "Success"
+                }, 
+                "message": {
+                        "type": "string", 
+                        "title": "Message"
+                }, 
+                "is_founding_customer": {
+                        "type": "boolean", 
+                        "title": "Is Founding Customer"
+                }, 
+                "founding_discount_pct": {
+                        "type": "integer", 
+                        "title": "Founding Discount Pct"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "success", 
+                "message", 
+                "is_founding_customer", 
+                "founding_discount_pct"
+        ], 
+        "title": "ClaimFoundingSpotResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/billing/founding-spots
+  Summary: Get Founding Spots
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "total_spots": {
+                        "type": "integer", 
+                        "title": "Total Spots"
+                }, 
+                "spots_taken": {
+                        "type": "integer", 
+                        "title": "Spots Taken"
+                }, 
+                "spots_remaining": {
+                        "type": "integer", 
+                        "title": "Spots Remaining"
+                }, 
+                "founding_discount_pct": {
+                        "type": "integer", 
+                        "title": "Founding Discount Pct"
+                }, 
+                "eligible_plans": {
+                        "items": {
+                                "type": "string"
+                        }, 
+                        "type": "array", 
+                        "title": "Eligible Plans"
+                }, 
+                "plan_discounts": {
+                        "additionalProperties": {
+                                "additionalProperties": true, 
+                                "type": "object"
+                        }, 
+                        "type": "object", 
+                        "title": "Plan Discounts"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "total_spots", 
+                "spots_taken", 
+                "spots_remaining", 
+                "founding_discount_pct", 
+                "eligible_plans", 
+                "plan_discounts"
+        ], 
+        "title": "FoundingSpotsResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/billing/initialize
+  Summary: Initialize Payment
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "plan": {
+                  "type": "string", 
+                  "maxLength": 50, 
+                  "minLength": 1, 
+                  "title": "Plan"
+            }, 
+            "email": {
+                  "anyOf": [
+                        {
+                              "type": "string", 
+                              "format": "email"
+                        }, 
+                        {
+                              "type": "null"
+                        }
+                  ], 
+                  "title": "Email"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "plan"
+      ], 
+      "title": "InitializePaymentRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "authorization_url": {
+                        "type": "string", 
+                        "title": "Authorization Url"
+                }, 
+                "reference": {
+                        "type": "string", 
+                        "title": "Reference"
+                }, 
+                "access_code": {
+                        "type": "string", 
+                        "title": "Access Code"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "authorization_url", 
+                "reference", 
+                "access_code"
+        ], 
+        "title": "InitializePaymentResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+GET /v1/orgs/{org_id}/billing/plan
+  Summary: Get Organization Plan
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "plan": {
+                        "type": "string", 
+                        "title": "Plan"
+                }, 
+                "max_dependencies": {
+                        "type": "integer", 
+                        "title": "Max Dependencies"
+                }, 
+                "min_check_interval_seconds": {
+                        "type": "integer", 
+                        "title": "Min Check Interval Seconds"
+                }, 
+                "subscription_status": {
+                        "anyOf": [
+                                {
+                                        "type": "string"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Subscription Status"
+                }, 
+                "current_period_end": {
+                        "anyOf": [
+                                {
+                                        "type": "string", 
+                                        "format": "date-time"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Current Period End"
+                }, 
+                "is_founding_customer": {
+                        "type": "boolean", 
+                        "title": "Is Founding Customer", 
+                        "default": false
+                }, 
+                "founding_discount_pct": {
+                        "type": "integer", 
+                        "title": "Founding Discount Pct", 
+                        "default": 0
+                }, 
+                "price_usd": {
+                        "type": "integer", 
+                        "title": "Price Usd", 
+                        "default": 0
+                }, 
+                "discounted_price_usd": {
+                        "anyOf": [
+                                {
+                                        "type": "integer"
+                                }, 
+                                {
+                                        "type": "null"
+                                }
+                        ], 
+                        "title": "Discounted Price Usd"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "org_id", 
+                "plan", 
+                "max_dependencies", 
+                "min_check_interval_seconds"
+        ], 
+        "title": "PlanDetailsResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## MEMBERS ENDPOINTS (2) ########
+
+DELETE /v1/orgs/{org_id}/members/{member_id}
+  Summary: Remove Organization Member
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    member_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Member Id"}
+  Responses:
+    204: Successful Response
+      Body: empty
+    422: Validation Error -> HTTPValidationError (see above)
+
+PATCH /v1/orgs/{org_id}/members/{member_id}
+  Summary: Change Organization Member Role
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+    member_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Member Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "role": {
+                  "type": "string", 
+                  "enum": [
+                        "owner", 
+                        "admin", 
+                        "member", 
+                        "viewer"
+                  ], 
+                  "title": "Role"
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "role"
+      ], 
+      "title": "OrganizationMemberRoleUpdateRequest"
+}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Org Id"
+                }, 
+                "user_id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "User Id"
+                }, 
+                "role": {
+                        "type": "string", 
+                        "title": "Role"
+                }, 
+                "joined_at": {
+                        "type": "string", 
+                        "format": "date-time", 
+                        "title": "Joined At"
+                }
+        }, 
+        "type": "object", 
+        "required": [
+                "id", 
+                "org_id", 
+                "user_id", 
+                "role", 
+                "joined_at"
+        ], 
+        "title": "OrganizationMemberResponse"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+######## NOTIFICATIONS ENDPOINTS (6) ########
+
+GET /v1/orgs/{org_id}/notifications/configs
+  Summary: List Alert Configs
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Responses:
+    200: Successful Response
+      Schema: {
+        "type": "array", 
+        "items": {
+                "properties": {
+                        "id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Id"
+                        }, 
+                        "org_id": {
+                                "type": "string", 
+                                "format": "uuid", 
+                                "title": "Org Id"
+                        }, 
+                        "channel_type": {
+                                "type": "string", 
+                                "title": "Channel Type"
+                        }, 
+                        "is_active": {
+                                "type": "boolean", 
+                                "title": "Is Active"
+                        }, 
+                        "created_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Created At"
+                        }, 
+                        "updated_at": {
+                                "type": "string", 
+                                "format": "date-time", 
+                                "title": "Updated At"
+                        }
+                }, 
+                "type": "object", 
+                "required": [
+                        "id", 
+                        "org_id", 
+                        "channel_type", 
+                        "is_active", 
+                        "created_at", 
+                        "updated_at"
+                ], 
+                "title": "AlertConfigResponse"
+        }, 
+        "title": "Response List Alert Configs V1 Orgs  Org Id  Notifications Configs Get"
+}
+    422: Validation Error -> HTTPValidationError (see above)
+
+POST /v1/orgs/{org_id}/notifications/configs
+  Summary: Create Alert Config
+  Auth Required: True
+  Parameters:
+    org_id (in: path, required: True)
+      Schema: {"type": "string", "format": "uuid", "title": "Org Id"}
+  Request Body:
+    Content-Type: application/json, Required: True
+    Schema: {
+      "properties": {
+            "channel_type": {
+                  "type": "string", 
+                  "enum": [
+                        "email", 
+                        "slack", 
+                        "pagerduty", 
+                        "webhook"
+                  ], 
+                  "title": "ChannelType"
+            }, 
+            "config": {
+                  "additionalProperties": true, 
+                  "type": "object", 
+                  "title": "Config"
+            }, 
+            "is_active": {
+                  "type": "boolean", 
+                  "title": "Is Active", 
+                  "default": true
+            }
+      }, 
+      "type": "object", 
+      "required": [
+            "channel_type", 
+            "config"
+      ], 
+      "title": "AlertConfigCreateRequest"
+}
+  Responses:
+    201: Successful Response
+      Schema: {
+        "properties": {
+                "id": {
+                        "type": "string", 
+                        "format": "uuid", 
+                        "title": "Id"
+                }, 
+                "org_id": {
+                        "type": "string", 

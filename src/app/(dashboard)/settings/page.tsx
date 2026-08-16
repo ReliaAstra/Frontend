@@ -159,6 +159,8 @@ export default function SettingsPage() {
     setUpgrading(targetPlan);
     try {
       const result = await initializePayment.mutateAsync({ plan: targetPlan, email: user?.email });
+      // Paystack authorization_url handles the payment, then redirects back to our callback
+      // The callback_url is configured server-side to include the reference param
       window.location.href = result.authorization_url;
     } catch {
       toast.error("Failed to initialize payment.");

@@ -1,0 +1,1625 @@
+
+=== AUTH (12 endpoints) ===
+  POST /v1/auth/register
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/RegisterRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['201', '422']
+  POST /v1/auth/login
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/LoginRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/refresh
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/RefreshRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/logout
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/LogoutRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['204', '422']
+  GET /v1/auth/google/url
+    Security: NOT SPECIFIED (check global)
+    Response codes: ['200']
+  POST /v1/auth/google
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/GoogleAuthRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  GET /v1/auth/github/url
+    Security: NOT SPECIFIED (check global)
+    Response codes: ['200']
+  POST /v1/auth/github
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/GitHubAuthRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/send-verification
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/SendVerificationRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/verify-email
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/VerifyEmailRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/forgot-password
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/ForgotPasswordRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  POST /v1/auth/reset-password
+    Security: NOT SPECIFIED (check global)
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/ResetPasswordRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+
+=== DASHBOARD (6 endpoints) ===
+  GET /v1/orgs/{org_id}/dashboard/summary
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dashboard/latency
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 2160,
+                  "minimum": 1,
+                  "default": 24,
+                  "title": "Hours"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dashboard/sla-degradation
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "period_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 1,
+                  "default": 30,
+                  "title": "Period Days"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dashboard/dependency-health
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dashboard/incident-timeline
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dashboard/vendor-status
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+
+=== DEPENDENCIES (3 endpoints) ===
+  GET /v1/orgs/{org_id}/dependencies/{dep_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "dep_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Dep Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  PATCH /v1/orgs/{org_id}/dependencies/{dep_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "dep_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Dep Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/DependencyUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  DELETE /v1/orgs/{org_id}/dependencies/{dep_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "dep_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Dep Id"
+            }
+      }
+]
+    Response codes: ['204', '422']
+  GET /v1/orgs/{org_id}/dependencies/{dep_id}/results
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "dep_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Dep Id"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/dependencies/{dep_id}/history
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "dep_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Dep Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+
+=== INCIDENTS (3 endpoints) ===
+  GET /v1/orgs/{org_id}/incidents/{inc_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "inc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Inc Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  PATCH /v1/orgs/{org_id}/incidents/{inc_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "inc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Inc Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/IncidentUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/incidents/{inc_id}/correlate
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "inc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Inc Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/IncidentCorrelateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}/incidents/{inc_id}/evidence
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "inc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Inc Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+
+=== EVIDENCE (2 endpoints) ===
+  GET /v1/orgs/{org_id}/evidence/{report_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Report Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/evidence/{report_id}/regenerate
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Report Id"
+            }
+      }
+]
+    Response codes: ['201', '422']
+
+=== CLIENTS (1 endpoints) ===
+  GET /v1/orgs/{org_id}/clients/{client_id}/applications
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Client Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/clients/{client_id}/applications
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Client Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/ApplicationCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+
+=== BILLING (6 endpoints) ===
+  GET /v1/orgs/{org_id}/billing/founding-spots
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/billing/founding-spot/claim
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "anyOf": [
+                              {
+                                    "$ref": "#/components/schemas/ClaimFoundingSpotRequest"
+                              },
+                              {
+                                    "type": "null"
+                              }
+                        ],
+                        "title": "Body"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/billing/plan
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/billing/initialize
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/InitializePaymentRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  POST /v1/billing/verify
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "reference",
+            "in": "query",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "title": "Reference"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/billing/webhook
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "x-paystack-signature",
+            "in": "header",
+            "required": false,
+            "schema": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "X-Paystack-Signature"
+            }
+      }
+]
+    Response codes: ['200', '422']
+
+=== MEMBERS (1 endpoints) ===
+  PATCH /v1/orgs/{org_id}/members/{member_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Member Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/OrganizationMemberRoleUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  DELETE /v1/orgs/{org_id}/members/{member_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Member Id"
+            }
+      }
+]
+    Response codes: ['204', '422']
+
+=== NOTIFICATIONS (3 endpoints) ===
+  GET /v1/orgs/{org_id}/notifications/configs
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/notifications/configs
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/AlertConfigCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}/notifications/configs/{config_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Config Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  PATCH /v1/orgs/{org_id}/notifications/configs/{config_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Config Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/AlertConfigUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  DELETE /v1/orgs/{org_id}/notifications/configs/{config_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Config Id"
+            }
+      }
+]
+    Response codes: ['204', '422']
+  POST /v1/orgs/{org_id}/notifications/test
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/AlertTestRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+
+=== VENDORS (5 endpoints) ===
+  GET /v1/public/vendors/{vendor_name}
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "vendor_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/public/vendors/{vendor_name}/history
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "vendor_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/public/vendors/{vendor_name}/metrics
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "vendor_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            }
+      },
+      {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Window"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/public/vendors/{vendor_name}/timeline
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "vendor_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            }
+      },
+      {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "string",
+                  "default": "24h",
+                  "title": "Window"
+            }
+      },
+      {
+            "name": "resolution",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "string",
+                  "default": "auto",
+                  "title": "Resolution"
+            }
+      },
+      {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Region"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/public/vendors/{vendor_name}/incidents
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "vendor_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      }
+]
+    Response codes: ['200', '422']
+
+=== OTHER (17 endpoints) ===
+  GET /v1/users/me
+    Security: [{'HTTPBearer': []}]
+    Response codes: ['200']
+  PATCH /v1/users/me
+    Security: [{'HTTPBearer': []}]
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/UserUpdateRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['200', '422']
+  GET /v1/orgs
+    Security: [{'HTTPBearer': []}]
+    Response codes: ['200']
+  POST /v1/orgs
+    Security: [{'HTTPBearer': []}]
+    RequestBody: {
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/OrganizationCreateRequest"
+                  }
+            }
+      },
+      "required": true
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  PATCH /v1/orgs/{org_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/OrganizationUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/members
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/members
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/OrganizationMemberInviteRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}/dependencies
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/dependencies
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/DependencyCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}/checks/recent
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/incidents
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      },
+      {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "anyOf": [
+                        {
+                              "$ref": "#/components/schemas/IncidentStatus"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Status"
+            }
+      },
+      {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "anyOf": [
+                        {
+                              "$ref": "#/components/schemas/IncidentSeverity"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Severity"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/orgs/{org_id}/evidence
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "default": 50,
+                  "title": "Limit"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /v1/public/vendors
+    Security: NOT SPECIFIED (check global)
+    Response codes: ['200']
+  GET /v1/public/pricing
+    Security: NOT SPECIFIED (check global)
+    Response codes: ['200']
+  GET /v1/orgs/{org_id}/api-keys
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/api-keys
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/ApiKeyCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  DELETE /v1/orgs/{org_id}/api-keys/{key_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Key Id"
+            }
+      }
+]
+    Response codes: ['204', '422']
+  GET /v1/orgs/{org_id}/clients
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/clients
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/ClientCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  GET /v1/orgs/{org_id}/ai-providers
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  POST /v1/orgs/{org_id}/ai-providers
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/AIProviderCreateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['201', '422']
+  PATCH /v1/orgs/{org_id}/ai-providers/{provider_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Provider Id"
+            }
+      }
+]
+    RequestBody: {
+      "required": true,
+      "content": {
+            "application/json": {
+                  "schema": {
+                        "$ref": "#/components/schemas/AIProviderUpdateRequest"
+                  }
+            }
+      }
+}
+    Response codes: ['200', '422']
+  DELETE /v1/orgs/{org_id}/ai-providers/{provider_id}
+    Security: [{'HTTPBearer': []}]
+    Parameters: [
+      {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            }
+      },
+      {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Provider Id"
+            }
+      }
+]
+    Response codes: ['204', '422']
+  GET /v1/verify/{verification_id}
+    Security: NOT SPECIFIED (check global)
+    Parameters: [
+      {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z0-9_-]+$",
+                  "title": "Verification Id"
+            }
+      }
+]
+    Response codes: ['200', '422']
+  GET /health
+    Security: NOT SPECIFIED (check global)
+    Response codes: ['200']

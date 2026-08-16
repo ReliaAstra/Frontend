@@ -1,0 +1,649 @@
+export interface AIProviderCreateRequest {
+  name: string
+  provider_type: 'openai_compatible' | 'anthropic' | 'google'
+  endpoint_url: string
+  api_key?: string | null
+  model_name: string
+  is_default?: boolean
+  max_tokens?: number
+  temperature?: number
+  enabled?: boolean
+}
+
+export interface AIProviderResponse {
+  id: string
+  organization_id: string
+  name: string
+  provider_type: string
+  endpoint_url: string
+  model_name: string
+  is_default: boolean
+  max_tokens: number
+  temperature: number
+  enabled: boolean
+  has_api_key?: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AIProviderUpdateRequest {
+  name?: string | null
+  provider_type?: 'openai_compatible' | 'anthropic' | 'google' | null
+  endpoint_url?: string | null
+  api_key?: string | null
+  model_name?: string | null
+  is_default?: boolean | null
+  max_tokens?: number | null
+  temperature?: number | null
+  enabled?: boolean | null
+}
+
+export interface AlertConfigCreateRequest {
+  channel_type: 'email' | 'slack' | 'pagerduty' | 'webhook'
+  config: Record<string, any>
+  is_active?: boolean
+}
+
+export interface AlertConfigResponse {
+  id: string
+  org_id: string
+  channel_type: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AlertConfigUpdateRequest {
+  channel_type?: 'email' | 'slack' | 'pagerduty' | 'webhook' | null
+  config?: Record<string, any> | null
+  is_active?: boolean | null
+}
+
+export interface AlertTestRequest {
+  config_id: string
+}
+
+export interface AlertTestResponse {
+  success: boolean
+  message: string
+}
+
+export interface ApiKeyCreateRequest {
+  name: string
+  scopes?: string[]
+  expires_at?: string | null
+}
+
+export interface ApiKeyCreateResponse {
+  id: string
+  org_id: string
+  name: string
+  prefix: string
+  scopes: string[]
+  last_used_at?: string | null
+  expires_at?: string | null
+  created_at: string
+  full_key: string
+}
+
+export interface ApiKeyResponse {
+  id: string
+  org_id: string
+  name: string
+  prefix: string
+  scopes: string[]
+  last_used_at?: string | null
+  expires_at?: string | null
+  created_at: string
+}
+
+export interface ApplicationCreateRequest {
+  name: string
+  description?: string | null
+}
+
+export interface ApplicationResponse {
+  id: string
+  org_id: string
+  client_id: string | null
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ChannelType = 'email' | 'slack' | 'pagerduty' | 'webhook'
+
+export interface CheckResultResponse {
+  id: string
+  dependency_id: string
+  org_id: string
+  region: string
+  executed_at: string
+  latency_ms: number
+  status_code?: number | null
+  is_up: boolean
+  error_message?: string | null
+  quorum_confirmed: boolean
+}
+
+export interface ClaimFoundingSpotRequest {
+  email?: string | null
+}
+
+export interface ClaimFoundingSpotResponse {
+  success: boolean
+  message: string
+  is_founding_customer: boolean
+  founding_discount_pct: number
+}
+
+export interface ClientCreateRequest {
+  name: string
+  description?: string | null
+}
+
+export interface ClientResponse {
+  id: string
+  org_id: string
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type CorrelationMethod = 'temporal' | 'manual' | 'ml'
+
+export interface DashboardSummaryResponse {
+  active_dependencies_count: number
+  open_incidents_count: number
+  overall_uptime_percentage: number
+  alerts_today_count: number
+}
+
+export interface DependencyCreateRequest {
+  name: string
+  application_id?: string | null
+  endpoint_url: string
+  method?: 'GET' | 'HEAD' | 'POST'
+  headers?: Record<string, any> | null
+  expected_status_codes?: number[]
+  timeout_seconds?: number
+  check_interval_seconds?: number
+  regions?: string[]
+  alert_threshold_ms?: number | null
+  is_active?: boolean
+}
+
+export interface DependencyHealthResponse {
+  dependency_id: string
+  name: string
+  endpoint_url: string
+  current_status: string
+  uptime_percentage_24h: number
+  avg_latency_ms_24h: number
+}
+
+export interface DependencyHistoryResponse {
+  dependency_id: string
+  uptime_percentage: number
+  avg_latency_ms: number
+  total_checks: number
+  total_up: number
+  total_down: number
+}
+
+export interface DependencyResponse {
+  id: string
+  org_id: string
+  application_id?: string | null
+  name: string
+  endpoint_url: string
+  method: string
+  headers?: Record<string, any> | null
+  expected_status_codes: number[]
+  timeout_seconds: number
+  check_interval_seconds: number
+  next_check_at?: string | null
+  regions: string[]
+  alert_threshold_ms?: number | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface DependencyUpdateRequest {
+  name?: string | null
+  application_id?: string | null
+  endpoint_url?: string | null
+  method?: 'GET' | 'HEAD' | 'POST' | null
+  headers?: Record<string, any> | null
+  expected_status_codes?: number[] | null
+  timeout_seconds?: number | null
+  check_interval_seconds?: number | null
+  regions?: string[] | null
+  alert_threshold_ms?: number | null
+  is_active?: boolean | null
+}
+
+export interface EvidenceReportDownloadResponse {
+  id: string
+  org_id: string
+  incident_id: string
+  file_size_bytes: number
+  checksum: string
+  generated_at: string
+  expires_at?: string | null
+  created_at: string
+  updated_at: string
+  download_url: string
+}
+
+export interface EvidenceReportResponse {
+  id: string
+  org_id: string
+  incident_id: string
+  file_size_bytes: number
+  checksum: string
+  generated_at: string
+  expires_at?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface FoundingSpotsResponse {
+  total_spots: number
+  spots_taken: number
+  spots_remaining: number
+  founding_discount_pct: number
+  eligible_plans: string[]
+  plan_discounts: Record<string, Record<string, any>>
+}
+
+export interface GitHubAuthRequest {
+  code: string
+  state?: string | null
+}
+
+export interface GitHubAuthUrlResponse {
+  authorization_url: string
+  state: string
+}
+
+export interface GoogleAuthRequest {
+  code: string
+  state?: string | null
+}
+
+export interface GoogleAuthUrlResponse {
+  authorization_url: string
+  state: string
+}
+
+export interface HTTPValidationError {
+  detail?: { loc: string | number[]; msg: string; type: string; input?: any; ctx?: object }[]
+}
+
+export type HttpMethod = 'GET' | 'HEAD' | 'POST'
+
+export interface IncidentCorrelateRequest {
+  correlated_dependency_id: string
+  correlation_confidence?: number
+  correlation_method?: 'temporal' | 'manual' | 'ml'
+  time_window_seconds?: number
+}
+
+export interface IncidentCorrelationResponse {
+  id: string
+  incident_id: string
+  correlated_dependency_id: string
+  correlation_confidence: number
+  time_window_seconds: number
+  correlation_method: string
+  created_at: string
+}
+
+export interface IncidentDetailResponse {
+  id: string
+  org_id: string
+  dependency_id: string
+  started_at: string
+  resolved_at?: string | null
+  severity: string
+  status: string
+  root_cause: string
+  description?: string | null
+  evidence_report_id?: string | null
+  created_at: string
+  updated_at: string
+  correlations?: { id: string; incident_id: string; correlated_dependency_id: string; correlation_confidence: number; time_window_seconds: number; correlation_method: string; created_at: string }[]
+}
+
+export interface IncidentResponse {
+  id: string
+  org_id: string
+  dependency_id: string
+  started_at: string
+  resolved_at?: string | null
+  severity: string
+  status: string
+  root_cause: string
+  description?: string | null
+  evidence_report_id?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type IncidentSeverity = 'critical' | 'major' | 'minor'
+
+export type IncidentStatus = 'open' | 'resolved' | 'false_positive'
+
+export interface IncidentUpdateRequest {
+  status?: 'open' | 'resolved' | 'false_positive' | null
+  severity?: 'critical' | 'major' | 'minor' | null
+  root_cause?: 'vendor_failure' | 'network_issue' | 'config_error' | 'unknown' | null
+  description?: string | null
+}
+
+export interface InitializePaymentRequest {
+  plan: string
+  email?: string | null
+}
+
+export interface InitializePaymentResponse {
+  authorization_url: string
+  reference: string
+  access_code: string
+}
+
+export interface LatencyPointResponse {
+  timestamp: string
+  region: string
+  latency_ms: number
+  dependency_id?: string | null
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface LogoutRequest {
+  refresh_token: string
+}
+
+export interface OAuthAuthResponse {
+  access_token: string
+  refresh_token: string
+  token_type?: string
+  expires_in: number
+  is_new_user?: boolean
+  user_id: string
+  email: string
+  full_name: string
+}
+
+export interface OrganizationCreateRequest {
+  name: string
+  slug?: string | null
+}
+
+export interface OrganizationMemberInviteRequest {
+  email: string
+  role?: 'owner' | 'admin' | 'member' | 'viewer'
+}
+
+export interface OrganizationMemberResponse {
+  id: string
+  org_id: string
+  user_id: string
+  role: string
+  joined_at: string
+}
+
+export interface OrganizationMemberRoleUpdateRequest {
+  role: 'owner' | 'admin' | 'member' | 'viewer'
+}
+
+export interface OrganizationResponse {
+  id: string
+  name: string
+  slug: string
+  plan: string
+  has_agency_mode?: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface OrganizationUpdateRequest {
+  name?: string | null
+  plan?: 'free' | 'starter' | 'standard' | 'professional' | 'agency' | null
+}
+
+export interface PaystackWebhookResponse {
+  received: boolean
+  event_type: string
+}
+
+export type Plan = 'free' | 'starter' | 'standard' | 'professional' | 'agency'
+
+export interface PlanDetailsResponse {
+  org_id: string
+  plan: string
+  max_dependencies: number
+  min_check_interval_seconds: number
+  subscription_status?: string | null
+  current_period_end?: string | null
+  is_founding_customer?: boolean
+  founding_discount_pct?: number
+  price_usd?: number
+  discounted_price_usd?: number | null
+}
+
+export interface PricingPlanResponse {
+  plan: string
+  display_name: string
+  description: string
+  tag?: string | null
+  price_usd: number
+  max_dependencies: number
+  min_check_interval_seconds: number
+  data_retention_days: number
+  features: Record<string, any>
+}
+
+export interface PricingPlansResponse {
+  plans: { plan: string; display_name: string; description: string; tag?: string | null; price_usd: number; max_dependencies: number; min_check_interval_seconds: number; data_retention_days: number; features: Record<string, any> }[]
+}
+
+export interface RefreshRequest {
+  refresh_token: string
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+  full_name: string
+  org_name?: string | null
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  new_password: string
+}
+
+export interface ResetPasswordResponse {
+  message: string
+}
+
+export type Role = 'owner' | 'admin' | 'member' | 'viewer'
+
+export type RootCause = 'vendor_failure' | 'network_issue' | 'config_error' | 'unknown'
+
+export interface SLADegradationResponse {
+  total_degradation_pct: number
+  affected_services: number
+  period: string
+}
+
+export interface SendVerificationRequest {
+  email: string
+}
+
+export interface TimelineBucket {
+  timestamp: string
+  avg_latency_ms: number
+  status_code: number | null
+  is_up: boolean
+  observation_count: number
+  incident_id?: string | null
+}
+
+export interface TimelineCurrent {
+  timestamp?: string | null
+  latency_ms?: number | null
+  status_code?: number | null
+  is_up?: boolean | null
+}
+
+export interface TokenResponse {
+  access_token: string
+  refresh_token: string
+  token_type?: string
+  expires_in: number
+}
+
+export interface UserResponse {
+  id: string
+  email: string
+  full_name: string
+  is_active: boolean
+  is_superuser: boolean
+  avatar_url?: string | null
+  auth_provider?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UserUpdateRequest {
+  full_name?: string | null
+  email?: string | null
+  password?: string | null
+}
+
+export interface ValidationError {
+  loc: string | number[]
+  msg: string
+  type: string
+  input?: any
+  ctx?: object
+}
+
+export interface VendorDetailResponse {
+  id: string
+  vendor_name: string
+  display_name: string
+  category: string
+  is_public: boolean
+  last_check_at?: string | null
+  created_at: string
+  updated_at: string
+  recent_status?: string
+  endpoints?: { id: string; endpoint_url: string; regions: string[]; health_status: string; is_active: boolean; last_check_at?: string | null }[]
+}
+
+export interface VendorEndpointResponse {
+  id: string
+  endpoint_url: string
+  regions: string[]
+  health_status: string
+  is_active: boolean
+  last_check_at?: string | null
+}
+
+export interface VendorHistoryResponse {
+  vendor_name: string
+  uptime_percentage_24h: number
+  avg_latency_ms_24h: number
+  recent_checks_count: number
+}
+
+export interface VendorIncidentResponse {
+  incident_id: string
+  dependency_name: string
+  started_at: string
+  resolved_at: string | null
+  severity: string
+  status: string
+  duration_seconds: number | null
+}
+
+export interface VendorIncidentsResponse {
+  vendor_name: string
+  incidents: { incident_id: string; dependency_name: string; started_at: string; resolved_at: string | null; severity: string; status: string; duration_seconds: number | null }[]
+}
+
+export interface VendorMetricsResponse {
+  vendor_name: string
+  metrics: Record<string, {
+  window: string
+  total_observations: number
+  uptime_percentage: number
+  avg_latency_ms: number
+  p95_latency_ms?: number | null
+}>
+}
+
+export interface VendorResponse {
+  id: string
+  vendor_name: string
+  display_name: string
+  category: string
+  is_public: boolean
+  last_check_at?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface VendorTimelineResponse {
+  vendor_name: string
+  window: string
+  resolution: string
+  region: string
+  from: string
+  to: string
+  current: {
+  timestamp?: string | null
+  latency_ms?: number | null
+  status_code?: number | null
+  is_up?: boolean | null
+}
+  points?: { timestamp: string; avg_latency_ms: number; status_code: number | null; is_up: boolean; observation_count: number; incident_id?: string | null }[]
+}
+
+export interface VendorWindowMetrics {
+  window: string
+  total_observations: number
+  uptime_percentage: number
+  avg_latency_ms: number
+  p95_latency_ms?: number | null
+}
+
+export interface VerifyEmailRequest {
+  token: string
+}
+
+export interface VerifyEmailResponse {
+  message: string
+  is_email_verified: boolean
+}
+
+export interface VerifyTransactionResponse {
+  verified: boolean
+  plan: string
+  reference: string
+}

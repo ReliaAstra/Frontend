@@ -1,0 +1,701 @@
+######## BILLING ENDPOINTS (6) ########
+
+--- POST /v1/billing/verify ---
+Summary: Verify Transaction
+OperationId: verify_transaction_v1_billing_verify_post
+Authentication: "None (no auth required - global security is empty)"
+Parameters:
+  - reference (in: query, required: True)
+    Schema: {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 200,
+    "title": "Reference"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "verified": {
+                  "type": "boolean",
+                  "title": "Verified"
+            },
+            "plan": {
+                  "type": "string",
+                  "title": "Plan"
+            },
+            "reference": {
+                  "type": "string",
+                  "title": "Reference"
+            }
+      },
+      "type": "object",
+      "required": [
+            "verified",
+            "plan",
+            "reference"
+      ],
+      "title": "VerifyTransactionResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/billing/webhook ---
+Summary: Paystack Webhook
+OperationId: paystack_webhook_v1_billing_webhook_post
+Authentication: "None (no auth required - global security is empty)"
+Parameters:
+  - x-paystack-signature (in: header, required: False)
+    Schema: {
+    "anyOf": [
+        {
+            "type": "string"
+        },
+        {
+            "type": "null"
+        }
+    ],
+    "title": "X-Paystack-Signature"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "received": {
+                  "type": "boolean",
+                  "title": "Received"
+            },
+            "event_type": {
+                  "type": "string",
+                  "title": "Event Type"
+            }
+      },
+      "type": "object",
+      "required": [
+            "received",
+            "event_type"
+      ],
+      "title": "PaystackWebhookResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/orgs/{org_id}/billing/founding-spot/claim ---
+Summary: Claim Founding Spot
+OperationId: claim_founding_spot_v1_orgs__org_id__billing_founding_spot_claim_post
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Request Body:
+  Content-Type: application/json
+  Required: False
+  Schema: {
+    "anyOf": [
+        {
+            "properties": {
+                "email": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "title": "Email"
+                }
+            },
+            "type": "object",
+            "title": "ClaimFoundingSpotRequest",
+            "description": "Request body for claiming a founding customer spot."
+        },
+        {
+            "type": "null"
+        }
+    ],
+    "title": "Body"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "success": {
+                  "type": "boolean",
+                  "title": "Success"
+            },
+            "message": {
+                  "type": "string",
+                  "title": "Message"
+            },
+            "is_founding_customer": {
+                  "type": "boolean",
+                  "title": "Is Founding Customer"
+            },
+            "founding_discount_pct": {
+                  "type": "integer",
+                  "title": "Founding Discount Pct"
+            }
+      },
+      "type": "object",
+      "required": [
+            "success",
+            "message",
+            "is_founding_customer",
+            "founding_discount_pct"
+      ],
+      "title": "ClaimFoundingSpotResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/billing/founding-spots ---
+Summary: Get Founding Spots
+OperationId: get_founding_spots_v1_orgs__org_id__billing_founding_spots_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "total_spots": {
+                  "type": "integer",
+                  "title": "Total Spots"
+            },
+            "spots_taken": {
+                  "type": "integer",
+                  "title": "Spots Taken"
+            },
+            "spots_remaining": {
+                  "type": "integer",
+                  "title": "Spots Remaining"
+            },
+            "founding_discount_pct": {
+                  "type": "integer",
+                  "title": "Founding Discount Pct"
+            },
+            "eligible_plans": {
+                  "items": {
+                        "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Eligible Plans"
+            },
+            "plan_discounts": {
+                  "additionalProperties": {
+                        "additionalProperties": true,
+                        "type": "object"
+                  },
+                  "type": "object",
+                  "title": "Plan Discounts"
+            }
+      },
+      "type": "object",
+      "required": [
+            "total_spots",
+            "spots_taken",
+            "spots_remaining",
+            "founding_discount_pct",
+            "eligible_plans",
+            "plan_discounts"
+      ],
+      "title": "FoundingSpotsResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- POST /v1/orgs/{org_id}/billing/initialize ---
+Summary: Initialize Payment
+OperationId: initialize_payment_v1_orgs__org_id__billing_initialize_post
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Request Body:
+  Content-Type: application/json
+  Required: True
+  Schema: {
+    "properties": {
+        "plan": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Plan"
+        },
+        "email": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "format": "email"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Email"
+        }
+    },
+    "type": "object",
+    "required": [
+        "plan"
+    ],
+    "title": "InitializePaymentRequest"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "authorization_url": {
+                  "type": "string",
+                  "title": "Authorization Url"
+            },
+            "reference": {
+                  "type": "string",
+                  "title": "Reference"
+            },
+            "access_code": {
+                  "type": "string",
+                  "title": "Access Code"
+            }
+      },
+      "type": "object",
+      "required": [
+            "authorization_url",
+            "reference",
+            "access_code"
+      ],
+      "title": "InitializePaymentResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/orgs/{org_id}/billing/plan ---
+Summary: Get Organization Plan
+OperationId: get_organization_plan_v1_orgs__org_id__billing_plan_get
+Authentication: [
+  {
+    "HTTPBearer": []
+  }
+]
+Parameters:
+  - org_id (in: path, required: True)
+    Schema: {
+    "type": "string",
+    "format": "uuid",
+    "title": "Org Id"
+}
+Responses:
+  200: Successful Response
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "plan": {
+                  "type": "string",
+                  "title": "Plan"
+            },
+            "max_dependencies": {
+                  "type": "integer",
+                  "title": "Max Dependencies"
+            },
+            "min_check_interval_seconds": {
+                  "type": "integer",
+                  "title": "Min Check Interval Seconds"
+            },
+            "subscription_status": {
+                  "anyOf": [
+                        {
+                              "type": "string"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Subscription Status"
+            },
+            "current_period_end": {
+                  "anyOf": [
+                        {
+                              "type": "string",
+                              "format": "date-time"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Current Period End"
+            },
+            "is_founding_customer": {
+                  "type": "boolean",
+                  "title": "Is Founding Customer",
+                  "default": false
+            },
+            "founding_discount_pct": {
+                  "type": "integer",
+                  "title": "Founding Discount Pct",
+                  "default": 0
+            },
+            "price_usd": {
+                  "type": "integer",
+                  "title": "Price Usd",
+                  "default": 0
+            },
+            "discounted_price_usd": {
+                  "anyOf": [
+                        {
+                              "type": "integer"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Discounted Price Usd"
+            }
+      },
+      "type": "object",
+      "required": [
+            "org_id",
+            "plan",
+            "max_dependencies",
+            "min_check_interval_seconds"
+      ],
+      "title": "PlanDetailsResponse"
+}
+  422: Validation Error
+    Content-Type: application/json
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+

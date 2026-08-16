@@ -1,0 +1,184 @@
+######## MEMBERS ENDPOINTS (2) ########
+
+--- DELETE /v1/orgs/{org_id}/members/{member_id} ---
+Summary: Remove Organization Member
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  member_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Member Id"}
+Responses:
+  204: Successful Response
+    Body: empty
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- PATCH /v1/orgs/{org_id}/members/{member_id} ---
+Summary: Change Organization Member Role
+Auth Required: True
+Parameters:
+  org_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Org Id"}
+  member_id (in: path, required: True)
+    {"type": "string", "format": "uuid", "title": "Member Id"}
+Request Body:
+  Content-Type: application/json, Required: True
+  Schema: {
+    "properties": {
+        "role": {
+            "type": "string",
+            "enum": [
+                "owner",
+                "admin",
+                "member",
+                "viewer"
+            ],
+            "title": "Role"
+        }
+    },
+    "type": "object",
+    "required": [
+        "role"
+    ],
+    "title": "OrganizationMemberRoleUpdateRequest"
+}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "org_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Org Id"
+            },
+            "user_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "User Id"
+            },
+            "role": {
+                  "type": "string",
+                  "title": "Role"
+            },
+            "joined_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Joined At"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "org_id",
+            "user_id",
+            "role",
+            "joined_at"
+      ],
+      "title": "OrganizationMemberResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}

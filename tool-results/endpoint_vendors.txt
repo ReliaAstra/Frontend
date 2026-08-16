@@ -1,0 +1,742 @@
+######## VENDORS ENDPOINTS (5) ########
+
+--- GET /v1/public/vendors/{vendor_name} ---
+Summary: Get Public Vendor
+Auth Required: False
+Parameters:
+  vendor_name (in: path, required: True)
+    {"type": "string", "title": "Vendor Name"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+            },
+            "vendor_name": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            },
+            "display_name": {
+                  "type": "string",
+                  "title": "Display Name"
+            },
+            "category": {
+                  "type": "string",
+                  "title": "Category"
+            },
+            "is_public": {
+                  "type": "boolean",
+                  "title": "Is Public"
+            },
+            "last_check_at": {
+                  "anyOf": [
+                        {
+                              "type": "string",
+                              "format": "date-time"
+                        },
+                        {
+                              "type": "null"
+                        }
+                  ],
+                  "title": "Last Check At"
+            },
+            "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Created At"
+            },
+            "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Updated At"
+            },
+            "recent_status": {
+                  "type": "string",
+                  "title": "Recent Status",
+                  "default": "unknown"
+            },
+            "endpoints": {
+                  "items": {
+                        "properties": {
+                              "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "title": "Id"
+                              },
+                              "endpoint_url": {
+                                    "type": "string",
+                                    "title": "Endpoint Url"
+                              },
+                              "regions": {
+                                    "items": {
+                                          "type": "string"
+                                    },
+                                    "type": "array",
+                                    "title": "Regions"
+                              },
+                              "health_status": {
+                                    "type": "string",
+                                    "title": "Health Status"
+                              },
+                              "is_active": {
+                                    "type": "boolean",
+                                    "title": "Is Active"
+                              },
+                              "last_check_at": {
+                                    "anyOf": [
+                                          {
+                                                "type": "string",
+                                                "format": "date-time"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "Last Check At"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "id",
+                              "endpoint_url",
+                              "regions",
+                              "health_status",
+                              "is_active"
+                        ],
+                        "title": "VendorEndpointResponse"
+                  },
+                  "type": "array",
+                  "title": "Endpoints"
+            }
+      },
+      "type": "object",
+      "required": [
+            "id",
+            "vendor_name",
+            "display_name",
+            "category",
+            "is_public",
+            "created_at",
+            "updated_at"
+      ],
+      "title": "VendorDetailResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/public/vendors/{vendor_name}/history ---
+Summary: Get Public Vendor History
+Auth Required: False
+Parameters:
+  vendor_name (in: path, required: True)
+    {"type": "string", "title": "Vendor Name"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "vendor_name": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            },
+            "uptime_percentage_24h": {
+                  "type": "number",
+                  "title": "Uptime Percentage 24H"
+            },
+            "avg_latency_ms_24h": {
+                  "type": "number",
+                  "title": "Avg Latency Ms 24H"
+            },
+            "recent_checks_count": {
+                  "type": "integer",
+                  "title": "Recent Checks Count"
+            }
+      },
+      "type": "object",
+      "required": [
+            "vendor_name",
+            "uptime_percentage_24h",
+            "avg_latency_ms_24h",
+            "recent_checks_count"
+      ],
+      "title": "VendorHistoryResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/public/vendors/{vendor_name}/incidents ---
+Summary: Get Vendor Incidents
+Auth Required: False
+Parameters:
+  vendor_name (in: path, required: True)
+    {"type": "string", "title": "Vendor Name"}
+  limit (in: query, required: False)
+    {"type": "integer", "maximum": 100, "minimum": 1, "default": 50, "title": "Limit"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "vendor_name": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            },
+            "incidents": {
+                  "items": {
+                        "properties": {
+                              "incident_id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "title": "Incident Id"
+                              },
+                              "dependency_name": {
+                                    "type": "string",
+                                    "title": "Dependency Name"
+                              },
+                              "started_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "title": "Started At"
+                              },
+                              "resolved_at": {
+                                    "anyOf": [
+                                          {
+                                                "type": "string",
+                                                "format": "date-time"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "Resolved At"
+                              },
+                              "severity": {
+                                    "type": "string",
+                                    "title": "Severity"
+                              },
+                              "status": {
+                                    "type": "string",
+                                    "title": "Status"
+                              },
+                              "duration_seconds": {
+                                    "anyOf": [
+                                          {
+                                                "type": "number"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "Duration Seconds"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "incident_id",
+                              "dependency_name",
+                              "started_at",
+                              "resolved_at",
+                              "severity",
+                              "status",
+                              "duration_seconds"
+                        ],
+                        "title": "VendorIncidentResponse"
+                  },
+                  "type": "array",
+                  "title": "Incidents"
+            }
+      },
+      "type": "object",
+      "required": [
+            "vendor_name",
+            "incidents"
+      ],
+      "title": "VendorIncidentsResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/public/vendors/{vendor_name}/metrics ---
+Summary: Get Vendor Metrics
+Auth Required: False
+Parameters:
+  vendor_name (in: path, required: True)
+    {"type": "string", "title": "Vendor Name"}
+  window (in: query, required: False)
+    {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Window"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "vendor_name": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            },
+            "metrics": {
+                  "additionalProperties": {
+                        "properties": {
+                              "window": {
+                                    "type": "string",
+                                    "title": "Window"
+                              },
+                              "total_observations": {
+                                    "type": "integer",
+                                    "title": "Total Observations"
+                              },
+                              "uptime_percentage": {
+                                    "type": "number",
+                                    "title": "Uptime Percentage"
+                              },
+                              "avg_latency_ms": {
+                                    "type": "number",
+                                    "title": "Avg Latency Ms"
+                              },
+                              "p95_latency_ms": {
+                                    "anyOf": [
+                                          {
+                                                "type": "number"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "P95 Latency Ms"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "window",
+                              "total_observations",
+                              "uptime_percentage",
+                              "avg_latency_ms"
+                        ],
+                        "title": "VendorWindowMetrics"
+                  },
+                  "type": "object",
+                  "title": "Metrics"
+            }
+      },
+      "type": "object",
+      "required": [
+            "vendor_name",
+            "metrics"
+      ],
+      "title": "VendorMetricsResponse"
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}
+
+--- GET /v1/public/vendors/{vendor_name}/timeline ---
+Summary: Get Vendor Timeline
+Auth Required: False
+Parameters:
+  vendor_name (in: path, required: True)
+    {"type": "string", "title": "Vendor Name"}
+  window (in: query, required: False)
+    {"type": "string", "default": "24h", "title": "Window"}
+  resolution (in: query, required: False)
+    {"type": "string", "default": "auto", "title": "Resolution"}
+  region (in: query, required: False)
+    {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Region"}
+Responses:
+  200: Successful Response
+    Schema: {
+      "properties": {
+            "vendor_name": {
+                  "type": "string",
+                  "title": "Vendor Name"
+            },
+            "window": {
+                  "type": "string",
+                  "title": "Window"
+            },
+            "resolution": {
+                  "type": "string",
+                  "title": "Resolution"
+            },
+            "region": {
+                  "type": "string",
+                  "title": "Region"
+            },
+            "from": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "From"
+            },
+            "to": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "To"
+            },
+            "current": {
+                  "properties": {
+                        "timestamp": {
+                              "anyOf": [
+                                    {
+                                          "type": "string",
+                                          "format": "date-time"
+                                    },
+                                    {
+                                          "type": "null"
+                                    }
+                              ],
+                              "title": "Timestamp"
+                        },
+                        "latency_ms": {
+                              "anyOf": [
+                                    {
+                                          "type": "number"
+                                    },
+                                    {
+                                          "type": "null"
+                                    }
+                              ],
+                              "title": "Latency Ms"
+                        },
+                        "status_code": {
+                              "anyOf": [
+                                    {
+                                          "type": "integer"
+                                    },
+                                    {
+                                          "type": "null"
+                                    }
+                              ],
+                              "title": "Status Code"
+                        },
+                        "is_up": {
+                              "anyOf": [
+                                    {
+                                          "type": "boolean"
+                                    },
+                                    {
+                                          "type": "null"
+                                    }
+                              ],
+                              "title": "Is Up"
+                        }
+                  },
+                  "type": "object",
+                  "title": "TimelineCurrent",
+                  "description": "The most recent observation for a vendor, independent of the window."
+            },
+            "points": {
+                  "items": {
+                        "properties": {
+                              "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "title": "Timestamp"
+                              },
+                              "avg_latency_ms": {
+                                    "type": "number",
+                                    "title": "Avg Latency Ms"
+                              },
+                              "status_code": {
+                                    "anyOf": [
+                                          {
+                                                "type": "integer"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "Status Code"
+                              },
+                              "is_up": {
+                                    "type": "boolean",
+                                    "title": "Is Up"
+                              },
+                              "observation_count": {
+                                    "type": "integer",
+                                    "title": "Observation Count"
+                              },
+                              "incident_id": {
+                                    "anyOf": [
+                                          {
+                                                "type": "string",
+                                                "format": "uuid"
+                                          },
+                                          {
+                                                "type": "null"
+                                          }
+                                    ],
+                                    "title": "Incident Id"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "timestamp",
+                              "avg_latency_ms",
+                              "status_code",
+                              "is_up",
+                              "observation_count"
+                        ],
+                        "title": "TimelineBucket",
+                        "description": "A single aggregated time bucket in the vendor timeline."
+                  },
+                  "type": "array",
+                  "title": "Points"
+            }
+      },
+      "type": "object",
+      "required": [
+            "vendor_name",
+            "window",
+            "resolution",
+            "region",
+            "from",
+            "to",
+            "current"
+      ],
+      "title": "VendorTimelineResponse",
+      "description": "Full response for GET /v1/public/vendors/{vendor_name}/timeline."
+}
+  422: Validation Error
+    Schema: {
+      "properties": {
+            "detail": {
+                  "items": {
+                        "properties": {
+                              "loc": {
+                                    "items": {
+                                          "anyOf": [
+                                                {
+                                                      "type": "string"
+                                                },
+                                                {
+                                                      "type": "integer"
+                                                }
+                                          ]
+                                    },
+                                    "type": "array",
+                                    "title": "Location"
+                              },
+                              "msg": {
+                                    "type": "string",
+                                    "title": "Message"
+                              },
+                              "type": {
+                                    "type": "string",
+                                    "title": "Error Type"
+                              },
+                              "input": {
+                                    "title": "Input"
+                              },
+                              "ctx": {
+                                    "type": "object",
+                                    "title": "Context"
+                              }
+                        },
+                        "type": "object",
+                        "required": [
+                              "loc",
+                              "msg",
+                              "type"
+                        ],
+                        "title": "ValidationError"
+                  },
+                  "type": "array",
+                  "title": "Detail"
+            }
+      },
+      "type": "object",
+      "title": "HTTPValidationError"
+}

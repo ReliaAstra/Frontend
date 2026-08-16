@@ -60,7 +60,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Paths that require authentication
-const PROTECTED_PREFIXES = ["/dashboard", "/dependencies", "/incidents", "/settings", "/clients", "/evidence"];
+const PROTECTED_PREFIXES = ["/dashboard", "/agency", "/dependencies", "/incidents", "/settings", "/clients", "/evidence"];
 // Paths that are auth pages (should redirect away if already logged in)
 const AUTH_PATHS = ["/login", "/register"];
 

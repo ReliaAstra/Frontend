@@ -18,8 +18,11 @@ import {
   Check,
   Menu,
   X,
+  Building2,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { canAccessFeature } from "@/lib/tierLimits";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 import type { Org } from "@/lib/auth-context";
@@ -70,6 +73,13 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "Agency",
+    items: [
+      { label: "Agency Dashboard", href: "/agency", icon: Building2 },
+      { label: "Clients", href: "/clients", icon: Users },
+    ],
+  },
+  {
     title: "Operations",
     items: [
       { label: "Notifications", href: "/settings?tab=notifications", icon: Bell },
@@ -85,10 +95,12 @@ const NAV_GROUPS: NavGroup[] = [
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/agency": "Agency Dashboard",
   "/dependencies": "Dependencies",
   "/incidents": "Incidents",
   "/evidence": "Evidence",
   "/vendors": "Vendors",
+  "/clients": "Clients",
   "/settings": "Settings",
 };
 
@@ -104,6 +116,8 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, currentOrg, logout } = useAuth();
+  const plan = currentOrg?.plan || "free";
+  const showAgencyNav = canAccessFeature(plan, "clients").allowed;
 
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const [orgs, setOrgs] = useState<Org[]>([]);
@@ -251,7 +265,7 @@ export function DashboardSidebar({
 
       {/* ---- Navigation ---- */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden">
-        {NAV_GROUPS.map((group) => (
+        {NAV_GROUPS.filter((g) => g.title !== "Agency" || showAgencyNav).map((group) => (
           <div key={group.title} className="mt-2">
             {/* Section header — hide in collapsed mode */}
             {(!collapsed || isMobile) && (

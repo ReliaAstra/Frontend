@@ -51,6 +51,13 @@ export interface EvidenceTimelineEvent {
 }
 
 export const evidenceService = {
+  async list(): Promise<EvidenceDetail[]> {
+    const orgId = getOrgContext();
+    if (!orgId) throw new Error("No organization context");
+    const res = await apiClient.get<EvidenceDetail[]>(`/orgs/${orgId}/evidence`);
+    return res.data;
+  },
+
   async getById(evidenceId: string): Promise<EvidenceDetail> {
     const orgId = getOrgContext();
     if (!orgId) throw new Error("No organization context");

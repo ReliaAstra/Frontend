@@ -45,7 +45,8 @@ export default function DashboardPage() {
       // Attempt to fetch clients (may not exist yet)
       try {
         const clientRes = await clientService.list({ per_page: 5 });
-        setClients(clientRes.items);
+        // API may return bare array or paginated response
+        setClients(Array.isArray(clientRes) ? clientRes : clientRes?.items ?? []);
       } catch {
         setClients([]);
       }

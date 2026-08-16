@@ -38,8 +38,11 @@ export default function ClientsPage() {
       if (search.trim()) params.search = search.trim();
 
       const res = await clientService.list(params);
-      setClients(res.items);
-      setTotal(res.total);
+      // API may return bare array or paginated response
+      const items = Array.isArray(res) ? res : res?.items ?? [];
+      const totalCount = Array.isArray(res) ? res.length : res?.total ?? 0;
+      setClients(items);
+      setTotal(totalCount);
     } catch {
       setError("Unable to load clients.");
     } finally {

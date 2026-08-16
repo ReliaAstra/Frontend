@@ -292,7 +292,7 @@ export function useClients(params?: ClientListParams) {
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
-  return useMutation<Client, BackendError, { name: string; slug?: string }>({
+  return useMutation<Client, BackendError, { name: string }>({
     mutationFn: (data) => clientService.create(data),
     onSuccess: () => {
       const orgId = getOrgContext();

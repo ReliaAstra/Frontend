@@ -147,7 +147,7 @@ export default function SettingsPage() {
       return;
     }
     try {
-      await inviteMutation.mutateAsync({ orgId: currentOrg.id, email: inviteEmail });
+      await inviteMutation.mutateAsync({ email: inviteEmail });
       toast.success(`Invitation sent to ${inviteEmail}.`);
       setInviteEmail("");
     } catch {

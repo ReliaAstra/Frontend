@@ -183,7 +183,7 @@ export function DashboardHeader({
         {/* Upgrade pill */}
         {showUpgradePill && (
           <Link
-            href="/settings?tab=plan"
+            href="/settings?tab=billing"
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0891B2]/10 border border-[#0891B2]/20 text-[#0891B2] text-xs font-medium hover:bg-[#0891B2]/15 transition-colors"
           >
             <Zap className="w-3.5 h-3.5" />

@@ -198,14 +198,14 @@ export default function DashboardPage() {
       value: summary.data?.active_dependencies_count ?? 0,
       icon: Layers,
       color: "#0891B2",
-      href: "/dashboard/dependencies",
+      href: "/dependencies",
     },
     {
       label: "Open Incidents",
       value: summary.data?.open_incidents_count ?? 0,
       icon: AlertTriangle,
       color: "#DC2626",
-      href: "/dashboard/incidents",
+      href: "/incidents",
     },
     {
       label: "Overall Uptime",
@@ -222,7 +222,7 @@ export default function DashboardPage() {
       value: summary.data?.alerts_today_count ?? 0,
       icon: FileText,
       color: "#8B5CF6",
-      href: "/dashboard/evidence",
+      href: "/evidence",
     },
     {
       label: "SLA Degradation",
@@ -341,7 +341,7 @@ export default function DashboardPage() {
               )}
             </div>
             <Link
-              href="/dashboard/incidents"
+              href="/incidents"
               className="text-xs text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors inline-flex items-center gap-1"
             >
               View all
@@ -371,7 +371,7 @@ export default function DashboardPage() {
               {incidents.data.map((incident) => (
                 <Link
                   key={incident.id}
-                  href={`/dashboard/incidents/${incident.id}`}
+                  href={`/incidents/${incident.id}`}
                   className="px-5 py-3.5 flex items-center gap-4 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
                 >
                   <StatusDot status={incident.status === "resolved" ? "operational" : "down"} pulse />
@@ -500,7 +500,7 @@ export default function DashboardPage() {
                   </h2>
                 </div>
                 <Link
-                  href="/dashboard/dependencies"
+                  href="/dependencies"
                   className="text-xs text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
                 >
                   Details
@@ -557,7 +557,7 @@ export default function DashboardPage() {
 
         {/* -- Quick actions bar -- */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Link href="/dashboard/dependencies/new">
+          <Link href="/dependencies">
             <ConsoleCard hover className="group">
               <ConsoleCardBody className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-[rgba(8,145,178,0.12)] flex items-center justify-center shrink-0">
@@ -576,7 +576,7 @@ export default function DashboardPage() {
             </ConsoleCard>
           </Link>
 
-          <Link href="/dashboard/incidents">
+          <Link href="/incidents">
             <ConsoleCard hover className="group">
               <ConsoleCardBody className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-[rgba(220,38,38,0.12)] flex items-center justify-center shrink-0">
@@ -595,7 +595,7 @@ export default function DashboardPage() {
             </ConsoleCard>
           </Link>
 
-          <Link href="/dashboard/evidence">
+          <Link href="/evidence">
             <ConsoleCard hover className="group">
               <ConsoleCardBody className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-[rgba(139,92,246,0.12)] flex items-center justify-center shrink-0">

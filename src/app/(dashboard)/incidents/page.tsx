@@ -31,8 +31,8 @@ export default function IncidentsPage() {
   const [severityFilter, setSeverityFilter] = useState<IncidentSeverity | "all">("all");
 
   const { data: incidents = [], isLoading: loading, isError: error, refetch } = useIncidents({
-    status: statusFilter,
-    severity: severityFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    severity: severityFilter === "all" ? undefined : severityFilter,
   });
 
   return (

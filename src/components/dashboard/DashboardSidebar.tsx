@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid, Layers, AlertTriangle, Shield, Settings, LogOut, Search,
-  HelpCircle, Bell, UserCircle, ChevronDown, Users, Database, FileText, Key,
+  Users, Building2, Globe, FileSearch, Database, Key, Bell,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -14,6 +14,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  badge?: string;
 }
 
 interface NavGroup {
@@ -29,6 +30,12 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    section: "PORTFOLIO",
+    items: [
+      { label: "Clients", href: "/clients", icon: Users },
+    ],
+  },
+  {
     section: "MONITORING",
     items: [
       { label: "Dependencies", href: "/dependencies", icon: Layers },
@@ -38,7 +45,7 @@ const navGroups: NavGroup[] = [
   {
     section: "INTELLIGENCE",
     items: [
-      { label: "Evidence", href: "#", icon: Shield },
+      { label: "Evidence", href: "/evidence", icon: FileSearch },
       { label: "Vendors", href: "#", icon: Database },
     ],
   },
@@ -58,6 +65,8 @@ export function DashboardSidebar() {
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/clients") return pathname.startsWith("/clients");
+    if (href === "/evidence") return pathname.startsWith("/evidence");
     if (href === "#") return false;
     return pathname.startsWith(href);
   };
@@ -98,6 +107,11 @@ export function DashboardSidebar() {
                     )}
                     <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                     {item.label}
+                    {item.badge && (
+                      <span className="ml-auto text-[10px] font-medium rounded-full bg-[#0891B2]/10 text-[#0891B2] px-1.5 py-0.5">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

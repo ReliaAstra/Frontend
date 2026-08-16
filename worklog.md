@@ -27,3 +27,28 @@ Stage Summary:
 - Advanced latency chart with P95, filtering by region and dependency
 - Paystack billing flow complete with callback verification page
 - All files saved, production build clean
+
+---
+Task ID: 2
+Agent: main
+Task: Fix client-side crash on dashboard + comprehensive bug audit
+
+Work Log:
+- Diagnosed "Application error: a client-side exception has occurred" on /dashboard
+- Used browser agent to capture console error: ReferenceError: Cannot access 'e' before initialization at chunk 8a7b082f3ddd58e4.js
+- Identified root cause: TDZ (Temporal Dead Zone) in src/hooks/useRealtime.ts line 172 — `const interval = setInterval(checkForChanges, interval)` shadows outer `interval` from destructured options
+- Fixed by renaming inner variable to `changeInterval`
+- Ran comprehensive audit across all source files (no circular deps, all imports verified)
+- Fixed 2 remaining broken links in dashboard page (/dashboard/incidents, /dashboard/evidence -> /incidents, /evidence)
+- Fixed useInviteMember mutation call in settings page passing extra `orgId` argument
+- Fixed Upgrade pill tab link (?tab=plan -> ?tab=billing) 
+- Fixed incidents page sending "all" as filter value to API instead of undefined
+- Fixed useCreateClient type removing unused `slug` property
+- All 23 routes verified returning 200
+- Final browser check: dashboard renders correctly with no console errors
+
+Stage Summary:
+- Dashboard crash resolved: TDZ variable shadowing in useRealtime hook
+- 5 additional bugs fixed: route links, invite mutation, tab link, filter passthrough, type cleanup
+- Pushed 2 commits to GitHub: 7f907b1 (TDZ fix) + 3dd44d5 (audit fixes)
+- Live verification passed: dashboard, login, homepage all render with zero errors

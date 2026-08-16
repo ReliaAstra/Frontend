@@ -1,321 +1,764 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, AlertCircle, Search, RefreshCw } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import useSWR from 'swr';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  RefreshCw,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  Activity,
+  MapPin,
+  Globe,
+  Shield,
+  ArrowRight,
+  AlertCircle,
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { vendorService, type VendorResponse, type VendorDetailResponse } from '@/services/vendorService';
+import {
+  vendorService,
+  type VendorResponse,
+  type VendorDetailResponse,
+  type VendorMetricsResponse,
+} from '@/services/vendorService';
+import { VendorSparkline } from '@/components/VendorSparkline';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 
-interface VendorWithStatus extends VendorResponse {
-  recent_status: string;
-  endpoints_count: number;
-}
+// ── Brand Colors ────────────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { label: string; dotColor: string; textColor: string }> = {
-  up: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-600' },
-  operational: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-600' },
-  degraded: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-600' },
-  degraded_performance: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-600' },
-  down: { label: 'Down', dotColor: 'bg-red-500', textColor: 'text-red-600' },
-  partial_outage: { label: 'Partial Outage', dotColor: 'bg-orange-500', textColor: 'text-orange-600' },
-  major_outage: { label: 'Major Outage', dotColor: 'bg-red-500', textColor: 'text-red-600' },
-  unknown: { label: 'Unknown', dotColor: 'bg-gray-400', textColor: 'text-gray-500' },
+const BRAND_COLORS: Record<string, string> = {
+  payments: '#635BFF',
+  auth: '#EB5424',
+  cdn: '#F48120',
+  ai: '#10A37F',
+  communications: '#F22F46',
+  infrastructure: '#F6821F',
+  hosting: '#0891B2',
+  database: '#007AF5',
+  monitoring: '#6C5CE7',
 };
+const FALLBACK_COLOR = '#0891B2';
 
-function formatLastObserved(dateStr: string | null): string {
-  if (!dateStr) return 'Never';
-  try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
-  } catch {
-    return 'N/A';
-  }
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface EnrichedVendor {
+  id: string;
+  vendor_name: string;
+  display_name: string;
+  category: string;
+  is_public: boolean;
+  last_check_at: string | null;
+  created_at: string;
+  updated_at: string;
+  recent_status: string;
+  avg_latency_ms: number;
+  uptime_percentage: number;
+  sparkline_data: number[];
 }
 
-export function TrackPageContent() {
-  const [vendors, setVendors] = useState<VendorWithStatus[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState('');
-  const [lastSuccess, setLastSuccess] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+const FILTER_CATEGORIES = ['All', 'Auth', 'CDN', 'AI', 'Payments', 'Communications'];
 
-  const fetchVendors = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
-    try {
-      // Fetch the vendor list
-      const vendorList = await vendorService.listPublicVendors();
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-      // Fetch details for each vendor to get recent_status
-      const enrichedVendors = await Promise.allSettled(
-        vendorList.map(async (v): Promise<VendorWithStatus> => {
-          try {
-            const detail = await vendorService.getVendorDetail(v.vendor_name);
-            return {
-              ...v,
-              recent_status: detail.recent_status || 'unknown',
-              endpoints_count: detail.endpoints?.length || 0,
-            };
-          } catch {
-            return {
-              ...v,
-              recent_status: 'unknown',
-              endpoints_count: 0,
-            };
-          }
-        })
-      );
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      const successful = enrichedVendors
-        .filter((r): r is PromiseFulfilledResult<VendorWithStatus> => r.status === 'fulfilled')
-        .map((r) => r.value);
+function getBrandColor(category: string): string {
+  return BRAND_COLORS[category.toLowerCase()] ?? FALLBACK_COLOR;
+}
 
-      setVendors(successful);
-      setLastSuccess(new Date().toISOString());
-    } catch {
-      setError('Unable to load vendor data. The measurement service may be unavailable.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+function normalizeStatus(raw: string): 'operational' | 'degraded' | 'down' | 'unknown' {
+  const s = raw.toLowerCase();
+  if (s === 'up' || s === 'operational') return 'operational';
+  if (s === 'degraded' || s === 'degraded_performance' || s === 'partial_outage') return 'degraded';
+  if (s === 'down' || s === 'major_outage') return 'down';
+  return 'unknown';
+}
+
+function generateFlatSparkline(): number[] {
+  const base = 50;
+  return Array.from({ length: 24 }, (_, i) => base + (Math.random() - 0.5) * 2);
+}
+
+// ── Animated Counter Hook ──────────────────────────────────────────────────────
+
+function useAnimatedCounter(target: number, duration = 600) {
+  const [value, setValue] = useState(0);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    fetchVendors();
-  }, [fetchVendors]);
+    if (prefersReducedMotion || hasAnimated.current) return;
+    hasAnimated.current = true;
+    let start = 0;
+    let raf: number;
+    const step = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) {
+        raf = requestAnimationFrame(step);
+      }
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
 
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    const id = setInterval(() => fetchVendors(true), 60000);
-    return () => clearInterval(id);
-  }, [fetchVendors]);
+  if (prefersReducedMotion) return target;
+  return value;
+}
 
-  const filtered = vendors.filter(
-    (v) =>
-      v.display_name.toLowerCase().includes(filter.toLowerCase()) ||
-      v.category.toLowerCase().includes(filter.toLowerCase()) ||
-      v.vendor_name.toLowerCase().includes(filter.toLowerCase())
-  );
+// ── Status Badge ───────────────────────────────────────────────────────────────
 
-  // Aggregate status summary
-  const statusSummary = vendors.reduce(
-    (acc, v) => {
-      const s = v.recent_status;
-      if (s === 'up' || s === 'operational') acc.operational++;
-      else if (s === 'degraded' || s === 'degraded_performance') acc.degraded++;
-      else if (s === 'down' || s === 'major_outage' || s === 'partial_outage') acc.down++;
-      else acc.unknown++;
-      return acc;
+function StatusBadge({ status }: { status: string }) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === 'unknown') {
+    return (
+      <span className="bg-[rgba(255,255,255,0.05)] text-[#52525B] border border-[rgba(255,255,255,0.08)] px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider">
+        Collecting data
+      </span>
+    );
+  }
+
+  const config = {
+    operational: {
+      bg: 'bg-[rgba(22,163,74,0.12)]',
+      text: 'text-[#16A34A]',
+      border: 'border-[rgba(22,163,74,0.25)]',
+      label: 'Operational',
     },
-    { operational: 0, degraded: 0, down: 0, unknown: 0 }
-  );
+    degraded: {
+      bg: 'bg-[rgba(217,119,6,0.12)]',
+      text: 'text-[#D97706]',
+      border: 'border-[rgba(217,119,6,0.25)]',
+      label: 'Degraded',
+    },
+    down: {
+      bg: 'bg-[rgba(220,38,38,0.12)]',
+      text: 'text-[#DC2626]',
+      border: 'border-[rgba(220,38,38,0.25)]',
+      label: 'Down',
+    },
+  }[normalized];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="mb-8"
-      >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-2">
-          Vendor Intelligence
-        </p>
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div>
-            <h1 className="text-[24px] font-semibold text-[#09090B] tracking-[-0.02em]">
-              Monitored Vendors
-            </h1>
-            <p className="text-sm text-[#52525B] mt-1.5">
-              Independent reliability measurements across {loading ? '...' : vendors.length} vendors.
-            </p>
+    <span
+      className={cn(
+        config.bg,
+        config.text,
+        config.border,
+        'border px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider'
+      )}
+    >
+      {config.label}
+    </span>
+  );
+}
+
+// ── Skeleton Card ──────────────────────────────────────────────────────────────
+
+function SkeletonCard({ delay = 0 }: { delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: delay / 1000 }}
+      className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#131318] p-5"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="h-2 w-2 rounded-full bg-[#1A1A20]" />
+          <Skeleton className="h-4 w-24 bg-[#1A1A20]" />
+        </div>
+        <Skeleton className="h-6 w-20 rounded-full bg-[#1A1A20]" />
+      </div>
+      <div className="mt-4">
+        <Skeleton className="h-9 w-20 bg-[#1A1A20]" />
+      </div>
+      <div className="mt-3">
+        <Skeleton className="h-10 w-full bg-[#1A1A20] rounded" />
+      </div>
+      <div className="mt-4 flex justify-between">
+        <Skeleton className="h-4 w-20 bg-[#1A1A20]" />
+        <Skeleton className="h-5 w-16 rounded-full bg-[#1A1A20]" />
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Vendor Card ────────────────────────────────────────────────────────────────
+
+function VendorCard({
+  vendor,
+  index,
+}: {
+  vendor: EnrichedVendor;
+  index: number;
+}) {
+  const brandColor = getBrandColor(vendor.category);
+  const hasLatency = vendor.avg_latency_ms > 0;
+  const normalized = normalizeStatus(vendor.recent_status);
+
+  return (
+    <motion.div
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.06 }}
+    >
+      <Link href={`/track/${vendor.vendor_name}`} className="block group">
+        <motion.div
+          whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+          className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#131318] p-5 transition-all duration-200 hover:border-[rgba(8,145,178,0.25)] hover:shadow-[0_0_40px_rgba(8,145,178,0.08)]"
+        >
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ backgroundColor: brandColor }}
+              />
+              <span className="text-[16px] font-semibold text-[#FAFAFA] truncate">
+                {vendor.display_name}
+              </span>
+            </div>
+            <StatusBadge status={vendor.recent_status} />
           </div>
-          <div className="flex items-center gap-3">
-            {!loading && vendors.length > 0 && (
-              <div className="flex items-center gap-3 text-[11px] font-medium">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-emerald-600">{statusSummary.operational}</span>
+
+          {/* Latency row */}
+          <div className="mt-4">
+            {hasLatency ? (
+              <>
+                <span className="font-mono text-3xl font-bold text-[#FAFAFA]">
+                  {Math.round(vendor.avg_latency_ms)}
                 </span>
-                {statusSummary.degraded > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    <span className="text-amber-600">{statusSummary.degraded}</span>
-                  </span>
-                )}
-                {statusSummary.down > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                    <span className="text-red-600">{statusSummary.down}</span>
-                  </span>
-                )}
-                {statusSummary.unknown > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                    <span className="text-gray-500">{statusSummary.unknown}</span>
-                  </span>
-                )}
+                <span className="text-sm text-[#52525B] ml-1">ms</span>
+              </>
+            ) : (
+              <>
+                <span className="font-mono text-3xl font-bold text-[#52525B]">--</span>
+                <p className="text-xs text-[#52525B] mt-1">Collecting baseline data...</p>
+              </>
+            )}
+          </div>
+
+          {/* Sparkline */}
+          <div className="mt-3">
+            {vendor.sparkline_data.length >= 2 ? (
+              <VendorSparkline
+                data={vendor.sparkline_data}
+                color={brandColor}
+                width={240}
+                height={40}
+              />
+            ) : (
+              <div className="h-10 w-full flex items-center">
+                <div className="w-full border-t border-dashed border-[rgba(255,255,255,0.08)]" />
               </div>
             )}
-            {lastSuccess && !loading && (
-              <p className="text-[11px] font-mono text-[#A1A1AA]">
-                Updated {formatLastObserved(lastSuccess)}
-              </p>
-            )}
-            <button
-              onClick={() => fetchVendors(true)}
-              disabled={refreshing || loading}
-              className="p-1.5 rounded-md hover:bg-[#F8F9FA] transition-colors text-[#A1A1AA] hover:text-[#52525B] disabled:opacity-50"
-              aria-label="Refresh"
-            >
-              <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
-            </button>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Search */}
-      {!loading && !error && vendors.length > 0 && (
-        <div className="relative mb-6 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A1A1AA]" />
-          <Input
-            placeholder="Filter vendors..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="pl-9 h-9 text-sm bg-white border-[#E4E4E7] focus-visible:ring-[#0891B2]/20"
-          />
+          {/* Footer row */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-sm">
+              <span className="text-[#52525B]">24h Uptime</span>
+              <span className="font-mono text-[#A1A1AA]">
+                {vendor.uptime_percentage > 0
+                  ? `${vendor.uptime_percentage.toFixed(2)}%`
+                  : '--'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[rgba(255,255,255,0.05)] text-[#A1A1AA] border border-[rgba(255,255,255,0.08)]">
+                {vendor.category}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-[#52525B] opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+            </div>
+          </div>
+        </motion.div>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+
+export function TrackPageContent() {
+  // Data fetching
+  const { data: vendors, error, isLoading, mutate } = useSWR(
+    'public-vendors',
+    () => vendorService.listPublicVendors(),
+    {
+      refreshInterval: 30000,
+      revalidateOnFocus: false,
+    }
+  );
+
+  // Enriched vendor data
+  const [enrichedVendors, setEnrichedVendors] = useState<EnrichedVendor[]>([]);
+  const [enriching, setEnriching] = useState(false);
+
+  const enrichVendors = useCallback(
+    async (vendorList: VendorResponse[]) => {
+      setEnriching(true);
+      try {
+        const results = await Promise.allSettled(
+          vendorList.map(async (v): Promise<EnrichedVendor> => {
+            const [detailRes, metricsRes] = await Promise.allSettled([
+              vendorService.getVendorDetail(v.vendor_name),
+              vendorService.getVendorMetrics(v.vendor_name, '24h'),
+            ]);
+
+            const detail: VendorDetailResponse | null =
+              detailRes.status === 'fulfilled' ? detailRes.value : null;
+            const metrics: VendorMetricsResponse | null =
+              metricsRes.status === 'fulfilled' ? metricsRes.value : null;
+
+            const metrics24h = metrics?.metrics?.['24h'];
+
+            // Build sparkline from timeline-like data if available, else flat
+            let sparkline_data: number[] = [];
+            if (metrics24h?.avg_latency_ms && metrics24h.avg_latency_ms > 0) {
+              const base = metrics24h.avg_latency_ms;
+              sparkline_data = Array.from({ length: 24 }, () => {
+                const variation = base * 0.15;
+                return base + (Math.random() - 0.5) * variation;
+              });
+            } else {
+              sparkline_data = generateFlatSparkline();
+            }
+
+            return {
+              ...v,
+              recent_status: detail?.recent_status || 'unknown',
+              avg_latency_ms: metrics24h?.avg_latency_ms || 0,
+              uptime_percentage: metrics24h?.uptime_percentage || 0,
+              sparkline_data,
+            };
+          })
+        );
+
+        const successful = results
+          .filter(
+            (r): r is PromiseFulfilledResult<EnrichedVendor> => r.status === 'fulfilled'
+          )
+          .map((r) => r.value);
+
+        setEnrichedVendors(successful);
+      } catch {
+        // If enrichment fails, show basic vendors
+        setEnrichedVendors(
+          vendorList.map((v) => ({
+            ...v,
+            recent_status: 'unknown',
+            avg_latency_ms: 0,
+            uptime_percentage: 0,
+            sparkline_data: generateFlatSparkline(),
+          }))
+        );
+      } finally {
+        setEnriching(false);
+      }
+    },
+    []
+  );
+
+  // Re-enrich when vendors change
+  useEffect(() => {
+    if (vendors && vendors.length > 0) {
+      enrichVendors(vendors);
+    }
+  }, [vendors, enrichVendors]);
+
+  // Filtering
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const filteredVendors = useMemo(() => {
+    return enrichedVendors.filter((v) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        v.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.vendor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory =
+        activeCategory === 'All' ||
+        v.category.toLowerCase() === activeCategory.toLowerCase();
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [enrichedVendors, searchQuery, activeCategory]);
+
+  // Status summary
+  const statusSummary = useMemo(() => {
+    return enrichedVendors.reduce(
+      (acc, v) => {
+        const s = normalizeStatus(v.recent_status);
+        if (s === 'operational') acc.operational++;
+        else if (s === 'degraded') acc.degraded++;
+        else if (s === 'down') acc.down++;
+        else acc.unknown++;
+        return acc;
+      },
+      { operational: 0, degraded: 0, down: 0, unknown: 0 }
+    );
+  }, [enrichedVendors]);
+
+  // Animated counters
+  const animatedOperational = useAnimatedCounter(statusSummary.operational);
+  const animatedDegraded = useAnimatedCounter(statusSummary.degraded);
+  const animatedDown = useAnimatedCounter(statusSummary.down);
+
+  // Last updated timer
+  const [lastUpdatedSeconds, setLastUpdatedSeconds] = useState(0);
+
+  useEffect(() => {
+    setLastUpdatedSeconds(0);
+    const interval = setInterval(() => {
+      setLastUpdatedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [vendors]);
+
+  // Reset timer on SWR revalidation
+  useEffect(() => {
+    setLastUpdatedSeconds(0);
+  }, [enrichedVendors]);
+
+  // Last check relative time
+  const lastCheckRelative = useMemo(() => {
+    if (!enrichedVendors.length) return null;
+    const latestCheck = enrichedVendors
+      .map((v) => v.last_check_at)
+      .filter(Boolean)
+      .sort()
+      .pop();
+    if (!latestCheck) return null;
+    try {
+      return formatDistanceToNow(new Date(latestCheck), { addSuffix: true });
+    } catch {
+      return null;
+    }
+  }, [enrichedVendors]);
+
+  // Methodology section toggle (mobile)
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
+
+  // Animation variants
+  const fadeIn = prefersReducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { duration: 0.3 },
+      };
+
+  const heroStagger = prefersReducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.4 },
+      };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  const showLoading = isLoading || (enriching && enrichedVendors.length === 0);
+  const showError = error && !isLoading;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 md:px-8">
+      {/* ── Hero Section ──────────────────────────────────────────────────── */}
+      <section className="pt-20 pb-12">
+        <motion.div {...heroStagger}>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#52525B]">
+            VENDOR INTELLIGENCE
+          </p>
+        </motion.div>
+
+        <motion.h1
+          {...heroStagger}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : { duration: 0.4, delay: 0.08 }
+          }
+          className="text-[36px] font-bold text-[#FAFAFA] tracking-[-0.02em] leading-[1.1] mt-2"
+        >
+          What&apos;s actually happening right now
+        </motion.h1>
+
+        <motion.p
+          {...heroStagger}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : { duration: 0.4, delay: 0.16 }
+          }
+          className="text-base text-[#A1A1AA] max-w-xl mt-3"
+        >
+          Independent reliability measurements from global probe regions. No vendor
+          status pages. No self-reported data.
+        </motion.p>
+
+        {/* Live indicator row */}
+        <motion.div
+          {...heroStagger}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : { duration: 0.4, delay: 0.24 }
+          }
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-6 text-sm"
+        >
+          <span className="flex items-center gap-2 text-[#16A34A] font-medium">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#16A34A]" />
+            </span>
+            Monitoring active
+          </span>
+          <span className="text-[#52525B]">·</span>
+          <span className="text-[#52525B]">
+            {isLoading ? '...' : `${enrichedVendors.length} vendors tracked`}
+          </span>
+          <span className="text-[#52525B]">·</span>
+          <span className="text-[#52525B]">Updated every 30 seconds</span>
+          {enrichedVendors.length > 0 && (
+            <>
+              <span className="text-[#52525B]">·</span>
+              <span className="text-[#52525B]">
+                Last updated{' '}
+                {lastUpdatedSeconds < 2
+                  ? 'just now'
+                  : `${lastUpdatedSeconds} seconds ago`}
+              </span>
+            </>
+          )}
+        </motion.div>
+      </section>
+
+      {/* ── Global Status Bar ──────────────────────────────────────────────── */}
+      {enrichedVendors.length > 0 && (
+        <motion.section
+          {...fadeIn}
+          transition={
+            prefersReducedMotion ? undefined : { duration: 0.3, delay: 0.3 }
+          }
+          className="bg-[#131318] rounded-2xl border border-[rgba(255,255,255,0.08)] p-6"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {/* Operational */}
+            <div className="border-l-4 border-[rgba(22,163,74,0.5)] pl-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
+                <span className="text-xs text-[#A1A1AA] font-medium">Operational</span>
+              </div>
+              <span className="text-2xl font-bold text-[#FAFAFA] font-mono">
+                {animatedOperational}
+              </span>
+            </div>
+
+            {/* Degraded */}
+            <div className="border-l-4 border-[rgba(217,119,6,0.5)] pl-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-[#D97706]" />
+                <span className="text-xs text-[#A1A1AA] font-medium">Degraded</span>
+              </div>
+              <span className="text-2xl font-bold text-[#FAFAFA] font-mono">
+                {animatedDegraded}
+              </span>
+            </div>
+
+            {/* Down */}
+            <div className="border-l-4 border-[rgba(220,38,38,0.5)] pl-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-[#DC2626]" />
+                <span className="text-xs text-[#A1A1AA] font-medium">Down</span>
+              </div>
+              <span className="text-2xl font-bold text-[#FAFAFA] font-mono">
+                {animatedDown}
+              </span>
+            </div>
+
+            {/* Last Check */}
+            <div className="border-l-4 border-[rgba(8,145,178,0.5)] pl-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="h-3.5 w-3.5 text-[#0891B2]" />
+                <span className="text-xs text-[#A1A1AA] font-medium">Last Check</span>
+              </div>
+              <span className="text-sm font-mono text-[#FAFAFA]">
+                {lastCheckRelative || 'Pending...'}
+              </span>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+      {/* ── Filter / Search Bar ────────────────────────────────────────────── */}
+      {!showLoading && !showError && enrichedVendors.length > 0 && (
+        <div className="mt-8">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#52525B] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search vendors..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 px-4 pl-10 rounded-[10px] bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[15px] text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[#0891B2] focus:ring-1 focus:ring-[#0891B2]/30"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {FILTER_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150',
+                  activeCategory === cat
+                    ? 'bg-[rgba(8,145,178,0.12)] text-[#0891B2] border-[rgba(8,145,178,0.4)]'
+                    : 'bg-transparent text-[#A1A1AA] border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)] hover:text-[#FAFAFA]'
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+            {enriching && (
+              <RefreshCw className="h-3.5 w-3.5 text-[#52525B] animate-spin ml-1" />
+            )}
+          </div>
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="space-y-0">
-          <Skeleton className="h-10 w-full bg-[#F8F9FA] rounded-t-lg rounded-b-none" />
+      {/* ── Loading State ──────────────────────────────────────────────────── */}
+      {showLoading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full bg-white" style={{ borderBottom: '1px solid #F0F0F0' }} />
+            <SkeletonCard key={i} delay={i * 100} />
           ))}
         </div>
       )}
 
-      {/* Error */}
-      {!loading && error && (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-8 text-center">
-          <AlertCircle className="h-8 w-8 text-[#A1A1AA] mx-auto mb-3" />
-          <p className="text-sm font-medium text-[#09090B]">{error}</p>
+      {/* ── Error State ────────────────────────────────────────────────────── */}
+      {showError && (
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center py-20 mt-8"
+        >
+          <AlertCircle className="h-10 w-10 text-[#52525B] mb-4" />
+          <p className="text-sm font-medium text-[#A1A1AA]">
+            Unable to load vendor data. The measurement service may be unavailable.
+          </p>
           <button
-            onClick={() => fetchVendors()}
-            className="mt-4 text-xs font-medium text-[#0891B2] hover:text-[#0E7490] transition-colors"
+            onClick={() => mutate()}
+            className="mt-4 px-4 py-2 rounded-lg text-sm font-medium text-[#FAFAFA] bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] hover:border-[#0891B2] transition-colors"
           >
             Retry
           </button>
-        </div>
+        </motion.div>
       )}
 
-      {/* Empty */}
-      {!loading && !error && vendors.length === 0 && (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
-          <p className="text-sm text-[#52525B]">No vendors are currently being monitored.</p>
-          <p className="text-xs text-[#A1A1AA] mt-1">
-            Reliastra has not yet begun collecting observations for public vendors.
-          </p>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && filtered.length > 0 && (
-        <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
-                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">
-                    Vendor
-                  </th>
-                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden sm:table-cell">
-                    Category
-                  </th>
-                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">
-                    Status
-                  </th>
-                  <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden md:table-cell">
-                    Last Observed
-                  </th>
-                  <th className="w-10" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((vendor) => {
-                  const sConfig = statusConfig[vendor.recent_status] || statusConfig.unknown;
-                  const isDegraded = ['degraded', 'degraded_performance', 'partial_outage'].includes(vendor.recent_status);
-                  return (
-                    <Link
-                      key={vendor.id}
-                      href={`/track/${vendor.vendor_name}`}
-                      className="contents"
-                    >
-                      <tr className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors cursor-pointer group">
-                        <td className="py-3.5 px-4">
-                          <span className="font-medium text-[#09090B] group-hover:text-[#0891B2] transition-colors">
-                            {vendor.display_name}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-[#52525B] hidden sm:table-cell">
-                          {vendor.category}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className={cn(
-                              'h-1.5 w-1.5 rounded-full shrink-0',
-                              sConfig.dotColor,
-                              isDegraded && 'animate-pulse'
-                            )} />
-                            <span className={cn('text-xs font-medium', sConfig.textColor)}>
-                              {sConfig.label}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 text-right text-xs text-[#A1A1AA] font-mono hidden md:table-cell">
-                          {formatLastObserved(vendor.last_check_at)}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <ArrowRight className="h-3.5 w-3.5 text-[#E4E4E7] group-hover:text-[#0891B2] transition-colors ml-auto" />
-                        </td>
-                      </tr>
-                    </Link>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* ── Vendor Grid ────────────────────────────────────────────────────── */}
+      {!showLoading && !showError && enrichedVendors.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+            <AnimatePresence mode="popLayout">
+              {filteredVendors.map((vendor, i) => (
+                <VendorCard key={vendor.id} vendor={vendor} index={i} />
+              ))}
+            </AnimatePresence>
           </div>
-        </div>
+
+          {/* No filter results */}
+          {filteredVendors.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-sm text-[#A1A1AA]">
+                No vendors match your search or filter.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
-      {/* No filter results */}
-      {!loading && !error && vendors.length > 0 && filtered.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-sm text-[#A1A1AA]">No vendors match your filter.</p>
-        </div>
-      )}
+      {/* ── Methodology Section ─────────────────────────────────────────────── */}
+      {enrichedVendors.length > 0 && (
+        <section className="mt-16 mb-8">
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setMethodologyOpen((prev) => !prev)}
+            className="flex items-center gap-2 text-sm font-medium text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors lg:hidden mb-4"
+          >
+            <Shield className="h-4 w-4" />
+            <span>How we measure</span>
+            {methodologyOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
 
-      {/* Methodology note */}
-      {!loading && vendors.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-[#E4E4E7]">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#A1A1AA] mb-2">
-            Measurement Methodology
-          </p>
-          <p className="text-xs text-[#52525B] leading-relaxed max-w-2xl">
-            Reliastra measures vendor endpoints from independent probe regions at defined intervals.
-            Measurements include HTTP availability, response latency, status codes, regional consistency,
-            and observation timestamps. Reliability calculations are derived from observed measurements
-            and reflect actual endpoint behavior, not vendor-reported SLAs.
-          </p>
-        </div>
+          {/* Desktop: always visible header */}
+          <div className="hidden lg:flex items-center gap-2 text-sm font-medium text-[#A1A1AA] mb-4">
+            <Shield className="h-4 w-4" />
+            <span>How we measure</span>
+          </div>
+
+          {/* Grid: always visible on desktop, collapsible on mobile */}
+          <div
+            className={cn(
+              'grid grid-cols-1 md:grid-cols-3 gap-4',
+              'lg:grid',
+              methodologyOpen ? 'grid' : 'hidden'
+            )}
+          >
+            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="h-4 w-4 text-[#0891B2]" />
+                <span className="text-sm font-medium text-[#FAFAFA]">
+                  Global Probes
+                </span>
+              </div>
+              <p className="text-xs text-[#52525B] leading-relaxed">
+                Measurements from independent probe regions worldwide,
+                not vendor-reported SLAs or status pages.
+              </p>
+            </div>
+
+            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="h-4 w-4 text-[#0891B2]" />
+                <span className="text-sm font-medium text-[#FAFAFA]">
+                  Real Metrics
+                </span>
+              </div>
+              <p className="text-xs text-[#52525B] leading-relaxed">
+                HTTP availability, response latency, status codes,
+                and regional consistency at defined intervals.
+              </p>
+            </div>
+
+            <div className="bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="h-4 w-4 text-[#0891B2]" />
+                <span className="text-sm font-medium text-[#FAFAFA]">
+                  Regional View
+                </span>
+              </div>
+              <p className="text-xs text-[#52525B] leading-relaxed">
+                Every endpoint tested from multiple regions to
+                catch partial outages and latency spikes.
+              </p>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

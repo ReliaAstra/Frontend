@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ vendor: s
 export default async function TrackVendorPage({ params }: { params: Promise<{ vendor: string }> }) {
   const { vendor } = await params;
   return (
-    <main className="min-h-screen bg-white pt-[72px]">
+    <main className="min-h-screen bg-[#0A0A0F] pt-[72px]">
       <TrackVendorContent vendorSlug={vendor} />
     </main>
   );

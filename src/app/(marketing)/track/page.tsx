@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TrackPage() {
   return (
-    <main className="min-h-screen bg-white pt-[72px]">
+    <main className="min-h-screen bg-[#0A0A0F] pt-[72px]">
       <TrackPageContent />
     </main>
   );

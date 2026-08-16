@@ -1,0 +1,695 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useCallback, useRef } from "react";
+     4→import Link from "next/link";
+     5→import { useAuth } from "@/lib/auth-context";
+     6→import {
+     7→  dependencyService,
+     8→  type Dependency,
+     9→  type DependencyHistory,
+    10→} from "@/services/dependencyService";
+    11→import { billingService } from "@/services/billingService";
+    12→import { Skeleton } from "@/components/ui/skeleton";
+    13→import { cn } from "@/lib/utils";
+    14→import { formatDistanceToNow } from "date-fns";
+    15→import {
+    16→  Layers,
+    17→  Plus,
+    18→  MoreVertical,
+    19→  Pause,
+    20→  Play,
+    21→  Trash2,
+    22→  Edit3,
+    23→  ExternalLink,
+    24→  X,
+    25→} from "lucide-react";
+    26→import { StatusDot } from "@/components/dashboard/ConsoleLayout";
+    27→import { ConsoleCard } from "@/components/dashboard/ConsoleLayout";
+    28→import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
+    29→import { EmptyState } from "@/components/dashboard/EmptyState";
+    30→import { getPlanConfig } from "@/lib/tierLimits";
+    31→import type { Plan } from "@/services/billingService";
+    32→
+    33→// ── Constants ────────────────────────────────────────────────────────────────
+    34→
+    35→const CHECK_INTERVAL_OPTIONS = [
+    36→  { value: 15, label: "15s" },
+    37→  { value: 30, label: "30s" },
+    38→  { value: 60, label: "60s" },
+    39→  { value: 300, label: "5m" },
+    40→  { value: 600, label: "10m" },
+    41→];
+    42→
+    43→const REGION_OPTIONS = [
+    44→  { value: "us-east", label: "US East" },
+    45→  { value: "us-west", label: "US West" },
+    46→  { value: "eu-west", label: "EU West" },
+    47→  { value: "apac-south", label: "APAC South" },
+    48→];
+    49→
+    50→type StatusBadgeType = "operational" | "degraded" | "down" | "unknown";
+    51→
+    52→function deriveStatus(dep: Dependency): StatusBadgeType {
+    53→  if (!dep.is_active) return "unknown";
+    54→  // If no recent check info, treat as unknown. In a real app you'd check last check result.
+    55→  return "operational";
+    56→}
+    57→
+    58→const STATUS_CONFIG: Record<
+    59→  StatusBadgeType,
+    60→  { label: string; color: string; bg: string }
+    61→> = {
+    62→  operational: {
+    63→    label: "Operational",
+    64→    color: "#16A34A",
+    65→    bg: "rgba(22,163,74,0.12)",
+    66→  },
+    67→  degraded: {
+    68→    label: "Degraded",
+    69→    color: "#D97706",
+    70→    bg: "rgba(217,119,6,0.12)",
+    71→  },
+    72→  down: {
+    73→    label: "Down",
+    74→    color: "#DC2626",
+    75→    bg: "rgba(220,38,38,0.12)",
+    76→  },
+    77→  unknown: {
+    78→    label: "Unknown",
+    79→    color: "#52525B",
+    80→    bg: "rgba(82,82,91,0.12)",
+    81→  },
+    82→};
+    83→
+    84→function uptimeColor(pct: number | null): string {
+    85→  if (pct === null) return "#52525B";
+    86→  if (pct >= 99) return "#16A34A";
+    87→  if (pct >= 95) return "#D97706";
+    88→  return "#DC2626";
+    89→}
+    90→
+    91→function formatUptime(pct: number | null): string {
+    92→  if (pct === null) return "—";
+    93→  return pct.toFixed(2) + "%";
+    94→}
+    95→
+    96→// ── Component ────────────────────────────────────────────────────────────────
+    97→
+    98→export default function DependenciesPage() {
+    99→  const { user } = useAuth();
+   100→
+   101→  // Data
+   102→  const [dependencies, setDependencies] = useState<Dependency[]>([]);
+   103→  const [historyMap, setHistoryMap] = useState<Record<string, DependencyHistory>>({});
+   104→  const [plan, setPlan] = useState<Plan>("free");
+   105→  const [loading, setLoading] = useState(true);
+   106→  const [error, setError] = useState<string | null>(null);
+   107→
+   108→  // Modal
+   109→  const [modalOpen, setModalOpen] = useState(false);
+   110→  const [formName, setFormName] = useState("");
+   111→  const [formEndpoint, setFormEndpoint] = useState("");
+   112→  const [formExpectedStatus, setFormExpectedStatus] = useState(200);
+   113→  const [formInterval, setFormInterval] = useState(60);
+   114→  const [formRegions, setFormRegions] = useState<string[]>(["us-east"]);
+   115→  const [formEndpointError, setFormEndpointError] = useState("");
+   116→  const [creating, setCreating] = useState(false);
+   117→
+   118→  // Actions
+   119→  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+   120→  const [togglingId, setTogglingId] = useState<string | null>(null);
+   121→  const [deletingId, setDeletingId] = useState<string | null>(null);
+   122→
+   123→  const menuRef = useRef<HTMLDivElement>(null);
+   124→
+   125→  // ── Fetch ────────────────────────────────────────────────────────────────
+   126→
+   127→  const planConfig = getPlanConfig(plan);
+   128→  const depLimit = planConfig.limits.dependencies;
+   129→  const maxRegions = planConfig.limits.regions;
+   130→  const minInterval = planConfig.limits.interval;
+   131→  const atLimit = dependencies.length >= depLimit;
+   132→  const isFreeOrStarter = plan === "free" || plan === "starter";
+   133→
+   134→  const fetchData = useCallback(async () => {
+   135→    setLoading(true);
+   136→    setError(null);
+   137→    try {
+   138→      const [deps, billing] = await Promise.all([
+   139→        dependencyService.list(),
+   140→        billingService.getPlan(),
+   141→      ]);
+   142→      setDependencies(deps);
+   143→      setPlan(billing.plan);
+   144→    } catch {
+   145→      setError("Unable to load dependencies. Please try again.");
+   146→    } finally {
+   147→      setLoading(false);
+   148→    }
+   149→  }, []);
+   150→
+   151→  const fetchHistory = useCallback(async (id: string) => {
+   152→    try {
+   153→      const history = await dependencyService.getHistory(id);
+   154→      setHistoryMap((prev) => ({ ...prev, [id]: history }));
+   155→    } catch {
+   156→      // Silently ignore history fetch failures
+   157→    }
+   158→  }, []);
+   159→
+   160→  useEffect(() => {
+   161→    fetchData();
+   162→  }, [fetchData]);
+   163→
+   164→  // Fetch history for all deps once they load
+   165→  useEffect(() => {
+   166→    dependencies.forEach((dep) => {
+   167→      if (!historyMap[dep.id]) {
+   168→        fetchHistory(dep.id);
+   169→      }
+   170→    });
+   171→  }, [dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
+   172→
+   173→  // Close dropdown menu when clicking outside
+   174→  useEffect(() => {
+   175→    function handleClickOutside(e: MouseEvent) {
+   176→      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+   177→        setActiveMenuId(null);
+   178→      }
+   179→    }
+   180→    document.addEventListener("mousedown", handleClickOutside);
+   181→    return () => document.removeEventListener("mousedown", handleClickOutside);
+   182→  }, []);
+   183→
+   184→  // ── Handlers ─────────────────────────────────────────────────────────────
+   185→
+   186→  const openModal = () => {
+   187→    setFormName("");
+   188→    setFormEndpoint("");
+   189→    setFormExpectedStatus(200);
+   190→    setFormInterval(60);
+   191→    setFormRegions(["us-east"]);
+   192→    setFormEndpointError("");
+   193→    setModalOpen(true);
+   194→  };
+   195→
+   196→  const handleCreate = async () => {
+   197→    // Validate HTTPS
+   198→    if (
+   199→      !formEndpoint.startsWith("https://") &&
+   200→      !formEndpoint.startsWith("http://")
+   201→    ) {
+   202→      setFormEndpointError("Endpoint must be a valid URL (https:// or http://)");
+   203→      return;
+   204→    }
+   205→    if (!formName.trim() || !formEndpoint.trim()) {
+   206→      setFormEndpointError("Name and endpoint URL are required.");
+   207→      return;
+   208→    }
+   209→    setFormEndpointError("");
+   210→    setCreating(true);
+   211→    try {
+   212→      await dependencyService.create({
+   213→        name: formName.trim(),
+   214→        endpoint_url: formEndpoint.trim(),
+   215→        expected_status_codes: [formExpectedStatus],
+   216→        check_interval_seconds: formInterval,
+   217→        regions: formRegions,
+   218→      });
+   219→      setModalOpen(false);
+   220→      fetchData();
+   221→    } catch {
+   222→      setFormEndpointError("Failed to create dependency. Please try again.");
+   223→    } finally {
+   224→      setCreating(false);
+   225→    }
+   226→  };
+   227→
+   228→  const handleToggle = async (dep: Dependency) => {
+   229→    setActiveMenuId(null);
+   230→    setTogglingId(dep.id);
+   231→    try {
+   232→      await dependencyService.update(dep.id, { is_active: !dep.is_active });
+   233→      setDependencies((prev) =>
+   234→        prev.map((d) =>
+   235→          d.id === dep.id ? { ...d, is_active: !dep.is_active } : d
+   236→        )
+   237→      );
+   238→    } catch {
+   239→      // Silently ignore
+   240→    } finally {
+   241→      setTogglingId(null);
+   242→    }
+   243→  };
+   244→
+   245→  const handleDelete = async (id: string) => {
+   246→    setActiveMenuId(null);
+   247→    setDeletingId(id);
+   248→    try {
+   249→      await dependencyService.delete(id);
+   250→      setDependencies((prev) => prev.filter((d) => d.id !== id));
+   251→      setHistoryMap((prev) => {
+   252→        const next = { ...prev };
+   253→        delete next[id];
+   254→        return next;
+   255→      });
+   256→    } catch {
+   257→      // Silently ignore
+   258→    } finally {
+   259→      setDeletingId(null);
+   260→    }
+   261→  };
+   262→
+   263→  const toggleRegion = (region: string) => {
+   264→    setFormRegions((prev) => {
+   265→      if (prev.includes(region)) {
+   266→        if (prev.length > 1) return prev.filter((r) => r !== region);
+   267→        return prev;
+   268→      }
+   269→      if (plan === "free" && prev.length >= 1) return prev;
+   270→      if (plan === "starter" && prev.length >= 2) return prev;
+   271→      return [...prev, region];
+   272→    });
+   273→  };
+   274→
+   275→  // ── Render ──────────────────────────────────────────────────────────────
+   276→
+   277→  return (
+   278→    <div className="min-h-screen bg-[#0A0A0F]">
+   279→      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+   280→        {/* Header */}
+   281→        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+   282→          <div>
+   283→            <h1 className="text-2xl font-bold text-[#FAFAFA]">Dependencies</h1>
+   284→            <p className="text-sm text-[#52525B] mt-1">
+   285→              Monitor and manage your external service endpoints
+   286→            </p>
+   287→          </div>
+   288→          <button
+   289→            onClick={openModal}
+   290→            className="bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-white transition-colors inline-flex items-center gap-2 shrink-0"
+   291→          >
+   292→            <Plus className="w-4 h-4" />
+   293→            Add dependency
+   294→          </button>
+   295→        </div>
+   296→
+   297→        {/* Upgrade Banner */}
+   298→        {isFreeOrStarter && (
+   299→          <UpgradeBanner
+   300→            plan={plan}
+   301→            usage={dependencies.length}
+   302→            limit={depLimit}
+   303→            resource="dependencies"
+   304→            onUpgrade={() => {}}
+   305→          />
+   306→        )}
+   307→
+   308→        {/* Error */}
+   309→        {error && (
+   310→          <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-5 py-4 flex items-start gap-3">
+   311→            <div className="w-2 h-2 rounded-full bg-[#DC2626] mt-1.5 shrink-0" />
+   312→            <p className="text-sm text-[#FAFAFA]">{error}</p>
+   313→            <button
+   314→              onClick={fetchData}
+   315→              className="text-xs font-medium text-[#0891B2] ml-auto shrink-0 hover:underline"
+   316→            >
+   317→              Retry
+   318→            </button>
+   319→          </div>
+   320→        )}
+   321→
+   322→        {/* Loading Skeleton */}
+   323→        {loading && (
+   324→          <ConsoleCard>
+   325→            <div className="px-5 py-3 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4">
+   326→              {Array.from({ length: 6 }).map((_, i) => (
+   327→                <Skeleton
+   328→                  key={i}
+   329→                  className="h-3 w-12 rounded bg-[rgba(255,255,255,0.06)]"
+   330→                />
+   331→              ))}
+   332→            </div>
+   333→            {Array.from({ length: 5 }).map((_, rowIdx) => (
+   334→              <div
+   335→                key={rowIdx}
+   336→                className="px-5 py-4 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)]"
+   337→              >
+   338→                {Array.from({ length: 6 }).map((_, i) => (
+   339→                  <Skeleton
+   340→                    key={i}
+   341→                    className="h-4 w-full rounded bg-[rgba(255,255,255,0.06)]"
+   342→                  />
+   343→                ))}
+   344→              </div>
+   345→            ))}
+   346→          </ConsoleCard>
+   347→        )}
+   348→
+   349→        {/* Empty State */}
+   350→        {!loading && dependencies.length === 0 && !error && (
+   351→          <EmptyState
+   352→            icon={Layers}
+   353→            title="No dependencies configured"
+   354→            description="Add a dependency to start monitoring its uptime and reliability. Track response times, get alerted on outages, and correlate incidents automatically."
+   355→            actionLabel="Add dependency"
+   356→            onAction={openModal}
+   357→          />
+   358→        )}
+   359→
+   360→        {/* Dependencies Table */}
+   361→        {!loading && dependencies.length > 0 && (
+   362→          <ConsoleCard className="overflow-hidden">
+   363→            {/* Table Header */}
+   364→            <div className="px-5 py-3 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]">
+   365→              <div>Name</div>
+   366→              <div>Endpoint</div>
+   367→              <div>Status</div>
+   368→              <div>Uptime</div>
+   369→              <div>Last check</div>
+   370→              <div className="w-8" />
+   371→            </div>
+   372→
+   373→            {/* Rows */}
+   374→            {dependencies.map((dep, idx) => {
+   375→              const status = deriveStatus(dep);
+   376→              const statusCfg = STATUS_CONFIG[status];
+   377→              const history = historyMap[dep.id] || null;
+   378→              const uptime = history ? history.uptime_percentage : null;
+   379→
+   380→              return (
+   381→                <div
+   382→                  key={dep.id}
+   383→                  className="px-5 py-3.5 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center"
+   384→                >
+   385→                  {/* Name */}
+   386→                  <div className="min-w-0">
+   387→                    <div className="text-sm font-medium text-[#FAFAFA] truncate">
+   388→                      {dep.name}
+   389→                    </div>
+   390→                    <div className="text-xs text-[#52525B] font-mono truncate mt-0.5">
+   391→                      {dep.regions.length > 0
+   392→                        ? dep.regions.join(", ")
+   393→                        : "—"}
+   394→                    </div>
+   395→                  </div>
+   396→
+   397→                  {/* Endpoint */}
+   398→                  <div className="min-w-0">
+   399→                    <div className="text-xs text-[#A1A1AA] font-mono truncate">
+   400→                      {dep.endpoint_url}
+   401→                    </div>
+   402→                  </div>
+   403→
+   404→                  {/* Status */}
+   405→                  <div className="flex items-center gap-2">
+   406→                    <StatusDot status={status} pulse={status === "down"} />
+   407→                    <span
+   408→                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+   409→                      style={{
+   410→                        color: statusCfg.color,
+   411→                        backgroundColor: statusCfg.bg,
+   412→                      }}
+   413→                    >
+   414→                      {statusCfg.label}
+   415→                    </span>
+   416→                  </div>
+   417→
+   418→                  {/* Uptime */}
+   419→                  <div
+   420→                    className="font-mono text-sm"
+   421→                    style={{ color: uptimeColor(uptime) }}
+   422→                  >
+   423→                    {formatUptime(uptime)}
+   424→                  </div>
+   425→
+   426→                  {/* Last check */}
+   427→                  <div className="text-xs text-[#52525B] font-mono whitespace-nowrap">
+   428→                    {dep.updated_at
+   429→                      ? formatDistanceToNow(new Date(dep.updated_at), {
+   430→                          addSuffix: true,
+   431→                        })
+   432→                      : "—"}
+   433→                  </div>
+   434→
+   435→                  {/* Actions */}
+   436→                  <div className="relative w-8 flex justify-center" ref={idx === dependencies.findIndex(d => d.id === activeMenuId) ? menuRef : undefined}>
+   437→                    <button
+   438→                      onClick={() =>
+   439→                        setActiveMenuId(
+   440→                          activeMenuId === dep.id ? null : dep.id
+   441→                        )
+   442→                      }
+   443→                      className="p-1 rounded-md hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[#52525B] hover:text-[#A1A1AA]"
+   444→                    >
+   445→                      <MoreVertical className="w-4 h-4" />
+   446→                    </button>
+   447→
+   448→                    {/* Dropdown */}
+   449→                    {activeMenuId === dep.id && (
+   450→                      <div className="absolute right-0 top-full mt-1 z-20 bg-[#1A1A20] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-console-dropdown py-1 min-w-[160px]">
+   451→                        <button
+   452→                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+   453→                          onClick={() => setActiveMenuId(null)}
+   454→                        >
+   455→                          <Edit3 className="w-3.5 h-3.5" />
+   456→                          Edit
+   457→                        </button>
+   458→                        <button
+   459→                          className={cn(
+   460→                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors",
+   461→                            togglingId === dep.id && "opacity-50 pointer-events-none"
+   462→                          )}
+   463→                          onClick={() => handleToggle(dep)}
+   464→                        >
+   465→                          {dep.is_active ? (
+   466→                            <>
+   467→                              <Pause className="w-3.5 h-3.5" />
+   468→                              Pause
+   469→                            </>
+   470→                          ) : (
+   471→                            <>
+   472→                              <Play className="w-3.5 h-3.5" />
+   473→                              Resume
+   474→                            </>
+   475→                          )}
+   476→                        </button>
+   477→                        <div className="my-1 border-t border-[rgba(255,255,255,0.06)]" />
+   478→                        <button
+   479→                          className={cn(
+   480→                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#DC2626] hover:bg-[rgba(220,38,38,0.08)] transition-colors",
+   481→                            deletingId === dep.id && "opacity-50 pointer-events-none"
+   482→                          )}
+   483→                          onClick={() => handleDelete(dep.id)}
+   484→                        >
+   485→                          <Trash2 className="w-3.5 h-3.5" />
+   486→                          Delete
+   487→                        </button>
+   488→                      </div>
+   489→                    )}
+   490→                  </div>
+   491→                </div>
+   492→              );
+   493→            })}
+   494→          </ConsoleCard>
+   495→        )}
+   496→      </div>
+   497→
+   498→      {/* ── Add Dependency Modal ──────────────────────────────────────────────── */}
+   499→      {modalOpen && (
+   500→        <div
+   501→          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+   502→          onClick={(e) => {
+   503→            if (e.target === e.currentTarget) setModalOpen(false);
+   504→          }}
+   505→        >
+   506→          <div className="bg-[#1A1A20] rounded-2xl border border-[rgba(255,255,255,0.08)] max-w-lg w-full p-6 animate-[fadeIn_200ms_ease-out]">
+   507→            {/* Modal Header */}
+   508→            <div className="flex items-center justify-between mb-6">
+   509→              <h2 className="text-lg font-semibold text-[#FAFAFA]">
+   510→                Add dependency
+   511→              </h2>
+   512→              <button
+   513→                onClick={() => setModalOpen(false)}
+   514→                className="p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[#52525B] hover:text-[#A1A1AA]"
+   515→              >
+   516→                <X className="w-4 h-4" />
+   517→              </button>
+   518→            </div>
+   519→
+   520→            {/* Form */}
+   521→            <div className="space-y-4">
+   522→              {/* Name */}
+   523→              <div>
+   524→                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
+   525→                  Name
+   526→                </label>
+   527→                <input
+   528→                  type="text"
+   529→                  value={formName}
+   530→                  onChange={(e) => setFormName(e.target.value)}
+   531→                  placeholder="Stripe API"
+   532→                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors"
+   533→                />
+   534→              </div>
+   535→
+   536→              {/* Endpoint URL */}
+   537→              <div>
+   538→                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
+   539→                  Endpoint URL
+   540→                </label>
+   541→                <input
+   542→                  type="text"
+   543→                  value={formEndpoint}
+   544→                  onChange={(e) => {
+   545→                    setFormEndpoint(e.target.value);
+   546→                    setFormEndpointError("");
+   547→                  }}
+   548→                  placeholder="https://api.stripe.com/v1/charges"
+   549→                  className={cn(
+   550→                    "w-full bg-[#1C1C22] border text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors font-mono",
+   551→                    formEndpointError
+   552→                      ? "border-[rgba(220,38,38,0.5)]"
+   553→                      : "border-[rgba(255,255,255,0.08)]"
+   554→                  )}
+   555→                />
+   556→                {formEndpointError && (
+   557→                  <p className="text-xs text-[#DC2626] mt-1.5">
+   558→                    {formEndpointError}
+   559→                  </p>
+   560→                )}
+   561→              </div>
+   562→
+   563→              {/* Expected status + Check interval */}
+   564→              <div className="grid grid-cols-2 gap-4">
+   565→                <div>
+   566→                  <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
+   567→                    Expected status
+   568→                  </label>
+   569→                  <input
+   570→                    type="number"
+   571→                    value={formExpectedStatus}
+   572→                    onChange={(e) =>
+   573→                      setFormExpectedStatus(Number(e.target.value))
+   574→                    }
+   575→                    className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors font-mono"
+   576→                  />
+   577→                </div>
+   578→                <div>
+   579→                  <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
+   580→                    Check interval
+   581→                  </label>
+   582→                  <select
+   583→                    value={formInterval}
+   584→                    onChange={(e) => setFormInterval(Number(e.target.value))}
+   585→                    className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors appearance-none cursor-pointer"
+   586→                  >
+   587→                    {CHECK_INTERVAL_OPTIONS.map((opt) => {
+   588→                      const disabled = opt.value < minInterval;
+   589→                      return (
+   590→                        <option
+   591→                          key={opt.value}
+   592→                          value={opt.value}
+   593→                          disabled={disabled}
+   594→                          className={disabled ? "opacity-40" : ""}
+   595→                        >
+   596→                          {opt.label}
+   597→                          {disabled && " (upgrade)"}
+   598→                        </option>
+   599→                      );
+   600→                    })}
+   601→                  </select>
+   602→                </div>
+   603→              </div>
+   604→
+   605→              {/* Regions */}
+   606→              <div>
+   607→                <label className="text-sm font-medium text-[#A1A1AA] mb-2 block">
+   608→                  Regions
+   609→                  {(plan === "free" || plan === "starter") && (
+   610→                    <span className="text-[#52525B] ml-1.5 font-normal">
+   611→                      (max {maxRegions} on {planConfig.name})
+   612→                    </span>
+   613→                  )}
+   614→                </label>
+   615→                <div className="flex flex-wrap gap-2">
+   616→                  {REGION_OPTIONS.map((region) => {
+   617→                    const isSelected = formRegions.includes(region.value);
+   618→                    const canSelect =
+   619→                      !isSelected &&
+   620→                      plan === "free" &&
+   621→                      formRegions.length >= 1;
+   622→                    const canSelectStarter =
+   623→                      !isSelected &&
+   624→                      plan === "starter" &&
+   625→                      formRegions.length >= 2;
+   626→
+   627→                    return (
+   628→                      <button
+   629→                        key={region.value}
+   630→                        type="button"
+   631→                        onClick={() => toggleRegion(region.value)}
+   632→                        disabled={canSelect || canSelectStarter}
+   633→                        className={cn(
+   634→                          "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
+   635→                          isSelected
+   636→                            ? "bg-[rgba(8,145,178,0.15)] border-[rgba(8,145,178,0.3)] text-[#0891B2]"
+   637→                            : canSelect || canSelectStarter
+   638→                              ? "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] text-[#52525B] opacity-50 cursor-not-allowed"
+   639→                              : "bg-[#1C1C22] border-[rgba(255,255,255,0.08)] text-[#A1A1AA] hover:border-[rgba(255,255,255,0.15)] hover:text-[#FAFAFA]"
+   640→                        )}
+   641→                      >
+   642→                        {region.label}
+   643→                      </button>
+   644→                    );
+   645→                  })}
+   646→                </div>
+   647→              </div>
+   648→
+   649→              {/* Error message */}
+   650→              {formEndpointError && !formEndpoint.startsWith("http") && null}
+   651→
+   652→              {/* Footer */}
+   653→              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
+   654→                <button
+   655→                  onClick={() => setModalOpen(false)}
+   656→                  className="px-4 py-2.5 rounded-lg text-sm font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+   657→                >
+   658→                  Cancel
+   659→                </button>
+   660→                <div className="relative">
+   661→                  <button
+   662→                    onClick={handleCreate}
+   663→                    disabled={creating || atLimit}
+   664→                    className={cn(
+   665→                      "bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2",
+   666→                      atLimit || creating
+   667→                        ? "opacity-40 cursor-not-allowed"
+   668→                        : "hover:bg-white hover:shadow-lg"
+   669→                    )}
+   670→                  >
+   671→                    {creating ? (
+   672→                      <span className="inline-flex items-center gap-2">
+   673→                        <span className="w-3.5 h-3.5 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
+   674→                        Adding…
+   675→                      </span>
+   676→                    ) : (
+   677→                      "Add dependency"
+   678→                    )}
+   679→                  </button>
+   680→                  {atLimit && (
+   681→                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#1A1A20] border border-[rgba(255,255,255,0.08)] rounded-lg text-xs text-[#A1A1AA] whitespace-nowrap shadow-console-dropdown pointer-events-none">
+   682→                      Upgrade to add more dependencies
+   683→                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-[#1A1A20] border-r border-b border-[rgba(255,255,255,0.08)] rotate-45" />
+   684→                    </div>
+   685→                  )}
+   686→                </div>
+   687→              </div>
+   688→            </div>
+   689→          </div>
+   690→        </div>
+   691→      )}
+   692→    </div>
+   693→  );
+   694→}
+   695→

@@ -1,17 +1,70 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { AuthProvider } from "@/lib/auth-context";
+import { Providers } from "@/components/Providers";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { cn } from "@/lib/utils";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+/* ------------------------------------------------------------------ */
+/*  Layout                                                             */
+/* ------------------------------------------------------------------ */
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  /* ---------- responsive detection ---------- */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const toggleCollapse = () => setCollapsed((v) => !v);
+
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-[#F8F9FA]">
-        <DashboardSidebar />
-        <div className="ml-[240px]">
-          <DashboardHeader />
-          <main className="p-6">{children}</main>
+    <Providers>
+      <AuthProvider>
+        <div className="min-h-screen bg-[#0A0A0F]">
+          {/* Sidebar — separate on desktop, overlay on mobile */}
+          <DashboardSidebar
+            collapsed={collapsed}
+            onToggleCollapse={toggleCollapse}
+            mobileOpen={mobileOpen}
+            setMobileOpen={setMobileOpen}
+          />
+
+          {/* Main content area */}
+          <div
+            className={cn(
+              "transition-[margin] duration-200 ease-out",
+              isMobile ? "ml-0" : collapsed ? "ml-[72px]" : "ml-[260px]"
+            )}
+          >
+            {/* Sticky header */}
+            <DashboardHeader
+              sidebarCollapsed={collapsed}
+              onToggleSidebar={toggleCollapse}
+              onOpenMobileSidebar={() => setMobileOpen(true)}
+            />
+
+            {/* Page content with fadeIn */}
+            <main className="p-8 min-h-[calc(100vh-56px)]">
+              <div className="animate-[fadeIn_200ms_ease-out]">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
-    </AuthProvider>
+
+        {/* Mobile sidebar backdrop is rendered by DashboardSidebar */}
+      </AuthProvider>
+    </Providers>
   );
 }

@@ -1,113 +1,230 @@
 "use client";
-
-import { useEffect, useState, useCallback } from "react";
-import { IncidentList } from "@/components/dashboard/IncidentList";
-import { incidentService, type Incident, type IncidentStatus } from "@/services/incidentService";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { incidentService, type Incident, type IncidentSeverity, type IncidentStatus } from "@/services/incidentService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow, format } from "date-fns";
+import { AlertTriangle, Filter, ChevronRight } from "lucide-react";
+import { ConsoleCard, ConsoleCardHeader, StatusDot } from "@/components/dashboard/ConsoleLayout";
+import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
-const statusFilters: Array<{ value: IncidentStatus | "all"; label: string }> = [
+const statusOptions: Array<{ value: IncidentStatus | "all"; label: string }> = [
   { value: "all", label: "All" },
   { value: "open", label: "Open" },
   { value: "resolved", label: "Resolved" },
-  { value: "false_positive", label: "False Positive" },
+];
+
+const severityOptions: Array<{ value: IncidentSeverity | "all"; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "critical", label: "Critical" },
+  { value: "major", label: "Major" },
+  { value: "minor", label: "Minor" },
 ];
 
 export default function IncidentsPage() {
+  const { currentOrg } = useAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | "all">("all");
+  const [severityFilter, setSeverityFilter] = useState<IncidentSeverity | "all">("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchIncidents = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
-    try {
-      const data = await incidentService.list(
-        statusFilter === "all" ? undefined : statusFilter
-      );
-      setIncidents(data);
-    } catch {
-      setError("Unable to load incidents.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [statusFilter]);
 
   useEffect(() => {
-    fetchIncidents();
-  }, [fetchIncidents]);
+    if (!currentOrg) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    incidentService
+      .list(
+        statusFilter === "all" ? undefined : statusFilter,
+        severityFilter === "all" ? undefined : severityFilter
+      )
+      .then((data) => {
+        if (!cancelled) setIncidents(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Unable to load incidents.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentOrg, statusFilter, severityFilter]);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-[15px] font-semibold text-[#09090B] tracking-tight">INCIDENTS</h1>
-          <p className="text-[12px] text-[#A1A1AA] mt-1">
-            Track and manage dependency incidents
-          </p>
+      {/* ── Header ────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-2xl font-bold text-[#FAFAFA] tracking-tight">Incidents</h1>
+        <p className="text-sm text-[#A1A1AA] mt-1">
+          Track and manage dependency incidents across your stack.
+        </p>
+      </div>
+
+      {/* ── Filter Row ────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-6">
+        {/* Status pills */}
+        <div className="flex items-center gap-2">
+          <Filter className="w-3.5 h-3.5 text-[#52525B]" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] mr-1">
+            Status
+          </span>
+          {statusOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStatusFilter(opt.value)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                statusFilter === opt.value
+                  ? "bg-[#0891B2] text-white"
+                  : "bg-[rgba(255,255,255,0.05)] text-[#A1A1AA] hover:bg-[rgba(255,255,255,0.08)] hover:text-[#FAFAFA]"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
-        <button
-          onClick={() => fetchIncidents(true)}
-          disabled={refreshing || loading}
-          className="p-2 rounded-md border border-[#E4E4E7] hover:bg-[#F8F9FA] transition-colors text-[#52525B] disabled:opacity-50"
-        >
-          <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />
-        </button>
+
+        {/* Severity pills */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] mr-1">
+            Severity
+          </span>
+          {severityOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSeverityFilter(opt.value)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                severityFilter === opt.value
+                  ? "bg-[#0891B2] text-white"
+                  : "bg-[rgba(255,255,255,0.05)] text-[#A1A1AA] hover:bg-[rgba(255,255,255,0.08)] hover:text-[#FAFAFA]"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Status Filter Tabs */}
-      <div className="flex gap-1 rounded-lg bg-white border border-[#E4E4E7] p-1 w-fit">
-        {statusFilters.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => setStatusFilter(s.value)}
-            className={cn(
-              "rounded-md px-4 py-2 text-xs font-medium transition-colors",
-              statusFilter === s.value
-                ? "bg-[#F8F9FA] text-[#09090B]"
-                : "text-[#A1A1AA] hover:text-[#52525B]"
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Error */}
+      {/* ── Error ─────────────────────────────────────────── */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-red-700">{error}</p>
-          <button onClick={() => fetchIncidents()} className="text-xs font-medium text-red-600 ml-auto">
-            Retry
-          </button>
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
-      {/* Loading */}
-      {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] rounded-lg bg-white" />
-          ))}
-        </div>
-      ) : incidents.length === 0 ? (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
-          <p className="text-sm text-[#09090B] font-medium">No incidents</p>
-          <p className="text-xs text-[#A1A1AA] mt-1">
-            {statusFilter === "all"
-              ? "No incidents have been recorded."
-              : `No ${statusFilters.find(s => s.value === statusFilter)?.label?.toLowerCase() || statusFilter} incidents.`}
-          </p>
-        </div>
+      {/* ── Loading Skeletons ─────────────────────────────── */}
+      {loading && !error ? (
+        <ConsoleCard>
+          <div className="p-5 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 bg-[rgba(255,255,255,0.04)] rounded-lg" />
+            ))}
+          </div>
+        </ConsoleCard>
+      ) : /* ── Empty State ──────────────────────────────────── */
+      !error && incidents.length === 0 ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="No incidents recorded"
+          description={
+            statusFilter === "all" && severityFilter === "all"
+              ? "Your dependencies are healthy. Incidents will appear here when failures are detected."
+              : "No incidents match the selected filters. Try adjusting your criteria."
+          }
+        />
       ) : (
-        <IncidentList incidents={incidents} />
+        /* ── Incidents Table ─────────────────────────────── */
+        <ConsoleCard>
+          <ConsoleCardHeader>
+            <div
+              className="grid gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B]"
+              style={{ gridTemplateColumns: "auto 1fr auto auto auto auto" }}
+            >
+              <span className="w-[80px]">Severity</span>
+              <span>Title</span>
+              <span className="w-[120px]">Dependency</span>
+              <span className="w-[90px]">Status</span>
+              <span className="w-[100px]">Opened</span>
+              <span className="w-[60px] text-right">Action</span>
+            </div>
+          </ConsoleCardHeader>
+
+          {/* Rows */}
+          <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+            {incidents.map((inc, idx) => (
+              <div
+                key={inc.id}
+                className="px-5 py-3.5 grid gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                style={{
+                  gridTemplateColumns: "auto 1fr auto auto auto auto",
+                  animationDelay: `${idx * 60}ms`,
+                }}
+              >
+                {/* Severity */}
+                <span className="w-[80px]">
+                  <SeverityBadge severity={inc.severity} />
+                </span>
+
+                {/* Title */}
+                <span className="text-sm font-medium text-[#FAFAFA] truncate">
+                  {inc.description || `Incident ${inc.id.slice(0, 8)}`}
+                </span>
+
+                {/* Dependency */}
+                <span className="w-[120px] font-mono text-xs text-[#A1A1AA] truncate">
+                  {inc.dependency_id.slice(0, 8)}
+                </span>
+
+                {/* Status */}
+                <span className="w-[90px]">
+                  {inc.status === "open" ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DC2626]" />
+                      </span>
+                      Open
+                    </span>
+                  ) : inc.status === "resolved" ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+                      <span className="inline-flex h-2 w-2 rounded-full bg-[#16A34A]" />
+                      Resolved
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#A1A1AA]">
+                      <span className="inline-flex h-2 w-2 rounded-full bg-[#52525B]" />
+                      {inc.status.replace(/_/g, " ")}
+                    </span>
+                  )}
+                </span>
+
+                {/* Opened */}
+                <span className="w-[100px] text-xs text-[#A1A1AA] whitespace-nowrap">
+                  {formatDistanceToNow(new Date(inc.started_at), { addSuffix: true })}
+                </span>
+
+                {/* Action */}
+                <span className="w-[60px] text-right">
+                  <Link
+                    href={`/incidents/${inc.id}`}
+                    className="inline-flex items-center gap-0.5 text-xs font-medium text-[#0891B2] hover:text-[#06B6D4] transition-colors"
+                  >
+                    View
+                    <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </span>
+              </div>
+            ))}
+          </div>
+        </ConsoleCard>
       )}
     </div>
   );

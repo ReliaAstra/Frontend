@@ -1,0 +1,673 @@
+     1→# SYSTEM PROMPT: BUILD RELIASTRA'S $1M AUTHENTICATED OPERATIONS CONSOLE
+     2→
+     3→## YOUR ROLE
+     4→You are a principal designer and frontend architect who ships operational consoles for Stripe, Datadog, Cloudflare, and Linear. You do not ask questions. You make decisions. Every screen converts free users to paid. Every empty state is designed. Every button is wired to a real endpoint. You have total authority to violate any existing design.
+     5→
+     6→## PRODUCT CONTEXT
+     7→Reliastra's authenticated console is where engineers and agencies monitor dependencies, investigate incidents, generate evidence, and manage billing. It must feel like **infrastructure mission control** — dense, precise, alive, and unignorable. It must also **sell upgrades aggressively** at every natural friction point.
+     8→
+     9→## CRITICAL PRINCIPLES
+    10→1. **Dark mode is the only mode.** Engineers do not monitor infrastructure in light mode. The public marketing site can be light. The console is `#0A0A0F`.
+    11→2. **Every tier limit is visible, metered, and pressured.** Free users must always know exactly what they're missing and how close they are to the wall.
+    12→3. **Empty states are onboarding, not apologies.** "No data" means "Here's how to get value" with a CTA.
+    13→4. **Backend owns the truth.** The frontend visualizes. It does not compute reliability, attribution, or confidence.
+    14→5. **No fake data. No fabricated outages.** Every number comes from the API. Credibility is non-negotiable.
+    15→6. **Agency hierarchy is first-class.** Organization → Clients → Sites → Dependencies → Observations → Incidents → Evidence → Reports. The user must always know where they are in this tree.
+    16→
+    17→---
+    18→
+    19→## DESIGN SYSTEM (EXACT TOKENS — ZERO DEVIATION)
+    20→
+    21→### Colors (Dark Mode Only)
+    22→- Background Primary: `#0A0A0F`
+    23→- Background Secondary: `#131318`
+    24→- Background Elevated: `#1A1A20`
+    25→- Background Input: `#1C1C22`
+    26→- Background Hover: `rgba(255,255,255,0.03)`
+    27→- Text Primary: `#FAFAFA`
+    28→- Text Secondary: `#A1A1AA`
+    29→- Text Muted: `#52525B`
+    30→- Text Inverse: `#09090B`
+    31→- Accent: `#0891B2`
+    32→- Accent Light: `#67E8F9`
+    33→- Accent Dim: `rgba(8,145,178,0.12)`
+    34→- Accent Glow: `0 0 40px rgba(8,145,178,0.08)`
+    35→- Success: `#16A34A`
+    36→- Success Dim: `rgba(22,163,74,0.12)`
+    37→- Warning: `#D97706`
+    38→- Warning Dim: `rgba(217,119,6,0.12)`
+    39→- Danger: `#DC2626`
+    40→- Danger Dim: `rgba(220,38,38,0.12)`
+    41→- Border Default: `rgba(255,255,255,0.08)`
+    42→- Border Subtle: `rgba(255,255,255,0.05)`
+    43→- Border Accent: `rgba(8,145,178,0.25)`
+    44→
+    45→### Typography
+    46→- Font: Inter (Variable, 400–700). Self-hosted via next/font.
+    47→- Mono: IBM Plex Mono (400–500). Self-hosted.
+    48→- Display: `32px/700/1.1/-0.02em`
+    49→- H1: `24px/700/1.2/-0.01em`
+    50→- H2: `18px/600/1.3/0`
+    51→- H3: `15px/600/1.4/0`
+    52→- Body: `14px/400/1.6/0`
+    53→- Body Small: `13px/400/1.5/0`
+    54→- Label: `11px/600/1.3/0.08em uppercase`
+    55→- Mono Metric: `28px/600/1.1/0` (IBM Plex Mono)
+    56→- Mono Small: `12px/500/1.4/0`
+    57→
+    58→### Spacing
+    59→- Sidebar Width: `260px` (desktop), collapsible to `72px` icon-only on tablet, hidden hamburger on mobile
+    60→- Page Padding: `32px`
+    61→- Section Gap: `32px`
+    62→- Card Padding: `24px`
+    63→- Card Radius: `12px`
+    64→- Inner Radius: `8px`
+    65→- Button Radius: `10px`
+    66→
+    67→### Shadows
+    68→- Card: `0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)`
+    69→- Card Hover: `0 4px 12px rgba(0,0,0,0.4)`
+    70→- Dropdown: `0 10px 40px rgba(0,0,0,0.5)`
+    71→- Modal Overlay: `rgba(0,0,0,0.7)` + `backdrop-filter: blur(8px)`
+    72→- Upgrade Banner Glow: `0 0 0 1px rgba(8,145,178,0.2), 0 0 60px rgba(8,145,178,0.06)`
+    73→
+    74→---
+    75→
+    76→## APP SHELL (Shared Across All Authenticated Pages)
+    77→
+    78→### Sidebar
+    79→- Background: `#0A0A0F`
+    80→- Width: `260px`, fixed, `h-screen`
+    81→- Border-right: `1px solid rgba(255,255,255,0.06)`
+    82→- Overflow-y: auto
+    83→
+    84→**Top Section:**
+    85→- Reliastra wordmark: "reliastra." in `font-weight: 700`, `text-[#FAFAFA] text-lg`, cyan dot. `px-6 py-5`.
+    86→- Below: Organization switcher
+    87→  - `mx-6 mb-4`
+    88→  - Container: `bg-[#131318] rounded-lg border border-[rgba(255,255,255,0.06)] px-3 py-2.5 flex items-center justify-between cursor-pointer hover:border-[rgba(255,255,255,0.1)] transition-colors`
+    89→  - Current org name: `text-sm font-medium text-[#FAFAFA] truncate max-w-[180px]`
+    90→  - ChevronDown icon (14px, `#52525B`)
+    91→  - On click: Dropdown
+    92→    - `absolute left-6 top-[88px] w-[220px] bg-[#1A1A20] border border-[rgba(255,255,255,0.08)] rounded-xl shadow-dropdown p-2 z-50`
+    93→    - Org list: Each item `px-3 py-2 rounded-lg text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.03)] flex items-center gap-2`
+    94→    - Active org: `text-[#FAFAFA] bg-[rgba(255,255,255,0.05)]`
+    95→    - Divider: `border-t border-[rgba(255,255,255,0.06)] my-1`
+    96→    - "Create organization" — `text-sm text-[#0891B2] hover:text-[#67E8F9] px-3 py-2`
+    97→
+    98→**Navigation Groups:**
+    99→- Section headers: `text-[11px] font-semibold uppercase tracking-wider text-[#52525B] px-6 py-2 mt-2`
+   100→- Nav items: `flex items-center gap-3 px-4 py-2 mx-3 rounded-lg text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.03)] transition-all duration-150`
+   101→- **Active item:** `text-[#FAFAFA] bg-[rgba(255,255,255,0.05)] relative`
+   102→  - **Left accent bar:** `absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#0891B2] rounded-r-full`
+   103→- Icons: 18px, Lucide React
+   104→- Items:
+   105→  - **OVERVIEW**: Dashboard (LayoutDashboard)
+   106→  - **MONITORING**: Dependencies (Layers), Incidents (AlertTriangle)
+   107→  - **INTELLIGENCE**: Evidence (ShieldCheck), Vendors (Globe)
+   108→  - **OPERATIONS**: Notifications (Bell), API Keys (Key), Settings (Settings)
+   109→- **Bottom of nav:** "Help & Support" link — `text-xs text-[#52525B] hover:text-[#A1A1AA] px-6 py-4`
+   110→
+   111→**Bottom Section (User Card):**
+   112→- `px-4 py-3 mx-3 mt-auto mb-4 rounded-xl bg-[#131318] border border-[rgba(255,255,255,0.06)]`
+   113→- Avatar: 32px circle, initials in `font-mono text-xs font-bold` or uploaded image
+   114→- Name: `text-sm font-medium text-[#FAFAFA] truncate`
+   115→- Email: `text-xs text-[#52525B] truncate`
+   116→- Sign Out: `text-xs text-[#52525B] hover:text-[#FAFAFA] mt-2 flex items-center gap-1.5` with LogOut icon (14px)
+   117→
+   118→### Top Header
+   119→- Height: `56px`
+   120→- Background: `#0A0A0F`
+   121→- Border-bottom: `1px solid rgba(255,255,255,0.06)`
+   122→- Position: sticky top-0 z-40
+   123→- Left: Breadcrumb or page title
+   124→  - If dashboard: "Operations overview" — `text-sm font-medium text-[#FAFAFA]`
+   125→  - If subpage: "Dashboard / Dependencies" — `text-sm text-[#52525B]` with chevrons
+   126→- Center: Global search
+   127→  - Input: `w-[400px] h-9 bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3 pl-9 text-sm text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[#0891B2] focus:ring-1 focus:ring-[#0891B2]/30 transition-all`
+   128→  - Search icon (16px, `#52525B`) absolute left-3
+   129→  - ⌘K badge: `absolute right-2 text-[10px] bg-[#131318] rounded px-1.5 text-[#52525B] font-mono`
+   130→- Right:
+   131→  - **Upgrade pill** (if Free/Starter): `bg-[rgba(8,145,178,0.12)] border border-[rgba(8,145,178,0.2)] text-[#67E8F9] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[rgba(8,145,178,0.2)] cursor-pointer transition-colors`
+   132→    - Text: "Upgrade" or "3/3 deps used"
+   133→  - Notification bell (20px, `#A1A1AA`, hover: `#FAFAFA`) with red dot (8px) if unread
+   134→  - Theme toggle: NOT SHOWN. Dark mode only.
+   135→  - User avatar (32px circle) — click opens dropdown with Profile, Settings, Sign Out
+   136→
+   137→### Main Content Area
+   138→- Background: `#0A0A0F`
+   139→- Padding: `32px`
+   140→- Min-height: `calc(100vh - 56px)`
+   141→- Overflow: auto
+   142→
+   143→---
+   144→
+   145→## CONVERSION ARCHITECTURE (THE AGGRESSIVE PART)
+   146→
+   147→### Tier Configuration (Frontend Constants)
+   148→```typescript
+   149→const PLANS = {
+   150→  free: {
+   151→    name: "Free",
+   152→    price: 0,
+   153→    priceDisplay: "$0",
+   154→    limits: { dependencies: 3, clients: 0, sites: 0, evidence: 0, apiKeys: 0, regions: 1, interval: 60, team: 1, retentionDays: 1, notifications: ["email"] },
+   155→    features: ["Custom endpoint URLs", "Email alerts", "Basic incident detection", "24h data retention"],
+   156→    upgradeCTA: "Upgrade to Starter",
+   157→    nextPlan: "starter",
+   158→  },
+   159→  starter: {
+   160→    name: "Starter",
+   161→    price: 19,
+   162→    priceDisplay: "$19",
+   163→    limits: { dependencies: 10, clients: 0, sites: 0, evidence: 10, apiKeys: 0, regions: 2, interval: 60, team: 3, retentionDays: 7, notifications: ["email", "slack"] },
+   164→    features: ["7-day data retention", "Email & Slack alerts", "Limited attribution", "Basic dependency history"],
+   165→    upgradeCTA: "Upgrade to Standard",
+   166→    nextPlan: "standard",
+   167→  },
+   168→  standard: {
+   169→    name: "Standard",
+   170→    price: 49,
+   171→    priceDisplay: "$49",
+   172→    limits: { dependencies: 30, clients: 5, sites: 20, evidence: 100, apiKeys: 1, regions: 4, interval: 30, team: 5, retentionDays: 30, notifications: ["email", "slack", "webhook", "pagerduty"] },
+   173→    features: ["Incident correlation", "Deterministic attribution", "Evidence generation", "Slack, Webhook, PagerDuty", "Historical analysis", "Client groups"],
+   174→    upgradeCTA: "Upgrade to Professional",
+   175→    nextPlan: "professional",
+   176→  },
+   177→  professional: {
+   178→    name: "Professional",
+   179→    price: 99,
+   180→    priceDisplay: "$99",
+   181→    limits: { dependencies: 100, clients: 15, sites: 50, evidence: 500, apiKeys: 5, regions: 6, interval: 15, team: 10, retentionDays: 90, notifications: ["email", "slack", "webhook", "pagerduty"] },
+   182→    features: ["90-day retention", "Custom-branded evidence", "15s check intervals", "Full API access", "All notification channels"],
+   183→    upgradeCTA: "Upgrade to Agency",
+   184→    nextPlan: "agency",
+   185→  },
+   186→  agency: {
+   187→    name: "Agency",
+   188→    price: 199,
+   189→    priceDisplay: "$199",
+   190→    limits: { dependencies: 500, clients: Infinity, sites: Infinity, evidence: Infinity, apiKeys: 10, regions: 12, interval: 15, team: 25, retentionDays: 365, notifications: ["email", "slack", "webhook", "pagerduty"] },
+   191→    features: ["Unlimited clients & sites", "Agency branding", "Client-facing reports", "White-label evidence", "Dedicated support"],
+   192→    upgradeCTA: null,
+   193→    nextPlan: null,
+   194→  },
+   195→};
+   196→Upgrade Banner Component (Reusable)
+   197→Used on EVERY page where a limit applies.
+   198→tsx
+   199→// If free/starter and approaching limit
+   200→<div className="bg-gradient-to-r from-[rgba(8,145,178,0.12)] to-[rgba(8,145,178,0.04)] rounded-xl border border-[rgba(8,145,178,0.2)] p-4 mb-6 flex items-center justify-between">
+   201→  <div className="flex items-center gap-4">
+   202→    <div className="w-10 h-10 rounded-lg bg-[rgba(8,145,178,0.15)] flex items-center justify-center">
+   203→      <Zap className="w-5 h-5 text-[#0891B2]" />
+   204→    </div>
+   205→    <div>
+   206→      <p className="text-sm font-semibold text-[#FAFAFA]">
+   207→        You're on the {currentPlan.name} plan
+   208→      </p>
+   209→      <p className="text-sm text-[#A1A1AA] mt-0.5">
+   210→        {usage} of {limit} {resource} used. {remaining === 0 ? "You've hit your limit." : `${remaining} remaining.`}
+   211→      </p>
+   212→      {/* Progress bar */}
+   213→      <div className="w-48 h-1.5 bg-[rgba(255,255,255,0.08)] rounded-full mt-2">
+   214→        <div 
+   215→          className="h-full rounded-full transition-all duration-500"
+   216→          style={{ 
+   217→            width: `${(usage/limit)*100}%`,
+   218→            backgroundColor: usage/limit > 0.9 ? '#DC2626' : usage/limit > 0.7 ? '#D97706' : '#0891B2'
+   219→          }}
+   220→        />
+   221→      </div>
+   222→    </div>
+   223→  </div>
+   224→  <button className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white hover:shadow-lg transition-all">
+   225→    {currentPlan.upgradeCTA}
+   226→  </button>
+   227→</div>
+   228→Locked Feature Pattern (Reusable)
+   229→When a feature requires a higher tier:
+   230→tsx
+   231→<div className="relative">
+   232→  {/* Content with opacity-50 */}
+   233→  <div className="opacity-50 pointer-events-none">
+   234→    {/* The feature UI */}
+   235→  </div>
+   236→  {/* Overlay */}
+   237→  <div className="absolute inset-0 flex items-center justify-center bg-[rgba(10,10,15,0.6)] backdrop-blur-sm rounded-xl">
+   238→    <div className="text-center">
+   239→      <Lock className="w-6 h-6 text-[#52525B] mx-auto" />
+   240→      <p className="text-sm font-medium text-[#FAFAFA] mt-2">Standard plan required</p>
+   241→      <p className="text-xs text-[#A1A1AA] mt-1">Upgrade to unlock this feature</p>
+   242→      <button className="mt-3 bg-[#0891B2] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[#0E7490]">
+   243→        Upgrade to Standard
+   244→      </button>
+   245→    </div>
+   246→  </div>
+   247→</div>
+   248→Paystack Billing Flow
+   249→TypeScript
+   250→// Initialize checkout
+   251→const initializeCheckout = async (plan: string) => {
+   252→  const { data } = await apiClient.post(`/v1/orgs/${orgId}/billing/initialize`, { plan });
+   253→  window.location.href = data.authorization_url;
+   254→};
+   255→
+   256→// Verify on return (handle ?reference=xxx on /dashboard or /settings/billing)
+   257→const verifyPayment = async (reference: string) => {
+   258→  const { data } = await apiClient.post(`/v1/billing/verify?reference=${reference}`);
+   259→  // Invalidate plan cache, show success toast, refresh page
+   260→};
+   261→PAGE 1: DASHBOARD (/dashboard)
+   262→Header
+   263→Headline: "Operations overview" — 24px/700 text-[#FAFAFA]
+   264→Subtitle: "{org_name} · Last updated {relative_time}" — 14px/400 text-[#52525B]
+   265→Refresh button: Rotate icon, 16px, #52525B, hover #FAFAFA, rotates 360deg on click
+   266→Upgrade Banner (Conditional)
+   267→Show if plan is Free or Starter, OR if any usage > 70% of limit
+   268→Uses the reusable Upgrade Banner component
+   269→Resource: dependencies (primary pressure point)
+   270→Global Stats Row (The Command Center Feel)
+   271→Grid: grid-cols-2 lg:grid-cols-5 gap-4
+   272→Each card: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 hover:border-[rgba(255,255,255,0.12)] transition-colors
+   273→Structure:
+   274→Top: Icon (16px, #52525B) + Label (11px uppercase tracking-wider text-[#52525B])
+   275→Middle: Metric (font-mono text-2xl font-semibold text-[#FAFAFA] mt-2)
+   276→Bottom: Context text (text-xs text-[#52525B] mt-1)
+   277→Cards:
+   278→Clients (Agency tier only, else hidden or show lock): Icon Users, count from /v1/orgs/{org_id}/clients
+   279→Sites (Agency tier only, else hidden): Icon Globe, count from aggregated client sites
+   280→Dependencies: Icon Layers, count from /v1/orgs/{org_id}/dependencies
+   281→If at limit: Number in #DC2626, "At limit" badge
+   282→Open Incidents: Icon AlertTriangle, count from /v1/orgs/{org_id}/incidents?status=open
+   283→If > 0: Card border changes to rgba(220,38,38,0.2), number in #DC2626, pulse animation on icon
+   284→Evidence: Icon FileText, count from /v1/orgs/{org_id}/evidence
+   285→If free plan: Show lock icon + "Upgrade to generate"
+   286→If metric is 0: Show 0 in #52525B, not hidden
+   287→Active Incidents Section
+   288→Header row: flex items-center justify-between mb-4
+   289→Left: "Active incidents" — 18px/600 text-[#FAFAFA]
+   290→Right: "View all" → /incidents — text-sm text-[#0891B2] hover:text-[#67E8F9]
+   291→If incidents exist: Compact table
+   292→Container: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] overflow-hidden
+   293→Header: px-5 py-3 grid grid-cols-[auto,1fr,auto,auto,auto,auto] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]
+   294→Columns: Severity, Title, Dependency, Opened, Duration, Action
+   295→Row: px-5 py-3.5 grid grid-cols-[auto,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center
+   296→Severity: 8px dot (Critical=#DC2626, Warning=#D97706, Info=#0891B2) + label
+   297→Title: text-sm font-medium text-[#FAFAFA] truncated
+   298→Dependency: text-xs text-[#A1A1AA]
+   299→Opened: text-xs text-[#52525B] font-mono
+   300→Duration: Live timer (font-mono text-xs text-[#DC2626] if critical)
+   301→Action: "View" link → /incidents/{id}
+   302→Max 5 rows. If more: "View all 12 incidents" link at bottom
+   303→If no incidents: Designed empty state
+   304→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-10 text-center
+   305→ShieldCheck icon (32px, #16A34A) with subtle pulse ring (animate-pulse)
+   306→"All systems operational" — text-lg font-semibold text-[#FAFAFA]
+   307→"No active incidents across your dependencies." — text-sm text-[#A1A1AA] mt-2
+   308→"Last check: {time}" — text-xs text-[#52525B] mt-1
+   309→Two-Column Layout (Below incidents)
+   310→Left (65%): Latency Overview
+   311→Container: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5
+   312→Header: flex items-center justify-between mb-4
+   313→"Latency trends" — 14px/600 text-[#FAFAFA]
+   314→Time pills: "1h", "24h", "7d", "30d" — text-xs px-2.5 py-1 rounded-md
+   315→Active: bg-[#1A1A20] text-[#FAFAFA] border border-[rgba(255,255,255,0.1)]
+   316→Inactive: text-[#52525B] hover:text-[#A1A1AA]
+   317→Canvas area chart: 220px tall
+   318→Median: cyan, 2px
+   319→P95: rgba(255,255,255,0.15), 1px dashed
+   320→Gradient fill under median: rgba(8,145,178,0.06) → transparent
+   321→Grid: horizontal only, rgba(255,255,255,0.03)
+   322→Hover: vertical crosshair + tooltip (bg-[#1A1A20] border border-[rgba(255,255,255,0.12)] rounded-lg px-3 py-2 text-xs)
+   323→If no data:
+   324→Grid lines visible
+   325→Centered: Activity icon (24px, #52525B) + "Latency data will appear once checks begin" — text-sm text-[#52525B]
+   326→"Add your first dependency" button — mt-3 bg-[#0891B2] text-white px-4 py-2 rounded-lg text-xs font-semibold
+   327→Right (35%): SLA Degradation + Recent Checks
+   328→SLA Card: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5
+   329→Header: "SLA degradation" — 14px/600 text-[#FAFAFA]
+   330→Large metric: font-mono text-3xl font-bold — color: #16A34A (healthy), #D97706 (warning), #DC2626 (critical)
+   331→Label: "30-day degradation" — 11px uppercase text-[#52525B] mt-1
+   332→Divider
+   333→Stats:
+   334→Affected services: flex justify-between text-sm text-[#A1A1AA]
+   335→Period: 30d
+   336→Status line: CheckCircle icon + "No SLA degradation" — text-xs text-[#16A34A] mt-3
+   337→If degraded: List affected deps with mini latency bars (red)
+   338→Recent Checks: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 mt-4
+   339→Header: "Recent checks" — 14px/600 text-[#FAFAFA]
+   340→List: Max 5 items
+   341→Each: flex items-center justify-between py-2 border-b border-[rgba(255,255,255,0.05)] last:border-0
+   342→Left: Status dot + Dependency name (text-sm text-[#FAFAFA])
+   343→Right: Latency (font-mono text-xs text-[#A1A1AA]) + Time (text-xs text-[#52525B])
+   344→If no checks: "No checks yet. Add a dependency to start." — text-xs text-[#52525B] text-center py-4
+   345→Quick Actions Bar (Bottom of page)
+   346→flex gap-3 mt-8
+   347→Buttons:
+   348→"Add dependency" — bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-white
+   349→"View incidents" — bg-[#131318] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] px-4 py-2.5 rounded-lg text-sm hover:bg-[rgba(255,255,255,0.03)]
+   350→"Generate report" — bg-[#0891B2] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0E7490]
+   351→If free: Disabled, tooltip "Upgrade to Standard"
+   352→PAGE 2: DEPENDENCIES (/dependencies)
+   353→Header
+   354→Headline: "Dependencies" — 24px/700
+   355→Subtitle: "Monitor and manage your external service endpoints" — 14px/400 text-[#52525B]
+   356→Right: "Add dependency" button — primary style
+   357→Upgrade Banner (Always visible)
+   358→Shows dependency usage vs limit
+   359→If at limit: Banner turns red-tinted (from-[rgba(220,38,38,0.12)] to-[rgba(220,38,38,0.04)], border rgba(220,38,38,0.2))
+   360→CTA: "Upgrade to add more"
+   361→Dependencies Table
+   362→Container: bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] overflow-hidden
+   363→Header: px-5 py-3 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]
+   364→Columns: Name, Endpoint, Status, Uptime, Last check, Actions
+   365→Row: px-5 py-4 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center
+   366→Name: text-sm font-medium text-[#FAFAFA] + URL below text-xs text-[#52525B] font-mono truncate
+   367→Endpoint: text-xs text-[#A1A1AA] font-mono truncate
+   368→Status: Badge (Operational=#16A34A, Degraded=#D97706, Down=#DC2626, Unknown=#52525B)
+   369→Uptime: font-mono text-sm (green if >99%, amber if 95-99%, red if <95%)
+   370→Last check: text-xs text-[#52525B] font-mono
+   371→Actions: Dropdown (Edit, Pause/Resume, Delete)
+   372→Pagination at bottom
+   373→Add Dependency Modal
+   374→Overlay: fixed inset-0 bg-black/70 backdrop-blur-sm z-50
+   375→Modal: bg-[#1A1A20] rounded-2xl border border-[rgba(255,255,255,0.08)] w-full max-w-lg shadow-2xl
+   376→Header: "Add dependency" + X close
+   377→Form fields:
+   378→Name: Input, placeholder "Stripe API"
+   379→Endpoint URL: Input, placeholder "https://api.stripe.com/v1/charges"
+   380→Validation: Must be valid HTTPS URL
+   381→Expected status: Number input, default 200
+   382→Check interval: Select
+   383→Options: 15s, 30s, 60s, 300s, 600s
+   384→If free: Only 60s selectable. Others grayed with lock icon + tooltip "Upgrade for faster intervals"
+   385→Region: Multi-select checkboxes
+   386→Options: us-east, us-west, eu-west, apac-south
+   387→If free: Only 1 selectable. Others grayed with lock icon + "Upgrade for multi-region"
+   388→Client (if agency): Select dropdown of clients
+   389→If not agency: Hidden
+   390→Footer:
+   391→"Cancel" — secondary
+   392→"Add dependency" — primary
+   393→If at limit: Disabled, opacity-50, tooltip: "Upgrade to add more dependencies"
+   394→Empty State
+   395→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-16 text-center
+   396→Layers icon (40px, #52525B)
+   397→"No dependencies configured" — text-lg font-semibold text-[#FAFAFA]
+   398→"Add your first external service endpoint to start monitoring." — text-sm text-[#A1A1AA] mt-2
+   399→"Add dependency" button — mt-6 bg-[#FAFAFA] text-[#0A0A0F]
+   400→PAGE 3: INCIDENTS (/incidents)
+   401→Incident List
+   402→Same table pattern as Dependencies
+   403→Columns: ID, Title, Severity, Dependency, Status, Opened, Duration, Actions
+   404→Filters row above table: Status (All, Open, Resolved), Severity (All, Critical, Warning, Info), Date range
+   405→Status badge: Open = red pulse dot + "Open", Resolved = green check + "Resolved"
+   406→Severity: Critical = #DC2626, Warning = #D97706, Info = #0891B2
+   407→Incident Detail (/incidents/{id}) — THE COMMAND CENTER
+   408→Header:
+   409→Breadcrumb: "Incidents / INC-92841"
+   410→Title: "{incident_title}" — 24px/700
+   411→Status badge + Severity badge
+   412→Duration: Live timer if open, static "Resolved in {duration}" if closed
+   413→Layout: Two-column (60/40)
+   414→Left Column:
+   415→Likely Contributor Card
+   416→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5
+   417→Label: "Likely contributing dependency" — 11px uppercase text-[#52525B]
+   418→Value: Dependency name — 18px/600 text-[#FAFAFA]
+   419→Evidence strength: Badge (Strong=#16A34A, Moderate=#D97706, Weak=#52525B)
+   420→Confidence: {confidence}% — font-mono text-sm text-[#A1A1AA]
+   421→If no attribution: "Investigating..." with spinner. Never fabricate.
+   422→Observed Signals
+   423→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 mt-4
+   424→Label: "Reliastra observed" — 11px uppercase text-[#52525B]
+   425→Bullet list from backend:
+   426→CheckCircle icon (14px, #16A34A) + text-sm text-[#A1A1AA]
+   427→If free plan: Last bullet is locked: "Evidence correlation requires Standard plan" with lock icon
+   428→Timeline
+   429→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 mt-4
+   430→Vertical line: 1px bg-[rgba(255,255,255,0.08)]
+   431→Events with colored dots (10px):
+   432→Normal (gray), Latency rising (amber), Degradation (amber), Opened (red), Correlation (cyan), Recovery (green), Resolved (green)
+   433→Each: Timestamp (font-mono text-xs text-[#52525B]) + Description (text-sm text-[#A1A1AA])
+   434→Right Column:
+   435→Actions Card
+   436→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5
+   437→"Acknowledge" — outline button
+   438→"Resolve" — green button
+   439→"Generate evidence" — cyan button
+   440→If free: Disabled, lock icon, "Upgrade to Standard for evidence reports"
+   441→"Escalate" — outline button (if PagerDuty configured)
+   442→Metadata Card
+   443→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 mt-4
+   444→Key-value pairs in text-xs:
+   445→Incident ID, Opened at, Dependency, Region, Check interval, Correlation confidence
+   446→PAGE 4: EVIDENCE (/evidence)
+   447→Evidence List
+   448→Table columns: ID, Incident, Status, Strength, Created, Actions
+   449→Status: Verified = green check + "Verified", Pending = amber + "Pending"
+   450→Strength: Strong = #16A34A, Moderate = #D97706, Weak = #52525B
+   451→Actions: View, Download PDF, Verify, Generate client report
+   452→Generate client report: If not Standard+, show upgrade modal
+   453→Evidence Detail (/evidence/{id})
+   454→Header:
+   455→"Evidence snapshot" label
+   456→ID: "EV-83A91" — font-mono text-2xl font-bold
+   457→Status badge + Verify button
+   458→Two-column layout:
+   459→Left:
+   460→Incident link: "Linked to INC-92841" — cyan link
+   461→Observation window: font-mono text-sm
+   462→Evidence strength: Badge
+   463→Data hash: sha256:... in bg-[#1C1C22] rounded px-2 py-1 font-mono text-xs
+   464→Right:
+   465→Actions:
+   466→"View JSON" — outline
+   467→"Download PDF" — primary
+   468→"Generate client report" — primary
+   469→If not Standard+: Disabled + "Upgrade to Standard"
+   470→"Verify" — outline (POST verify endpoint)
+   471→Below: Evidence Preview
+   472→bg-[#131318] rounded-xl border border-[rgba(255,255,255,0.08)] p-5 mt-6
+   473→Structured view (not raw JSON):
+   474→Timestamp, observations, correlation data, confidence scores, region verification
+   475→Empty State
+   476→"No evidence generated yet"
+   477→"Evidence is created when an incident is correlated with a dependency degradation."
+   478→CTA: "View incidents" → /incidents
+   479→If free plan: Add banner: "Evidence generation requires Standard plan or higher"
+   480→PAGE 5: VENDORS (/vendors)
+   481→Public vendor tracking within authenticated shell
+   482→Dark mode, 6 vendor cards with live sparklines
+   483→"Monitor this vendor" button on detail → creates dependency
+   484→If at dependency limit: Show upgrade modal instead of creating
+   485→PAGE 6: NOTIFICATIONS (/notifications)
+   486→List
+   487→Table: Channel, Type, Status, Last triggered, Actions
+   488→Channels: Email, Slack, Webhook, PagerDuty
+   489→Status: Active/Disabled toggle
+   490→If free: Only Email channel can be active. Others show lock overlay.
+   491→Add Notification Modal
+   492→Channel type select
+   493→Configuration fields
+   494→Event triggers: Incident opened, Degraded detected, Evidence ready, Incident resolved
+   495→If free: "Slack, PagerDuty, and webhooks require Starter plan or higher"
+   496→PAGE 7: API KEYS (/api-keys)
+   497→List
+   498→Table: Name, Key (masked), Created, Last used, Actions
+   499→If free: Full-page lock overlay
+   500→"API access requires Standard plan or higher"
+   501→"Upgrade to Standard" button
+   502→If paid: "Create API key" button → modal with name input
+   503→PAGE 8: SETTINGS (/settings)
+   504→Tabs: Profile, Team, Billing
+   505→Profile:
+   506→Avatar upload (drag & drop zone)
+   507→Full name, Email (read-only)
+   508→Update button
+   509→Team:
+   510→Member list table
+   511→Invite button
+   512→If free: "Team invites require Starter plan or higher" banner
+   513→Billing:
+   514→Current plan card (large, prominent)
+   515→Plan name, price, status badge
+   516→"Manage subscription" or "Upgrade" button
+   517→Usage meters (grid of 4):
+   518→Dependencies: progress bar + 3/3
+   519→Evidence: 0/0 (free) or 5/100
+   520→API Keys: 0/0 (free) or 1/1
+   521→Team seats: 1/1 or 3/5
+   522→Features checklist:
+   523→All features with checkmark (green) or lock (gray) based on plan
+   524→Payment flow:
+   525→Click Upgrade → initialize Paystack → redirect → verify on return
+   526→Loading state during redirect
+   527→Success toast on verified return
+   528→AGENCY HIERARCHY (If on Agency Plan)
+   529→Client Management (/clients)
+   530→Table: Client name, Sites, Dependencies, Active incidents, Reliability, Actions
+   531→"Add client" button
+   532→Drill-down: Click client → Client detail page
+   533→Client Detail (/clients/{id})
+   534→Header: Client name
+   535→Stats: Sites, Dependencies, Active incidents
+   536→Sites list: Each site shows its dependencies and status
+   537→"Generate client report" button → branded evidence report for this client
+   538→Site Detail (/sites/{id})
+   539→Header: Site name + client breadcrumb
+   540→Dependency list for this site only
+   541→Status overview
+   542→Incident history filtered to this site
+   543→API INTEGRATION
+   544→Axios Client
+   545→TypeScript
+   546→const apiClient = axios.create({
+   547→  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://api.zevcloud.app/v1",
+   548→  headers: { "Content-Type": "application/json" },
+   549→});
+   550→
+   551→apiClient.interceptors.request.use((config) => {
+   552→  const token = localStorage.getItem("reliastra_access_token");
+   553→  if (token) config.headers.Authorization = `Bearer ${token}`;
+   554→  return config;
+   555→});
+   556→
+   557→apiClient.interceptors.response.use(
+   558→  (res) => res,
+   559→  async (err) => {
+   560→    const original = err.config;
+   561→    if (err.response?.status === 401 && !original._retry) {
+   562→      original._retry = true;
+   563→      const refresh = localStorage.getItem("reliastra_refresh_token");
+   564→      if (refresh) {
+   565→        try {
+   566→          const { data } = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, { refresh_token: refresh });
+   567→          localStorage.setItem("reliastra_access_token", data.access_token);
+   568→          original.headers.Authorization = `Bearer ${data.access_token}`;
+   569→          return apiClient(original);
+   570→        } catch {
+   571→          window.location.href = "/login";
+   572→        }
+   573→      }
+   574→    }
+   575→    return Promise.reject(err);
+   576→  }
+   577→);
+   578→Service Functions
+   579→TypeScript
+   580→// Dependencies
+   581→export const getDependencies = (orgId: string, params?: any) => apiClient.get(`/orgs/${orgId}/dependencies`, { params });
+   582→export const createDependency = (orgId: string, data: any) => apiClient.post(`/orgs/${orgId}/dependencies`, data);
+   583→export const updateDependency = (orgId: string, id: string, data: any) => apiClient.put(`/orgs/${orgId}/dependencies/${id}`, data);
+   584→export const deleteDependency = (orgId: string, id: string) => apiClient.delete(`/orgs/${orgId}/dependencies/${id}`);
+   585→
+   586→// Incidents
+   587→export const getIncidents = (orgId: string, params?: any) => apiClient.get(`/orgs/${orgId}/incidents`, { params });
+   588→export const getIncident = (orgId: string, id: string) => apiClient.get(`/orgs/${orgId}/incidents/${id}`);
+   589→export const resolveIncident = (orgId: string, id: string) => apiClient.post(`/orgs/${orgId}/incidents/${id}/resolve`);
+   590→export const acknowledgeIncident = (orgId: string, id: string) => apiClient.post(`/orgs/${orgId}/incidents/${id}/acknowledge`);
+   591→
+   592→// Evidence
+   593→export const getEvidence = (orgId: string) => apiClient.get(`/orgs/${orgId}/evidence`);
+   594→export const getEvidenceDetail = (orgId: string, id: string) => apiClient.get(`/orgs/${orgId}/evidence/${id}`);
+   595→export const verifyEvidence = (orgId: string, id: string) => apiClient.post(`/orgs/${orgId}/evidence/${id}/verify`);
+   596→export const generateReport = (orgId: string, id: string) => apiClient.post(`/orgs/${orgId}/evidence/${id}/generate-report`);
+   597→
+   598→// Billing
+   599→export const getBillingPlan = (orgId: string) => apiClient.get(`/orgs/${orgId}/billing/plan`);
+   600→export const initializeCheckout = (orgId: string, plan: string) => apiClient.post(`/orgs/${orgId}/billing/initialize`, { plan });
+   601→export const verifyPayment = (reference: string) => apiClient.post(`/billing/verify?reference=${reference}`);
+   602→
+   603→// Notifications
+   604→export const getNotifications = (orgId: string) => apiClient.get(`/orgs/${org_id}/notifications`);
+   605→export const createNotification = (orgId: string, data: any) => apiClient.post(`/orgs/${org_id}/notifications`, data);
+   606→
+   607→// API Keys
+   608→export const getApiKeys = (orgId: string) => apiClient.get(`/orgs/${org_id}/api-keys`);
+   609→export const createApiKey = (orgId: string, data: any) => apiClient.post(`/orgs/${org_id}/api-keys`, data);
+   610→
+   611→// Public Vendors
+   612→export const getPublicVendors = () => apiClient.get("/public/vendors");
+   613→export const getPublicVendor = (name: string) => apiClient.get(`/public/vendors/${name}`);
+   614→export const getVendorMetrics = (name: string, window: string) => apiClient.get(`/public/vendors/${name}/metrics?window=${window}`);
+   615→export const getVendorHistory = (name: string) => apiClient.get(`/public/vendors/${name}/history`);
+   616→export const getVendorIncidents = (name: string) => apiClient.get(`/public/vendors/${name}/incidents`);
+   617→
+   618→// Clients (Agency)
+   619→export const getClients = (orgId: string) => apiClient.get(`/orgs/${orgId}/clients`);
+   620→export const getClient = (orgId: string, id: string) => apiClient.get(`/orgs/${orgId}/clients/${id}`);
+   621→export const createClient = (orgId: string, data: any) => apiClient.post(`/orgs/${orgId}/clients`, data);
+   622→Data Fetching
+   623→Use TanStack Query with:
+   624→staleTime: 30000
+   625→refetchInterval: 30000 for dashboard KPIs
+   626→refetchOnWindowFocus: true
+   627→Optimistic updates for mutations
+   628→GLOBAL ANIMATION REQUIREMENTS
+   629→Page transitions: opacity: 0→1, y: 8→0, 200ms ease smooth
+   630→Table rows: Stagger in 60ms each
+   631→Live timers: Update every second with requestAnimationFrame
+   632→Status dots: Pulse for "Open" incidents (box-shadow animation, 1.5s loop)
+   633→Charts: stroke-dashoffset draw animation on mount (1s)
+   634→Modal: scale: 0.97→1, opacity: 0→1, 200ms
+   635→Toast notifications: Slide in from top-right, auto-dismiss 5s
+   636→Skeletons: animate-pulse with bg-[rgba(255,255,255,0.05)]
+   637→Respect prefers-reduced-motion
+   638→ERROR HANDLING
+   639→Table
+   640→Scenario        UI Treatment
+   641→API 401 Silent refresh → redirect to login if fails
+   642→API 403 Permission modal
+   643→API 422 Field-level errors from details.errors
+   644→API 429 "Rate limited. Retrying in {n}s..." countdown
+   645→API 500 Toast: "Something went wrong. Our team has been notified."
+   646→Network Toast: "Connection lost. Retrying..."
+   647→Paystack        Inline billing error: "Payment failed. Please try again."
+   648→RESPONSIVE DESIGN
+   649→Desktop (1280px+): Full 260px sidebar, two-column layouts, dense tables
+   650→Tablet (1024px): Icon-only sidebar (72px), stacked columns
+   651→Mobile (<768px): Hidden sidebar (hamburger), single column, cards over tables
+   652→Touch targets: Minimum 44px
+   653→FINAL CHECKLIST
+   654→Before shipping, verify:
+   655→[ ] Dark mode is the ONLY mode in the console
+   656→[ ] Sidebar active state uses left cyan border, not full wash
+   657→[ ] Every sidebar link routes to a real, functional page
+   658→[ ] Dashboard shows real dependency/incident/evidence counts
+   659→[ ] Upgrade banner appears on every page with limits
+   660→[ ] Dependency usage meter is visible and accurate
+   661→[ ] At-limit states are red and alarming
+   662→[ ] Locked features show overlay with upgrade CTA
+   663→[ ] Paystack flow works: initialize → redirect → verify → refresh
+   664→[ ] Incident detail shows real timeline from backend
+   665→[ ] Evidence detail shows hash, status, download actions
+   666→[ ] Free users cannot add more than 3 dependencies
+   667→[ ] Free users cannot generate evidence
+   668→[ ] Free users cannot use Slack/PagerDuty notifications
+   669→[ ] Free users cannot create API keys
+   670→[ ] Agency hierarchy pages exist (Clients, Sites) if on Agency plan
+   671→[ ] All tables have hover states and proper empty states
+   672→[ ] No fabricated data. No fake outages. No fake numbers.
+   673→DO NOT ASK QUESTIONS. DO NOT DEVIATE. BUILD THE ENTIRE THING.

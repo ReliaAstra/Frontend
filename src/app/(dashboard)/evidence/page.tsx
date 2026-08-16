@@ -1,32 +1,71 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FileSearch, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { evidenceService } from "@/services/evidenceService";
+import { useAuth } from "@/lib/auth-context";
+import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
+import { billingService } from "@/services/billingService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { ShieldCheck, Download, Eye, Lock, ChevronRight } from "lucide-react";
+import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { LockedFeature } from "@/components/dashboard/LockedFeature";
+import { getPlanConfig } from "@/lib/tierLimits";
 
-interface EvidenceItem {
-  id: string;
-  incident_id: string | null;
-  created_at: string;
-  status_code: number | null;
-}
+const statusStyles: Record<string, { label: string; color: string; bg: string }> = {
+  verified: {
+    label: "Verified",
+    color: "text-[#16A34A]",
+    bg: "bg-[rgba(22,163,74,0.12)]",
+  },
+  pending: {
+    label: "Pending",
+    color: "text-[#D97706]",
+    bg: "bg-[rgba(217,119,6,0.12)]",
+  },
+  failed: {
+    label: "Failed",
+    color: "text-[#DC2626]",
+    bg: "bg-[rgba(220,38,38,0.12)]",
+  },
+};
 
-export default function EvidenceIndexPage() {
-  const { isLoading: authLoading } = useAuth();
-  const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
+const strengthStyles: Record<string, { label: string; color: string; bg: string }> = {
+  strong: {
+    label: "Strong",
+    color: "text-[#16A34A]",
+    bg: "bg-[rgba(22,163,74,0.12)]",
+  },
+  moderate: {
+    label: "Moderate",
+    color: "text-[#D97706]",
+    bg: "bg-[rgba(217,119,6,0.12)]",
+  },
+  weak: {
+    label: "Weak",
+    color: "text-[#52525B]",
+    bg: "bg-[rgba(255,255,255,0.05)]",
+  },
+};
+
+export default function EvidencePage() {
+  const { isLoading: authLoading, currentOrg } = useAuth();
+  const [evidence, setEvidence] = useState<EvidenceDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string>("free");
 
   useEffect(() => {
     if (authLoading) return;
     setLoading(true);
     setError(null);
-    evidenceService
-      .list()
-      .then((data) => setEvidence(Array.isArray(data) ? data : []))
+
+    Promise.all([evidenceService.list(), billingService.getPlan()])
+      .then(([evData, planData]) => {
+        setEvidence(Array.isArray(evData) ? evData : []);
+        setCurrentPlan(planData.plan);
+      })
       .catch(() => {
         setError("Unable to load evidence records.");
         setEvidence([]);
@@ -37,87 +76,181 @@ export default function EvidenceIndexPage() {
   if (authLoading) {
     return (
       <div className="space-y-5">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-[200px] rounded-lg" />
+        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
+        <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
       </div>
     );
   }
 
+  const planConfig = getPlanConfig(currentPlan as "free" | "starter" | "standard" | "professional" | "agency");
+  const isFreePlan = currentPlan === "free";
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-[15px] font-semibold text-[#09090B] tracking-tight">
-          EVIDENCE
+        <h1 className="text-[15px] font-semibold text-[#FAFAFA] tracking-tight">
+          Evidence
         </h1>
         <p className="text-[12px] text-[#A1A1AA] mt-1">
           Tamper-proof SLA evidence reports for vendor incidents
         </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
+          <p className="text-sm text-[#DC2626]">{error}</p>
         </div>
       )}
 
-      {loading ? (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white overflow-hidden">
-          <div className="p-5 space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-[52px] bg-[#F8F9FA]" />
-            ))}
-          </div>
-        </div>
-      ) : evidence.length > 0 ? (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#E4E4E7]">
-            <p className="text-[13px] font-semibold text-[#09090B]">Recent Evidence</p>
-          </div>
-          <div className="divide-y divide-[#F0F0F0]">
-            {evidence.map((item) => (
-              <Link
-                key={item.id}
-                href={`/evidence/${item.id}`}
-                className="flex items-center gap-4 px-5 py-3 hover:bg-[#FAFAFA] transition-colors group"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#0891B2]/8">
-                  <FileSearch className="h-4 w-4 text-[#0891B2]" strokeWidth={1.8} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[13px] font-medium text-[#09090B] group-hover:text-[#0891B2] transition-colors font-mono">
-                    {item.id.slice(0, 8)}
-                  </span>
-                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[#A1A1AA]">
-                    {item.incident_id && (
-                      <span className="font-mono">
-                        INC-{item.incident_id.slice(0, 8)}
-                      </span>
+      <LockedFeature
+        currentPlan={currentPlan as "free" | "starter" | "standard" | "professional" | "agency"}
+        feature="evidence"
+        onUpgrade={() => {}}
+      >
+        {loading ? (
+          <ConsoleCard>
+            <ConsoleCardHeader>
+              <span className="text-[13px] font-semibold text-[#FAFAFA]">
+                Recent Evidence
+              </span>
+            </ConsoleCardHeader>
+            <div className="p-5 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-[52px] bg-[#1C1C22] rounded-lg" />
+              ))}
+            </div>
+          </ConsoleCard>
+        ) : evidence.length > 0 ? (
+          <ConsoleCard>
+            <ConsoleCardHeader className="grid grid-cols-[1fr_1fr_100px_100px_120px_80px] gap-4 items-center">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                ID
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Incident
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Status
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Strength
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Created
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] text-right">
+                Actions
+              </span>
+            </ConsoleCardHeader>
+            <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+              {evidence.map((ev, idx) => {
+                const status = statusStyles[ev.status] || statusStyles.pending;
+                const strength = strengthStyles[ev.evidence_strength] || strengthStyles.moderate;
+
+                return (
+                  <div
+                    key={ev.id}
+                    className="px-5 py-3.5 grid grid-cols-[1fr_1fr_100px_100px_120px_80px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    {/* ID */}
+                    <Link
+                      href={`/evidence/${ev.id}`}
+                      className="text-[13px] font-mono font-medium text-[#FAFAFA] hover:text-[#0891B2] transition-colors truncate"
+                    >
+                      {ev.id.slice(0, 8)}
+                    </Link>
+
+                    {/* Incident */}
+                    {ev.incident_id ? (
+                      <Link
+                        href={`/incidents/${ev.incident_id}`}
+                        className="text-[13px] font-mono text-[#A1A1AA] hover:text-[#0891B2] transition-colors truncate"
+                      >
+                        INC-{ev.incident_id.slice(0, 8)}
+                      </Link>
+                    ) : (
+                      <span className="text-[13px] text-[#52525B]">--</span>
                     )}
-                    <span>
-                      {new Date(item.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
+
+                    {/* Status */}
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] font-medium w-fit",
+                        status.bg,
+                        status.color
+                      )}
+                    >
+                      {ev.status === "verified" && <ShieldCheck className="w-3 h-3" />}
+                      {status.label}
+                    </span>
+
+                    {/* Strength */}
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-medium w-fit",
+                        strength.bg,
+                        strength.color
+                      )}
+                    >
+                      {strength.label}
+                    </span>
+
+                    {/* Created */}
+                    <span className="text-[12px] text-[#A1A1AA]">
+                      {formatDistanceToNow(new Date(ev.created_at), {
+                        addSuffix: true,
                       })}
                     </span>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-1">
+                      <Link
+                        href={`/evidence/${ev.id}`}
+                        className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                        title="View"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const blob = await evidenceService.downloadPdf(ev.id);
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `evidence-${ev.id.slice(0, 8)}.pdf`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                          } catch {
+                            // silent fail
+                          }
+                        }}
+                        className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                        title="Download PDF"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <ArrowRight className="h-3.5 w-3.5 text-[#E4E4E7] group-hover:text-[#0891B2] shrink-0 transition-colors" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
-          <FileSearch className="h-10 w-10 text-[#E4E4E7] mx-auto mb-4" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-[#09090B]">No evidence records yet</p>
-          <p className="text-xs text-[#A1A1AA] mt-1.5 max-w-md mx-auto">
-            Evidence reports are automatically generated when incidents are detected
-            and correlated with your monitored dependencies.
-          </p>
-        </div>
-      )}
+                );
+              })}
+            </div>
+          </ConsoleCard>
+        ) : (
+          <EmptyState
+            icon={ShieldCheck}
+            title="No evidence generated yet"
+            description="Evidence reports are automatically generated when incidents are detected and correlated with your monitored dependencies."
+            actionLabel="View Incidents"
+            actionHref="/incidents"
+          />
+        )}
+      </LockedFeature>
     </div>
   );
 }

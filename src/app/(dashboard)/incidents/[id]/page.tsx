@@ -1,54 +1,84 @@
 "use client";
-
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, FileSearch, Loader2, ExternalLink } from "lucide-react";
-import { incidentService, type IncidentDetail as IncidentDetailType, type TimelineEvent, type CorrelatedSignal, buildTimeline, buildCorrelatedSignals } from "@/services/incidentService";
-import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
-import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
-import { PrecisionTimeline } from "@/components/dashboard/PrecisionTimeline";
-import { ContributorCard } from "@/components/dashboard/ContributorCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { format, formatDistanceToNow } from "date-fns";
+import { useAuth } from "@/lib/auth-context";
+import { incidentService, type IncidentDetail, buildTimeline, type TimelineEvent, type CorrelatedSignal, buildCorrelatedSignals } from "@/services/incidentService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow, format } from "date-fns";
+import { CheckCircle, XCircle, AlertTriangle, Clock, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
+import { ConsoleCard, ConsoleCardBody } from "@/components/dashboard/ConsoleLayout";
+import { LockedFeature } from "@/components/dashboard/LockedFeature";
+import { SeverityBadge } from "@/components/dashboard/SeverityBadge";
+import type { Plan } from "@/services/billingService";
 
-export default function IncidentCommandCenterPage() {
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatDuration(ms: number): string {
+  if (ms < 60000) return `${Math.round(ms / 1000)}s`;
+  if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m}m`;
+}
+
+function LiveTimer({ startedAt }: { startedAt: string }) {
+  const [elapsed, setElapsed] = useState(Date.now() - new Date(startedAt).getTime());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsed(Date.now() - new Date(startedAt).getTime());
+    }, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  return <span className="font-mono text-sm text-[#FAFAFA]">{formatDuration(elapsed)}</span>;
+}
+
+function StaticDuration({ start, end }: { start: string; end: string }) {
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  return <span className="font-mono text-sm text-[#FAFAFA]">{formatDuration(ms)}</span>;
+}
+
+// ── Timeline event dot color ─────────────────────────────────────────────────
+
+const timelineDotColor: Record<string, string> = {
+  status_change: "#DC2626",
+  correlation: "#0891B2",
+  evidence_generated: "#16A34A",
+  resolved: "#16A34A",
+  acknowledged: "#D97706",
+  note: "#52525B",
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export default function IncidentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { currentOrg } = useAuth();
   const id = params.id as string;
-  const [incident, setIncident] = useState<IncidentDetailType | null>(null);
-  const [evidence, setEvidence] = useState<EvidenceDetail | null>(null);
+
+  const [incident, setIncident] = useState<IncidentDetail | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [signals, setSignals] = useState<CorrelatedSignal[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusUpdating, setStatusUpdating] = useState(false);
-  const [evidenceLoading, setEvidenceLoading] = useState(true);
+  const notFound = useRef(false);
 
   const fetchIncident = useCallback(async () => {
     setLoading(true);
-    setEvidenceLoading(true);
+    notFound.current = false;
     try {
       const inc = await incidentService.getById(id);
       setIncident(inc);
       setTimeline(buildTimeline(inc));
       setSignals(buildCorrelatedSignals(inc));
-
-      // Attempt to fetch evidence
-      if (inc.evidence_report_id) {
-        try {
-          const ev = await evidenceService.getByIncident(id);
-          setEvidence(ev);
-        } catch {
-          setEvidence(null);
-        }
-      }
     } catch {
-      /* handled by null check below */
+      notFound.current = true;
     } finally {
       setLoading(false);
-      setEvidenceLoading(false);
     }
   }, [id]);
 
@@ -61,257 +91,431 @@ export default function IncidentCommandCenterPage() {
     try {
       await incidentService.update(id, { status });
       if (incident) setIncident({ ...incident, status });
-      toast.success(`Incident marked as ${status.replace("_", " ")}.`);
     } catch {
-      toast.error("Incident could not be updated.");
+      /* toast could be added later */
     } finally {
       setStatusUpdating(false);
     }
   };
 
+  // ── Loading ────────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-[180px] rounded-lg bg-white" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          <Skeleton className="h-[400px] rounded-lg bg-white" />
-          <Skeleton className="h-[400px] rounded-lg bg-white" />
+        <Skeleton className="h-4 w-48 bg-[rgba(255,255,255,0.04)]" />
+        <Skeleton className="h-8 w-[420px] bg-[rgba(255,255,255,0.04)]" />
+        <Skeleton className="h-[200px] bg-[rgba(255,255,255,0.04)] rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
+          <Skeleton className="h-[400px] bg-[rgba(255,255,255,0.04)] rounded-xl" />
+          <Skeleton className="h-[400px] bg-[rgba(255,255,255,0.04)] rounded-xl" />
         </div>
       </div>
     );
   }
 
-  if (!incident) {
+  if (!incident || notFound.current) {
     return (
       <div className="text-center py-20">
+        <AlertTriangle className="w-8 h-8 text-[#52525B] mx-auto mb-3" />
         <p className="text-[#A1A1AA]">Incident not found.</p>
-        <button onClick={() => router.push("/incidents")} className="mt-4 text-xs text-[#0891B2] hover:underline">
+        <button
+          onClick={() => router.push("/incidents")}
+          className="mt-4 text-xs text-[#0891B2] hover:text-[#06B6D4] transition-colors"
+        >
           Back to Incidents
         </button>
       </div>
     );
   }
 
-  const statusLabels: Record<string, string> = {
-    open: "Open",
-    resolved: "Resolved",
-    false_positive: "False Positive",
-  };
+  const shortId = id.slice(0, 6);
+  const currentPlan = (currentOrg?.plan as Plan) || "free";
 
-  const duration = incident.resolved_at
-    ? (() => {
-        const ms = new Date(incident.resolved_at!).getTime() - new Date(incident.started_at).getTime();
-        if (ms < 60000) return `${Math.round(ms / 1000)}s`;
-        if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        return `${h}h ${m}m`;
-      })()
-    : (() => {
-        const ms = Date.now() - new Date(incident.started_at).getTime();
-        if (ms < 60000) return `${Math.round(ms / 1000)}s (ongoing)`;
-        if (ms < 3600000) return `${Math.floor(ms / 60000)}m (ongoing)`;
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        return `${h}h ${m}m (ongoing)`;
-      })();
+  // Top correlation (if any)
+  const topCorrelation =
+    incident.correlations.length > 0
+      ? incident.correlations.reduce((a, b) =>
+          a.correlation_confidence > b.correlation_confidence ? a : b
+        )
+      : null;
+
+  const confidencePct = topCorrelation
+    ? Math.round(topCorrelation.correlation_confidence * 100)
+    : null;
+
+  // Evidence strength label
+  const evidenceLabel =
+    confidencePct === null
+      ? null
+      : confidencePct >= 80
+        ? "Strong"
+        : confidencePct >= 50
+          ? "Moderate"
+          : "Weak";
+
+  const evidenceLabelColor =
+    evidenceLabel === "Strong"
+      ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
+      : evidenceLabel === "Moderate"
+        ? "text-amber-400 bg-amber-400/10 border-amber-400/20"
+        : "text-[#A1A1AA] bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.08)]";
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
+      {/* ── Breadcrumb ──────────────────────────────────────────────── */}
       <button
         onClick={() => router.push("/incidents")}
-        className="flex items-center gap-2 text-sm text-[#52525B] hover:text-[#09090B] transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="w-3.5 h-3.5" />
         Incidents
+        <span className="text-[#52525B]">/</span>
+        <span className="text-[#FAFAFA] font-mono text-xs">INC-{shortId}</span>
       </button>
 
-      {/* Command Center Header */}
-      <div className="rounded-lg border border-[#E4E4E7] bg-white p-6">
-        {/* Status row */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <SeverityBadge severity={incident.severity} />
-          <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 border-blue-200">
-            <span className={cn(
-              "h-1.5 w-1.5 rounded-full animate-pulse",
-              incident.status === "open" ? "bg-amber-500" :
-              incident.status === "resolved" ? "bg-emerald-500" : "bg-[#71717A]"
-            )} />
-            {statusLabels[incident.status] || incident.status}
-          </span>
-          <span className="text-[11px] text-[#A1A1AA] font-mono ml-auto">{incident.id}</span>
-        </div>
-
-        {/* Title */}
-        <h1 className="text-xl font-semibold text-[#09090B] mb-2">
-          {incident.description || `Incident ${incident.id.slice(0, 8)}`}
+      {/* ── Title + Badges ──────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3">
+        <h1 className="text-2xl font-bold text-[#FAFAFA] tracking-tight">
+          {incident.description || incident.id}
         </h1>
-
-        {/* Metadata strip */}
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#52525B] mb-5">
-          <span className="flex items-center gap-1.5">
-            <span className="text-[#A1A1AA]">Started:</span>
-            <span className="font-medium">{format(new Date(incident.started_at), "MMM d, yyyy HH:mm:ss")}</span>
-          </span>
-          {incident.resolved_at && (
-            <span className="flex items-center gap-1.5">
-              <span className="text-[#A1A1AA]">Resolved:</span>
-              <span className="font-medium">{format(new Date(incident.resolved_at), "MMM d, yyyy HH:mm:ss")}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <SeverityBadge severity={incident.severity} />
+          {incident.status === "open" ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-xs font-medium text-red-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#DC2626]" />
+              </span>
+              Open
+            </span>
+          ) : incident.status === "resolved" ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+              <CheckCircle className="w-3.5 h-3.5" />
+              Resolved
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] px-2.5 py-0.5 text-xs font-medium text-[#A1A1AA]">
+              <XCircle className="w-3.5 h-3.5" />
+              {incident.status.replace(/_/g, " ")}
             </span>
           )}
-          <span className="flex items-center gap-1.5">
-            <span className="text-[#A1A1AA]">Duration:</span>
-            <span className="font-medium font-mono">{duration}</span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-[#A1A1AA]">
+            <Clock className="w-3.5 h-3.5" />
+            {incident.resolved_at ? (
+              <StaticDuration start={incident.started_at} end={incident.resolved_at} />
+            ) : (
+              <LiveTimer startedAt={incident.started_at} />
+            )}
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-[#A1A1AA]">Root Cause:</span>
-            <span className="font-medium capitalize">{incident.root_cause?.replace(/_/g, " ") || "Unknown"}</span>
-          </span>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {incident.status === "open" && (
-            <>
-              <button
-                onClick={() => handleStatusUpdate("resolved")}
-                disabled={statusUpdating}
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3.5 py-2 transition-colors disabled:opacity-50"
-              >
-                {statusUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                Mark Resolved
-              </button>
-              <button
-                onClick={() => handleStatusUpdate("false_positive")}
-                disabled={statusUpdating}
-                className="inline-flex items-center gap-2 rounded-md border border-[#E4E4E7] bg-white text-[#52525B] text-xs font-medium px-3.5 py-2 hover:bg-[#F8F9FA] transition-colors disabled:opacity-50"
-              >
-                Mark False Positive
-              </button>
-            </>
-          )}
-          {incident.evidence_report_id && (
-            <Link
-              href={`/evidence/${incident.evidence_report_id}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#0891B2]/30 bg-[#0891B2]/5 text-[#0891B2] text-xs font-medium px-3.5 py-2 hover:bg-[#0891B2]/10 transition-colors ml-auto"
-            >
-              <FileSearch className="h-3.5 w-3.5" />
-              View Evidence
-              <ExternalLink className="h-3 w-3" />
-            </Link>
-          )}
         </div>
       </div>
 
-      {/* What Happened Summary (from evidence AI assessment if available) */}
-      {evidence?.ai_assessment && (
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-6">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-[#A1A1AA] mb-3">Assessment</h3>
-          <p className="text-sm text-[#52525B] leading-relaxed">{evidence.ai_assessment}</p>
-          <div className="flex items-center gap-2 mt-3 text-[10px] text-[#A1A1AA]">
-            <span className="rounded bg-[#F8F9FA] px-1.5 py-0.5 text-[#52525B]">AI-assisted</span>
-            <span>Evidence-first, not AI-first. Always verify.</span>
-          </div>
-        </div>
-      )}
-
-      {/* Main Grid: Timeline + Contributors */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        {/* Left: Timeline */}
-        <div className="rounded-lg border border-[#E4E4E7] bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-[#A1A1AA]">
-              Event Timeline
-            </h3>
-            <span className="text-[11px] text-[#A1A1AA]">
-              {timeline.length} events
-            </span>
-          </div>
-          <PrecisionTimeline
-            events={timeline}
-            incidentStart={incident.started_at}
-            incidentEnd={incident.resolved_at}
-          />
-        </div>
-
-        {/* Right: Contributors + Metadata */}
-        <div className="space-y-5">
-          {/* Likely Contributors */}
-          {evidence && evidence.contributors && evidence.contributors.length > 0 && (
-            <div className="rounded-lg border border-[#E4E4E7] bg-white p-5">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-[#A1A1AA] mb-4">
-                Likely Contributors
+      {/* ── Two-Column Layout ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
+        {/* ── LEFT COLUMN ────────────────────────────────────────── */}
+        <div className="space-y-6">
+          {/* 1. Likely Contributor Card */}
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Likely Contributor
               </h3>
-              <div className="space-y-3">
-                {evidence.contributors.map((c) => (
-                  <ContributorCard key={c.dependency_id} contributor={c} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Incident Metadata */}
-          <div className="rounded-lg border border-[#E4E4E7] bg-white p-5">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-[#A1A1AA] mb-4">
-              Incident Metadata
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Dependency</span>
-                <span className="text-[#09090B] font-mono text-xs">{incident.dependency_id.slice(0, 12)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Root Cause</span>
-                <span className="text-[#09090B] font-medium capitalize">{incident.root_cause?.replace(/_/g, " ") || "Unknown"}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Evidence</span>
-                {incident.evidence_report_id ? (
-                  <Link href={`/evidence/${incident.evidence_report_id}`} className="text-[#0891B2] font-mono text-xs hover:underline">
-                    {incident.evidence_report_id.slice(0, 16)}
-                  </Link>
-                ) : (
-                  <span className="text-[#A1A1AA]">None</span>
-                )}
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Correlations</span>
-                <span className="text-[#09090B] font-medium">{incident.correlations?.length || 0}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Created</span>
-                <span className="text-[#52525B] text-xs">{format(new Date(incident.created_at), "MMM d, yyyy HH:mm")}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Updated</span>
-                <span className="text-[#52525B] text-xs">{formatDistanceToNow(new Date(incident.updated_at), { addSuffix: true })}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Correlated Dependencies (legacy from signals) */}
-          {signals.length > 0 && !evidence?.contributors && (
-            <div className="rounded-lg border border-[#E4E4E7] bg-white p-5">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-[#A1A1AA] mb-4">
-                Correlated Dependencies
-              </h3>
-              <div className="space-y-3">
-                {signals.map((signal) => (
-                  <div key={signal.id} className="border border-[#E4E4E7] rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-[#09090B]">{signal.name}</span>
-                      <span className="text-xs text-[#52525B]">{(signal.correlation * 100).toFixed(0)}%</span>
-                    </div>
-                    <p className="text-[10px] text-[#A1A1AA] font-mono">{signal.metric}</p>
+              {topCorrelation ? (
+                <div className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-[#FAFAFA] font-mono">
+                      {topCorrelation.correlated_dependency_id.slice(0, 8)}
+                    </span>
+                    {evidenceLabel && (
+                      <span
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                          evidenceLabelColor
+                        )}
+                      >
+                        {evidenceLabel}
+                      </span>
+                    )}
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#A1A1AA]">Confidence</span>
+                      <span className="font-mono text-[#FAFAFA]">
+                        {confidencePct}%
+                      </span>
+                    </div>
+                    {/* Confidence bar */}
+                    <div className="w-full h-1.5 rounded-full bg-[rgba(255,255,255,0.06)]">
+                      <div
+                        className={cn(
+                          "h-1.5 rounded-full transition-all",
+                          confidencePct && confidencePct >= 80
+                            ? "bg-emerald-500"
+                            : confidencePct && confidencePct >= 50
+                              ? "bg-amber-500"
+                              : "bg-[#A1A1AA]"
+                        )}
+                        style={{ width: `${confidencePct || 0}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#A1A1AA]">Method</span>
+                      <span className="text-[#FAFAFA] capitalize">
+                        {topCorrelation.correlation_method}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#A1A1AA]">Time window</span>
+                      <span className="text-[#FAFAFA] font-mono">
+                        {topCorrelation.time_window_seconds}s
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-[#52525B]">
+                  No correlated dependency identified yet.
+                </p>
+              )}
+            </ConsoleCardBody>
+          </ConsoleCard>
+
+          {/* 2. Observed Signals */}
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Observed Signals
+              </h3>
+              {signals.length > 0 ? (
+                <ul className="space-y-2.5">
+                  {signals.map((sig) => (
+                    <li
+                      key={sig.id}
+                      className="flex items-start gap-3 rounded-lg border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] p-3"
+                    >
+                      <span
+                        className="mt-0.5 inline-flex h-2 w-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor:
+                            sig.correlation >= 0.8
+                              ? "#16A34A"
+                              : sig.correlation >= 0.5
+                                ? "#D97706"
+                                : "#52525B",
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-[#FAFAFA] truncate">
+                            {sig.name}
+                          </span>
+                          <span className="text-xs font-mono text-[#A1A1AA] shrink-0">
+                            {(sig.correlation * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#52525B] font-mono mt-0.5 truncate">
+                          {sig.metric}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[#52525B]">
+                  No correlated signals detected for this incident.
+                </p>
+              )}
+            </ConsoleCardBody>
+          </ConsoleCard>
+
+          {/* 3. Timeline */}
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                  Timeline
+                </h3>
+                <span className="text-[11px] text-[#52525B] font-mono">
+                  {timeline.length} events
+                </span>
               </div>
-            </div>
-          )}
+              <div className="relative pl-6">
+                {/* Vertical line */}
+                <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[rgba(255,255,255,0.08)]" />
+
+                <div className="space-y-5">
+                  {timeline.map((evt) => (
+                    <div key={evt.id} className="relative flex gap-3">
+                      {/* Dot */}
+                      <span
+                        className="absolute -left-6 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-[#0A0A0F] shrink-0"
+                        style={{
+                          backgroundColor:
+                            timelineDotColor[evt.type] || "#52525B",
+                        }}
+                      />
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-[#FAFAFA]">
+                          {evt.action}
+                        </p>
+                        <p className="text-xs text-[#A1A1AA] mt-0.5 leading-relaxed">
+                          {evt.details}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="text-[11px] text-[#52525B]">
+                            {evt.actor}
+                          </span>
+                          <span className="text-[11px] text-[#52525B] font-mono">
+                            {format(new Date(evt.timestamp), "MMM d, HH:mm:ss")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ConsoleCardBody>
+          </ConsoleCard>
+        </div>
+
+        {/* ── RIGHT COLUMN ───────────────────────────────────────── */}
+        <div className="space-y-6">
+          {/* 1. Actions Card */}
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Actions
+              </h3>
+
+              <div className="space-y-2.5">
+                {/* Acknowledge */}
+                {incident.status === "open" && (
+                  <button
+                    onClick={() => handleStatusUpdate("open")}
+                    disabled={statusUpdating}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-2.5 text-sm font-medium text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.08)] transition-colors disabled:opacity-50"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#D97706]" />
+                    Acknowledge
+                  </button>
+                )}
+
+                {/* Resolve */}
+                {incident.status === "open" && (
+                  <button
+                    onClick={() => handleStatusUpdate("resolved")}
+                    disabled={statusUpdating}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Resolve
+                  </button>
+                )}
+
+                {/* Generate Evidence (locked on free) */}
+                <LockedFeature currentPlan={currentPlan} feature="evidence">
+                  <button
+                    disabled={statusUpdating}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#0891B2] hover:bg-[#0E7490] px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Generate Evidence
+                  </button>
+                </LockedFeature>
+              </div>
+            </ConsoleCardBody>
+          </ConsoleCard>
+
+          {/* 2. Metadata Card */}
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                Metadata
+              </h3>
+              <div className="space-y-3">
+                <MetaRow label="Incident ID" value={incident.id} mono />
+                <MetaRow
+                  label="Opened at"
+                  value={format(
+                    new Date(incident.started_at),
+                    "MMM d, yyyy HH:mm:ss"
+                  )}
+                />
+                <MetaRow
+                  label="Dependency"
+                  value={incident.dependency_id.slice(0, 12)}
+                  mono
+                />
+                <MetaRow
+                  label="Region"
+                  value={"—"}
+                />
+                <MetaRow
+                  label="Check interval"
+                  value={"—"}
+                />
+                <MetaRow
+                  label="Confidence"
+                  value={
+                    confidencePct !== null
+                      ? `${confidencePct}%`
+                      : "—"
+                  }
+                />
+                {incident.resolved_at && (
+                  <MetaRow
+                    label="Resolved at"
+                    value={format(
+                      new Date(incident.resolved_at),
+                      "MMM d, yyyy HH:mm:ss"
+                    )}
+                  />
+                )}
+                <MetaRow
+                  label="Root cause"
+                  value={
+                    incident.root_cause !== "unknown"
+                      ? incident.root_cause.replace(/_/g, " ")
+                      : "Unknown"
+                  }
+                  capitalize
+                />
+              </div>
+            </ConsoleCardBody>
+          </ConsoleCard>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Small helpers ────────────────────────────────────────────────────────────
+
+function MetaRow({
+  label,
+  value,
+  mono,
+  capitalize,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-[#A1A1AA]">{label}</span>
+      <span
+        className={cn(
+          "text-[#FAFAFA] text-xs",
+          mono && "font-mono",
+          capitalize && "capitalize"
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }

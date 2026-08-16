@@ -1,99 +1,126 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { MemberTable } from "@/components/dashboard/MemberTable";
-import { ApiKeyManager } from "@/components/dashboard/ApiKeyManager";
-import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
-import { BillingCard } from "@/components/dashboard/BillingCard";
-import { orgService, type OrgMemberResponse } from "@/services/orgService";
-import { apiKeyService, type ApiKeyResponse } from "@/services/apiKeyService";
-import { notificationService, type AlertConfig } from "@/services/notificationService";
-import { billingService, type PlanDetailsResponse } from "@/services/billingService";
-import { apiClient, BackendError } from "@/lib/api";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { billingService, type PlanDetailsResponse, type PricingPlansResponse } from "@/services/billingService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { User, CreditCard, Users, Check, Lock, Zap, Globe, FileText, Key, Bell } from "lucide-react";
+import { ConsoleCard, ConsoleCardHeader, ConsoleCardBody } from "@/components/dashboard/ConsoleLayout";
+import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
+import { getPlanConfig, PLANS } from "@/lib/tierLimits";
+import { orgService, type OrgMemberResponse } from "@/services/orgService";
+import { apiClient, BackendError } from "@/lib/api";
+import type { Plan } from "@/services/billingService";
 import { toast } from "sonner";
 
-const tabs = ["profile", "team", "api-keys", "notifications", "billing"] as const;
-const tabLabels: Record<string, string> = { profile: "Profile", team: "Team", "api-keys": "API Keys", notifications: "Notifications", billing: "Billing" };
+const tabs = [
+  { key: "profile", label: "Profile", icon: User },
+  { key: "team", label: "Team", icon: Users },
+  { key: "billing", label: "Billing", icon: CreditCard },
+] as const;
+
+// All features that can be checked across plans
+const allFeatures = [
+  { key: "dependencies", label: "Dependency monitoring" },
+  { key: "email_alerts", label: "Email alerts" },
+  { key: "slack_alerts", label: "Slack alerts" },
+  { key: "webhook_alerts", label: "Webhook alerts" },
+  { key: "pagerduty_alerts", label: "PagerDuty alerts" },
+  { key: "evidence", label: "Evidence generation" },
+  { key: "attribution", label: "Deterministic attribution" },
+  { key: "client_groups", label: "Client groups" },
+  { key: "api_keys", label: "API access" },
+  { key: "custom_branding", label: "Custom branding" },
+  { key: "client_reports", label: "Client-facing reports" },
+  { key: "white_label", label: "White-label evidence" },
+  { key: "multi_region", label: "Multi-region checks" },
+  { key: "fast_intervals", label: "15s check intervals" },
+  { key: "long_retention", label: "Extended data retention" },
+];
+
+const featurePlanMap: Record<string, Plan[]> = {
+  dependencies: ["free", "starter", "standard", "professional", "agency"],
+  email_alerts: ["free", "starter", "standard", "professional", "agency"],
+  slack_alerts: ["starter", "standard", "professional", "agency"],
+  webhook_alerts: ["standard", "professional", "agency"],
+  pagerduty_alerts: ["standard", "professional", "agency"],
+  evidence: ["standard", "professional", "agency"],
+  attribution: ["standard", "professional", "agency"],
+  client_groups: ["standard", "professional", "agency"],
+  api_keys: ["standard", "professional", "agency"],
+  custom_branding: ["professional", "agency"],
+  client_reports: ["agency"],
+  white_label: ["agency"],
+  multi_region: ["starter", "standard", "professional", "agency"],
+  fast_intervals: ["professional", "agency"],
+  long_retention: ["starter", "standard", "professional", "agency"],
+};
 
 export default function SettingsPage() {
-  const { user, memberRole } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("profile");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, memberRole, currentOrg, isLoading: authLoading } = useAuth();
+
+  const activeTab = searchParams.get("tab") || "profile";
+
+  // Profile state
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Team state
   const [members, setMembers] = useState<OrgMemberResponse[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [apiKeys, setApiKeys] = useState<ApiKeyResponse[]>([]);
-  const [apiKeysLoading, setApiKeysLoading] = useState(false);
-  const [apiKeysError, setApiKeysError] = useState<string | null>(null);
-  const [channels, setChannels] = useState<AlertConfig[]>([]);
-  const [channelsLoading, setChannelsLoading] = useState(false);
-  const [channelsError, setChannelsError] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  // Billing state
   const [plan, setPlan] = useState<PlanDetailsResponse | null>(null);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlansResponse | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
 
+  // Initialize profile
   useEffect(() => {
     if (user) {
       setName(user.full_name);
-      setEmail(user.email);
     }
   }, [user]);
 
+  // Fetch team data
   useEffect(() => {
-    if (activeTab === "team") {
+    if (activeTab === "team" && !authLoading) {
       setMembersLoading(true);
       setMembersError(null);
-      orgService.listMembers()
+      orgService
+        .listMembers()
         .then(setMembers)
         .catch(() => setMembersError("Unable to load team members."))
         .finally(() => setMembersLoading(false));
     }
-  }, [activeTab]);
+  }, [activeTab, authLoading]);
 
+  // Fetch billing data
   useEffect(() => {
-    if (activeTab === "api-keys") {
-      setApiKeysLoading(true);
-      setApiKeysError(null);
-      apiKeyService.list()
-        .then(setApiKeys)
-        .catch(() => setApiKeysError("Unable to load API keys."))
-        .finally(() => setApiKeysLoading(false));
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === "notifications") {
-      setChannelsLoading(true);
-      setChannelsError(null);
-      notificationService.list()
-        .then(setChannels)
-        .catch(() => setChannelsError("Unable to load notification channels."))
-        .finally(() => setChannelsLoading(false));
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === "billing") {
+    if ((activeTab === "billing") && !authLoading) {
       setBillingLoading(true);
       setBillingError(null);
-      billingService.getPlan()
-        .then(setPlan)
+      Promise.all([billingService.getPlan(), billingService.getPricingPlans()])
+        .then(([planData, pricingData]) => {
+          setPlan(planData);
+          setPricingPlans(pricingData);
+        })
         .catch(() => setBillingError("Unable to load billing information."))
         .finally(() => setBillingLoading(false));
     }
-  }, [activeTab]);
+  }, [activeTab, authLoading]);
 
   const handleProfileUpdate = async () => {
     setSaving(true);
     try {
-      await apiClient.patch("/users/me", { full_name: name, email });
+      await apiClient.patch("/users/me", { full_name: name });
       toast.success("Profile updated.");
     } catch (err) {
       if (err instanceof BackendError) {
@@ -106,158 +133,551 @@ export default function SettingsPage() {
     }
   };
 
+  const handleInvite = async () => {
+    if (!inviteEmail || !currentOrg?.id) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    setInviting(true);
+    try {
+      await orgService.inviteMember(currentOrg.id, inviteEmail);
+      toast.success(`Invitation sent to ${inviteEmail}.`);
+      setInviteEmail("");
+      // Refresh members
+      orgService.listMembers().then(setMembers).catch(() => {});
+    } catch {
+      toast.error("Failed to send invitation.");
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleUpgrade = async (targetPlan: string) => {
+    setUpgrading(targetPlan);
+    try {
+      const result = await billingService.initializePayment(targetPlan, user?.email);
+      window.location.href = result.authorization_url;
+    } catch {
+      toast.error("Failed to initialize payment.");
+    } finally {
+      setUpgrading(null);
+    }
+  };
+
+  const setTab = (tab: string) => {
+    router.push(`/settings?tab=${tab}`);
+  };
+
+  if (authLoading) {
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
+        <Skeleton className="h-[400px] rounded-xl bg-[#1C1C22]" />
+      </div>
+    );
+  }
+
+  const currentPlanTyped = (plan?.plan || "free") as Plan;
+  const planConfig = getPlanConfig(currentPlanTyped);
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-[15px] font-semibold text-[#09090B] tracking-tight">SETTINGS</h1>
-        <p className="text-[12px] text-[#A1A1AA] mt-1">Manage your account and organization</p>
+        <h1 className="text-[15px] font-semibold text-[#FAFAFA] tracking-tight">
+          Settings
+        </h1>
+        <p className="text-[12px] text-[#A1A1AA] mt-1">
+          Manage your account and organization
+        </p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 rounded-lg bg-white border border-[#E4E4E7] p-1 w-fit overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`rounded-md px-4 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab ? "bg-[#F8F9FA] text-[#09090B]" : "text-[#A1A1AA] hover:text-[#52525B]"
-            }`}
-          >
-            {tabLabels[tab]}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <div className="max-w-3xl">
-        {activeTab === "profile" && (
-          <div className="rounded-lg border border-[#E4E4E7] bg-white p-6 space-y-5">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="h-16 w-16 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xl font-semibold">
-                {user?.full_name?.charAt(0) || "U"}
-              </div>
-              <div>
-                <p className="text-lg font-medium text-[#09090B]">{user?.full_name}</p>
-                <p className="text-sm text-[#52525B] capitalize">{memberRole || "Member"}</p>
-              </div>
-            </div>
-            <div>
-              <label className="text-[13px] font-medium text-[#09090B] mb-1.5 block">Full Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-white border-[#E4E4E7] text-[#09090B]" />
-            </div>
-            <div>
-              <label className="text-[13px] font-medium text-[#09090B] mb-1.5 block">Email</label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white border-[#E4E4E7] text-[#09090B]" />
-            </div>
-            <Button onClick={handleProfileUpdate} disabled={saving} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white">
-              {saving ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Saving...
-                </span>
-              ) : (
-                "Update Profile"
+      <div className="flex gap-1 rounded-lg bg-[#131318] border border-[rgba(255,255,255,0.08)] p-1 w-fit">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setTab(tab.key)}
+              className={cn(
+                "rounded-md px-4 py-2 text-xs font-medium transition-colors flex items-center gap-2",
+                activeTab === tab.key
+                  ? "bg-[rgba(255,255,255,0.08)] text-[#FAFAFA]"
+                  : "text-[#A1A1AA] hover:text-[#FAFAFA]"
               )}
-            </Button>
-          </div>
-        )}
-
-        {activeTab === "team" && (
-          <div>
-            {membersLoading ? (
-              <Skeleton className="h-[200px] rounded-lg bg-white" />
-            ) : membersError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700">{membersError}</p>
-                </div>
-                <button onClick={() => {
-                  setMembersLoading(true);
-                  setMembersError(null);
-                  orgService.listMembers().then(setMembers).catch(() => setMembersError("Unable to load team members.")).finally(() => setMembersLoading(false));
-                }} className="text-xs font-medium text-red-600 hover:text-red-800">
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <MemberTable members={members} />
-            )}
-          </div>
-        )}
-
-        {activeTab === "api-keys" && (
-          <div>
-            {apiKeysLoading ? (
-              <Skeleton className="h-[200px] rounded-lg bg-white" />
-            ) : apiKeysError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700">{apiKeysError}</p>
-                </div>
-                <button onClick={() => {
-                  setApiKeysLoading(true);
-                  setApiKeysError(null);
-                  apiKeyService.list().then(setApiKeys).catch(() => setApiKeysError("Unable to load API keys.")).finally(() => setApiKeysLoading(false));
-                }} className="text-xs font-medium text-red-600 hover:text-red-800">
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <ApiKeyManager keys={apiKeys} />
-            )}
-          </div>
-        )}
-
-        {activeTab === "notifications" && (
-          <div>
-            {channelsLoading ? (
-              <Skeleton className="h-[200px] rounded-lg bg-white" />
-            ) : channelsError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700">{channelsError}</p>
-                </div>
-                <button onClick={() => {
-                  setChannelsLoading(true);
-                  setChannelsError(null);
-                  notificationService.list().then(setChannels).catch(() => setChannelsError("Unable to load notification channels.")).finally(() => setChannelsLoading(false));
-                }} className="text-xs font-medium text-red-600 hover:text-red-800">
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <NotificationSettings channels={channels} />
-            )}
-          </div>
-        )}
-
-        {activeTab === "billing" && (
-          <div>
-            {billingLoading ? (
-              <Skeleton className="h-[400px] rounded-lg bg-white" />
-            ) : billingError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700">{billingError}</p>
-                </div>
-                <button onClick={() => {
-                  setBillingLoading(true);
-                  setBillingError(null);
-                  billingService.getPlan().then(setPlan).catch(() => setBillingError("Unable to load billing information.")).finally(() => setBillingLoading(false));
-                }} className="text-xs font-medium text-red-600 hover:text-red-800">
-                  Retry
-                </button>
-              </div>
-            ) : plan ? (
-              <BillingCard plan={plan} />
-            ) : null}
-          </div>
-        )}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Profile Tab */}
+      {activeTab === "profile" && (
+        <div className="max-w-2xl">
+          <ConsoleCard>
+            <ConsoleCardBody className="space-y-6">
+              {/* Avatar + Name Row */}
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#0891B2] flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                  {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+                <div>
+                  <p className="text-[14px] font-medium text-[#FAFAFA]">
+                    {user?.full_name}
+                  </p>
+                  <p className="text-[12px] text-[#A1A1AA] capitalize">
+                    {memberRole || "Member"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
+
+              {/* Full Name */}
+              <div>
+                <label className="text-[13px] font-medium text-[#A1A1AA] mb-1.5 block">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(255,255,255,0.2)] transition-colors"
+                />
+              </div>
+
+              {/* Email (readonly) */}
+              <div>
+                <label className="text-[13px] font-medium text-[#A1A1AA] mb-1.5 block">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={user?.email || ""}
+                  readOnly
+                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#52525B] cursor-not-allowed focus:outline-none"
+                />
+              </div>
+
+              {/* Update Button */}
+              <button
+                onClick={handleProfileUpdate}
+                disabled={saving}
+                className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Saving..." : "Update Profile"}
+              </button>
+            </ConsoleCardBody>
+          </ConsoleCard>
+        </div>
+      )}
+
+      {/* Team Tab */}
+      {activeTab === "team" && (
+        <div className="max-w-3xl space-y-5">
+          {/* Free plan banner */}
+          {currentPlanTyped === "free" && (
+            <div className="rounded-xl border border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Lock className="w-4 h-4 text-[#0891B2]" />
+                <div>
+                  <p className="text-[13px] font-medium text-[#FAFAFA]">
+                    Team invites require Starter plan
+                  </p>
+                  <p className="text-[12px] text-[#A1A1AA]">
+                    Upgrade to invite team members to your organization.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleUpgrade("starter")}
+                className="bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white transition-all shrink-0"
+              >
+                Upgrade
+              </button>
+            </div>
+          )}
+
+          {/* Invite Bar */}
+          {currentPlanTyped !== "free" && (
+            <ConsoleCard>
+              <ConsoleCardBody>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@company.com"
+                    className="flex-1 bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] rounded-lg px-3.5 py-2.5 text-[13px] text-[#FAFAFA] placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(255,255,255,0.2)] transition-colors"
+                  />
+                  <button
+                    onClick={handleInvite}
+                    disabled={inviting || !inviteEmail}
+                    className="bg-[#FAFAFA] text-[#0A0A0F] px-5 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {inviting ? "Inviting..." : "Invite"}
+                  </button>
+                </div>
+              </ConsoleCardBody>
+            </ConsoleCard>
+          )}
+
+          {/* Members Table */}
+          {membersLoading ? (
+            <ConsoleCard>
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[48px] bg-[#1C1C22] rounded-lg" />
+                ))}
+              </div>
+            </ConsoleCard>
+          ) : membersError ? (
+            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
+              <p className="text-sm text-[#DC2626]">{membersError}</p>
+            </div>
+          ) : members.length > 0 ? (
+            <ConsoleCard>
+              <ConsoleCardHeader className="grid grid-cols-[1fr_1fr_100px] gap-4">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                  Member
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                  Role
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
+                  Joined
+                </span>
+              </ConsoleCardHeader>
+              <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+                {members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="px-5 py-3.5 grid grid-cols-[1fr_1fr_100px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center text-[11px] font-medium text-[#A1A1AA] shrink-0">
+                        {m.user_id.slice(0, 2).toUpperCase()}
+                      </div>
+                      <span className="text-[13px] font-mono text-[#FAFAFA]">
+                        {m.user_id.slice(0, 12)}
+                      </span>
+                    </div>
+                    <span className="text-[12px] text-[#A1A1AA] capitalize">
+                      {m.role}
+                    </span>
+                    <span className="text-[12px] text-[#52525B]">
+                      {new Date(m.joined_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </ConsoleCard>
+          ) : (
+            <ConsoleCard>
+              <ConsoleCardBody className="py-12 text-center">
+                <Users className="w-8 h-8 text-[#52525B] mx-auto mb-3" strokeWidth={1.5} />
+                <p className="text-[14px] font-medium text-[#FAFAFA]">
+                  No team members yet
+                </p>
+                <p className="text-[12px] text-[#A1A1AA] mt-1">
+                  {currentPlanTyped === "free"
+                    ? "Upgrade your plan to invite team members."
+                    : "Invite team members to collaborate on monitoring."}
+                </p>
+              </ConsoleCardBody>
+            </ConsoleCard>
+          )}
+        </div>
+      )}
+
+      {/* Billing Tab */}
+      {activeTab === "billing" && (
+        <div className="max-w-4xl space-y-6">
+          {billingLoading ? (
+            <div className="space-y-5">
+              <Skeleton className="h-[180px] rounded-xl bg-[#1C1C22]" />
+              <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
+            </div>
+          ) : billingError ? (
+            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
+              <p className="text-sm text-[#DC2626]">{billingError}</p>
+            </div>
+          ) : plan ? (
+            <>
+              {/* Current Plan Card (Large, Prominent) */}
+              <ConsoleCard className="border-[rgba(8,145,178,0.2)]">
+                <div className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-[rgba(8,145,178,0.12)] flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-[#0891B2]" />
+                        </div>
+                        <div>
+                          <h2 className="text-[18px] font-semibold text-[#FAFAFA]">
+                            {planConfig.name} Plan
+                          </h2>
+                          <p className="text-[13px] text-[#A1A1AA]">
+                            {planConfig.priceDisplay}/month
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                            plan.subscription_status === "active"
+                              ? "bg-[rgba(22,163,74,0.12)] text-[#16A34A]"
+                              : plan.price_usd === 0
+                                ? "bg-[rgba(255,255,255,0.05)] text-[#52525B]"
+                                : "bg-[rgba(217,119,6,0.12)] text-[#D97706]"
+                          )}
+                        >
+                          {plan.subscription_status === "active"
+                            ? "Active"
+                            : plan.price_usd === 0
+                              ? "Free"
+                              : plan.subscription_status || "Inactive"}
+                        </span>
+                        {plan.current_period_end && (
+                          <span className="text-[11px] text-[#52525B]">
+                            Renews {new Date(plan.current_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {planConfig.upgradeCTA && (
+                      <button
+                        onClick={() => planConfig.nextPlan && handleUpgrade(planConfig.nextPlan)}
+                        className="bg-[#FAFAFA] text-[#0A0A0F] px-6 py-3 rounded-lg text-[13px] font-semibold hover:bg-white hover:shadow-lg transition-all shrink-0"
+                      >
+                        {planConfig.upgradeCTA}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </ConsoleCard>
+
+              {/* Usage Meters Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  {
+                    label: "Dependencies",
+                    icon: Globe,
+                    used: 0,
+                    limit: plan.max_dependencies,
+                  },
+                  {
+                    label: "Evidence",
+                    icon: FileText,
+                    used: 0,
+                    limit: planConfig.limits.evidence,
+                  },
+                  {
+                    label: "API Keys",
+                    icon: Key,
+                    used: 0,
+                    limit: planConfig.limits.apiKeys,
+                  },
+                  {
+                    label: "Team",
+                    icon: Users,
+                    used: 1,
+                    limit: planConfig.limits.team,
+                  },
+                ].map((meter) => {
+                  const ratio =
+                    meter.limit > 0 && meter.limit !== Infinity
+                      ? Math.min(meter.used / meter.limit, 1)
+                      : 0;
+                  const barColor =
+                    ratio > 0.9
+                      ? "#DC2626"
+                      : ratio > 0.7
+                        ? "#D97706"
+                        : "#0891B2";
+
+                  return (
+                    <ConsoleCard key={meter.label}>
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <meter.icon className="w-4 h-4 text-[#52525B]" />
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
+                            {meter.label}
+                          </span>
+                        </div>
+                        <p className="text-xl font-mono font-semibold text-[#FAFAFA]">
+                          {meter.used}
+                          <span className="text-[13px] text-[#52525B] font-normal">
+                            /{meter.limit === Infinity ? "\u221E" : meter.limit}
+                          </span>
+                        </p>
+                        {meter.limit > 0 && meter.limit !== Infinity && (
+                          <div className="w-full h-1.5 bg-[rgba(255,255,255,0.08)] rounded-full mt-3">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${ratio * 100}%`,
+                                backgroundColor: barColor,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </ConsoleCard>
+                  );
+                })}
+              </div>
+
+              {/* Features Checklist */}
+              <ConsoleCard>
+                <ConsoleCardHeader>
+                  <span className="text-[13px] font-semibold text-[#FAFAFA]">
+                    Features
+                  </span>
+                </ConsoleCardHeader>
+                <ConsoleCardBody>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                    {allFeatures.map((feat) => {
+                      const allowed = (featurePlanMap[feat.key] || []).includes(currentPlanTyped);
+                      return (
+                        <div
+                          key={feat.key}
+                          className="flex items-center gap-2.5 py-1"
+                        >
+                          {allowed ? (
+                            <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-[#52525B] shrink-0" />
+                          )}
+                          <span
+                            className={cn(
+                              "text-[13px]",
+                              allowed ? "text-[#FAFAFA]" : "text-[#52525B]"
+                            )}
+                          >
+                            {feat.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ConsoleCardBody>
+              </ConsoleCard>
+
+              {/* Pricing Plans Comparison Grid */}
+              {pricingPlans && pricingPlans.plans.length > 0 && (
+                <div>
+                  <h3 className="text-[13px] font-semibold text-[#FAFAFA] mb-4">
+                    All Plans
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {pricingPlans.plans.map((p) => {
+                      const isCurrent = p.plan === currentPlanTyped;
+                      const pConfig = getPlanConfig(p.plan);
+                      const planOrder: Plan[] = ["free", "starter", "standard", "professional", "agency"];
+                      const canUpgrade =
+                        !isCurrent &&
+                        planOrder.indexOf(p.plan) > planOrder.indexOf(currentPlanTyped);
+
+                      return (
+                        <ConsoleCard
+                          key={p.plan}
+                          className={cn(
+                            isCurrent && "border-[rgba(8,145,178,0.3)]"
+                          )}
+                          hover
+                        >
+                          <div className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-[14px] font-semibold text-[#FAFAFA]">
+                                {p.display_name}
+                              </h4>
+                              {isCurrent && (
+                                <span className="rounded-full bg-[rgba(8,145,178,0.12)] text-[#0891B2] text-[10px] font-medium px-2 py-0.5">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mb-4">
+                              <span className="text-[22px] font-semibold text-[#FAFAFA]">
+                                ${p.price_usd}
+                              </span>
+                              <span className="text-[12px] text-[#52525B]">/mo</span>
+                            </div>
+
+                            <p className="text-[12px] text-[#A1A1AA] mb-4 line-clamp-2">
+                              {p.description}
+                            </p>
+
+                            {/* Plan features from API */}
+                            <div className="space-y-2 mb-5">
+                              {Object.entries(p.features)
+                                .filter(([, v]) => v)
+                                .slice(0, 5)
+                                .map(([key]) => (
+                                  <div
+                                    key={key}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Check className="w-3 h-3 text-[#16A34A] shrink-0" />
+                                    <span className="text-[11px] text-[#A1A1AA] capitalize">
+                                      {key.replace(/_/g, " ")}
+                                    </span>
+                                  </div>
+                                ))}
+                            </div>
+
+                            <div className="text-[11px] text-[#52525B] space-y-1 mb-4">
+                              <p>
+                                <span className="font-mono text-[#A1A1AA]">
+                                  {p.max_dependencies}
+                                </span>{" "}
+                                dependencies
+                              </p>
+                              <p>
+                                <span className="font-mono text-[#A1A1AA]">
+                                  {p.data_retention_days}d
+                                </span>{" "}
+                                retention
+                              </p>
+                            </div>
+
+                            {isCurrent ? (
+                              <div className="w-full text-center py-2.5 rounded-lg border border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)] text-[#0891B2] text-[12px] font-medium">
+                                Current Plan
+                              </div>
+                            ) : canUpgrade ? (
+                              <button
+                                onClick={() => handleUpgrade(p.plan)}
+                                disabled={upgrading === p.plan}
+                                className="w-full bg-[#FAFAFA] text-[#0A0A0F] py-2.5 rounded-lg text-[12px] font-semibold hover:bg-white hover:shadow-lg transition-all disabled:opacity-50"
+                              >
+                                {upgrading === p.plan ? "Processing..." : `Upgrade to ${p.display_name}`}
+                              </button>
+                            ) : (
+                              <div className="w-full text-center py-2.5 rounded-lg border border-[rgba(255,255,255,0.05)] text-[#52525B] text-[12px] font-medium">
+                                Downgrade not available
+                              </div>
+                            )}
+                          </div>
+                        </ConsoleCard>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

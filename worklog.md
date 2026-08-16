@@ -1,4 +1,30 @@
 ---
+Task ID: 4
+Agent: Main Agent
+Task: Live dashboard check — fix crashes and remove founding program
+
+Work Log:
+- Replaced Geist_Mono font with IBM_Plex_Mono (module-not-found crash on all pages)
+- Removed Founding Customer Program: deleted FoundingSpotCounter component, /api/founding-spots route, founding types/methods from billingService, founding discount display from BillingCard
+- Registered demo user (demotest@reliastra.com) via API
+- Browser automation live check of all dashboard routes
+- Found /dashboard CRASH: "Uncaught TypeError: Cannot read properties of undefined (reading 'length')" in chunk 312e6b6eb869c02f.js
+- Root cause: API returns bare [] for /clients endpoint, not PaginatedResponse {items:[], total:0}. Dashboard code did clientRes.items → undefined → .length crash
+- Fixed dashboard page: Array.isArray check handles both bare array and paginated response
+- Fixed clients page: same Array.isArray fix for res.items and res.total
+- Found /evidence 404: no index page existed, only /evidence/[evidenceId]. Next.js RSC prefetch got 404
+- Created /evidence index page with loading/empty states
+- Added evidenceService.list() method
+- Verified: 32 routes, 0 build errors
+- Pushed: commits d8f6e19, 310e76c
+
+Stage Summary:
+- Dashboard crash fixed: bare array vs paginated response mismatch
+- Evidence index page created to prevent 404 prefetch errors
+- All founding program references removed from codebase
+- Geist_Mono font replaced with IBM_Plex_Mono across the project
+
+---
 Task ID: 3
 Agent: Main Agent
 Task: Complete rebuild of public vendor tracking system (dark-mode mission-control)

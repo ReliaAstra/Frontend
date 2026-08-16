@@ -99,16 +99,17 @@ export function TrackVendorContent({ vendorSlug }: Props) {
     return Object.entries(metrics.metrics)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, w]) => ({
-        hour: format(new Date(w.window), 'HH:mm'),
+        hour: w.window,
         window: w.window,
         latency: Math.round(w.avg_latency_ms),
-        p95: Math.round(w.p95_latency_ms),
+        p95: w.p95_latency_ms != null ? Math.round(w.p95_latency_ms) : 0,
         uptime: w.uptime_percentage,
         observations: w.total_observations,
       }));
   }, [metrics]);
 
   const maxLatency = chartData.length > 0 ? Math.max(...chartData.map(d => d.latency), ...chartData.map(d => d.p95), 1) : 1;
+  const isZeroLatency = maxLatency === 0;
 
   const overallStatus = detail?.recent_status || 'unknown';
   const statusStyle = statusConfig[overallStatus] || statusConfig.unknown;

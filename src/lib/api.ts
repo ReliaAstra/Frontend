@@ -62,7 +62,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     }
   }
   if (["post", "put", "delete", "patch"].includes(config.method || "")) {
-    config.headers["Idempotency-Key"] = crypto.randomUUID();
+    try { config.headers["Idempotency-Key"] = crypto.randomUUID(); } catch { config.headers["Idempotency-Key"] = `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
   }
   return config;
 });

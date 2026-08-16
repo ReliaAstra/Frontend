@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/v1";
+// Production API is the default; NEXT_PUBLIC_API_URL overrides for local dev
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.zevcloud.app/v1";
 
 /**
  * Standard backend error envelope:

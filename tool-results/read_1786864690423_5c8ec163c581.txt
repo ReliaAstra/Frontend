@@ -1,0 +1,582 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useEffect, useCallback, useMemo } from 'react';
+     4→     4→import { motion } from 'framer-motion';
+     5→     5→import {
+     6→     6→  Bell, ExternalLink, CheckCircle2, AlertTriangle, Shield,
+     7→     7→  TrendingUp, RefreshCw, AlertCircle, ArrowRight,
+     8→     8→} from 'lucide-react';
+     9→     9→import { Button } from '@/components/ui/button';
+    10→    10→import { Input } from '@/components/ui/input';
+    11→    11→import { Skeleton } from '@/components/ui/skeleton';
+    12→    12→import { cn } from '@/lib/utils';
+    13→    13→import { toast } from 'sonner';
+    14→    14→import {
+    15→    15→  vendorService,
+    16→    16→  type VendorDetailResponse,
+    17→    17→  type VendorHistoryResponse,
+    18→    18→  type VendorMetricsResponse,
+    19→    19→  type VendorIncidentsResponse,
+    20→    20→  type VendorIncident,
+    21→    21→} from '@/services/vendorService';
+    22→    22→import { formatDistanceToNow, format } from 'date-fns';
+    23→    23→import Link from 'next/link';
+    24→    24→
+    25→    25→const statusConfig: Record<string, { label: string; dotColor: string; textColor: string; bg: string; borderColor: string }> = {
+    26→    26→  up: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700', bg: 'bg-emerald-50', borderColor: 'border-emerald-200' },
+    27→    27→  operational: { label: 'Operational', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700', bg: 'bg-emerald-50', borderColor: 'border-emerald-200' },
+    28→    28→  degraded: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', borderColor: 'border-amber-200' },
+    29→    29→  degraded_performance: { label: 'Degraded', dotColor: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', borderColor: 'border-amber-200' },
+    30→    30→  down: { label: 'Down', dotColor: 'bg-red-500', textColor: 'text-red-700', bg: 'bg-red-50', borderColor: 'border-red-200' },
+    31→    31→  partial_outage: { label: 'Partial Outage', dotColor: 'bg-orange-500', textColor: 'text-orange-700', bg: 'bg-orange-50', borderColor: 'border-orange-200' },
+    32→    32→  major_outage: { label: 'Major Outage', dotColor: 'bg-red-500', textColor: 'text-red-700', bg: 'bg-red-50', borderColor: 'border-red-200' },
+    33→    33→  unknown: { label: 'Unknown', dotColor: 'bg-gray-400', textColor: 'text-gray-600', bg: 'bg-gray-50', borderColor: 'border-gray-200' },
+    34→    34→};
+    35→    35→
+    36→    36→const severityConfig: Record<string, { label: string; color: string }> = {
+    37→    37→  critical: { label: 'Critical', color: 'text-red-700 bg-red-50 border-red-200' },
+    38→    38→  major: { label: 'Major', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+    39→    39→  high: { label: 'High', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+    40→    40→  minor: { label: 'Minor', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    41→    41→  medium: { label: 'Medium', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    42→    42→  low: { label: 'Low', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+    43→    43→};
+    44→    44→
+    45→    45→interface Props {
+    46→    46→  vendorSlug: string;
+    47→    47→}
+    48→    48→
+    49→    49→export function TrackVendorContent({ vendorSlug }: Props) {
+    50→    50→  const [email, setEmail] = useState('');
+    51→    51→  const [subscribing, setSubscribing] = useState(false);
+    52→    52→
+    53→    53→  const [detail, setDetail] = useState<VendorDetailResponse | null>(null);
+    54→    54→  const [history, setHistory] = useState<VendorHistoryResponse | null>(null);
+    55→    55→  const [metrics, setMetrics] = useState<VendorMetricsResponse | null>(null);
+    56→    56→  const [incidents, setIncidents] = useState<VendorIncidentsResponse | null>(null);
+    57→    57→  const [loading, setLoading] = useState(true);
+    58→    58→  const [fetchError, setFetchError] = useState<string | null>(null);
+    59→    59→  const [lastFetch, setLastFetch] = useState<string | null>(null);
+    60→    60→  const [refreshing, setRefreshing] = useState(false);
+    61→    61→
+    62→    62→  const vendorLabel = detail?.display_name || vendorSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    63→    63→  const vendorName = detail?.vendor_name || vendorSlug;
+    64→    64→
+    65→    65→  const fetchData = useCallback(async (isRefresh = false) => {
+    66→    66→    if (isRefresh) setRefreshing(true);
+    67→    67→    else setLoading(true);
+    68→    68→    setFetchError(null);
+    69→    69→    try {
+    70→    70→      const [d, h, m, i] = await Promise.all([
+    71→    71→        vendorService.getVendorDetail(vendorSlug),
+    72→    72→        vendorService.getVendorHistory(vendorSlug),
+    73→    73→        vendorService.getVendorMetrics(vendorSlug),
+    74→    74→        vendorService.getVendorIncidents(vendorSlug, 50),
+    75→    75→      ]);
+    76→    76→      setDetail(d);
+    77→    77→      setHistory(h);
+    78→    78→      setMetrics(m);
+    79→    79→      setIncidents(i);
+    80→    80→      setLastFetch(new Date().toISOString());
+    81→    81→    } catch {
+    82→    82→      setFetchError('Unable to load vendor intelligence data. The measurement service may be unavailable.');
+    83→    83→    } finally {
+    84→    84→      setLoading(false);
+    85→    85→      setRefreshing(false);
+    86→    86→    }
+    87→    87→  }, [vendorSlug]);
+    88→    88→
+    89→    89→  useEffect(() => {
+    90→    90→    fetchData();
+    91→    91→    // Auto-refresh every 60s
+    92→    92→    const interval = setInterval(() => fetchData(true), 60000);
+    93→    93→    return () => clearInterval(interval);
+    94→    94→  }, [fetchData]);
+    95→    95→
+    96→    96→  // Process metrics for chart
+    97→    97→  const chartData = useMemo(() => {
+    98→    98→    if (!metrics?.metrics) return [];
+    99→    99→    return Object.entries(metrics.metrics)
+   100→   100→      .sort(([a], [b]) => a.localeCompare(b))
+   101→   101→      .map(([, w]) => ({
+   102→   102→        hour: w.window,
+   103→   103→        window: w.window,
+   104→   104→        latency: Math.round(w.avg_latency_ms),
+   105→   105→        p95: w.p95_latency_ms != null ? Math.round(w.p95_latency_ms) : 0,
+   106→   106→        uptime: w.uptime_percentage,
+   107→   107→        observations: w.total_observations,
+   108→   108→      }));
+   109→   109→  }, [metrics]);
+   110→   110→
+   111→   111→  const maxLatency = chartData.length > 0 ? Math.max(...chartData.map(d => d.latency), ...chartData.map(d => d.p95), 1) : 1;
+   112→   112→  const isZeroLatency = maxLatency === 0;
+   113→   113→
+   114→   114→  const overallStatus = detail?.recent_status || 'unknown';
+   115→   115→  const statusStyle = statusConfig[overallStatus] || statusConfig.unknown;
+   116→   116→
+   117→   117→  const uptimeValue = history?.uptime_percentage_24h ?? null;
+   118→   118→  const avgLatency = history?.avg_latency_ms_24h ?? null;
+   119→   119→  const totalChecks = history?.recent_checks_count ?? null;
+   120→   120→  const latestP95 = chartData.length > 0 ? chartData[chartData.length - 1].p95 : null;
+   121→   121→  const latestObservations = chartData.length > 0 ? chartData[chartData.length - 1].observations : null;
+   122→   122→
+   123→   123→  const isStale = detail?.last_check_at && (Date.now() - new Date(detail.last_check_at).getTime()) > 300000; // 5 min
+   124→   124→
+   125→   125→  const handleSubscribe = async () => {
+   126→   126→    if (!email.includes('@')) {
+   127→   127→      toast.error('Please enter a valid email address.');
+   128→   128→      return;
+   129→   129→    }
+   130→   130→    setSubscribing(true);
+   131→   131→    try {
+   132→   132→      const res = await fetch('/api/newsletter/subscribe', {
+   133→   133→        method: 'POST',
+   134→   134→        headers: { 'Content-Type': 'application/json' },
+   135→   135→        body: JSON.stringify({ email, vendor: vendorSlug }),
+   136→   136→      });
+   137→   137→      if (res.ok) {
+   138→   138→        toast.success(`Subscribed to ${vendorLabel} alerts.`);
+   139→   139→        setEmail('');
+   140→   140→      } else {
+   141→   141→        toast.error('Subscription failed. Please try again.');
+   142→   142→      }
+   143→   143→    } catch {
+   144→   144→      toast.error('Network error.');
+   145→   145→    } finally {
+   146→   146→      setSubscribing(false);
+   147→   147→    }
+   148→   148→  };
+   149→   149→
+   150→   150→  const formatDuration = (seconds: number | null) => {
+   151→   151→    if (seconds === null) return 'Ongoing';
+   152→   152→    if (seconds < 60) return `${Math.round(seconds)}s`;
+   153→   153→    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+   154→   154→    const h = Math.floor(seconds / 3600);
+   155→   155→    const m = Math.floor((seconds % 3600) / 60);
+   156→   156→    return `${h}h ${m}m`;
+   157→   157→  };
+   158→   158→
+   159→   159→  // --- RENDER ---
+   160→   160→
+   161→   161→  // Loading shell
+   162→   162→  if (loading) {
+   163→   163→    return (
+   164→   164→      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+   165→   165→        <Skeleton className="h-6 w-48 mb-4" />
+   166→   166→        <Skeleton className="h-10 w-80 mb-2" />
+   167→   167→        <Skeleton className="h-5 w-96 mb-8" />
+   168→   168→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+   169→   169→          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+   170→   170→        </div>
+   171→   171→        <Skeleton className="h-64 rounded-lg mb-8" />
+   172→   172→        <Skeleton className="h-48 rounded-lg" />
+   173→   173→      </div>
+   174→   174→    );
+   175→   175→  }
+   176→   176→
+   177→   177→  // Error state
+   178→   178→  if (fetchError) {
+   179→   179→    return (
+   180→   180→      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+   181→   181→        <Link href="/track" className="text-sm text-[#0891B2] hover:text-[#0E7490] transition-colors mb-6 inline-block">
+   182→   182→          &larr; All Vendors
+   183→   183→        </Link>
+   184→   184→        <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center mt-4">
+   185→   185→          <AlertCircle className="h-8 w-8 text-[#A1A1AA] mx-auto mb-3" />
+   186→   186→          <p className="text-sm font-medium text-[#09090B]">{fetchError}</p>
+   187→   187→          <button
+   188→   188→            onClick={() => fetchData()}
+   189→   189→            className="mt-4 text-xs font-medium text-[#0891B2] hover:text-[#0E7490] transition-colors"
+   190→   190→          >
+   191→   191→            Retry
+   192→   192→          </button>
+   193→   193→        </div>
+   194→   194→      </div>
+   195→   195→    );
+   196→   196→  }
+   197→   197→
+   198→   198→  return (
+   199→   199→    <div className="max-w-6xl mx-auto px-4 md:px-8">
+   200→   200→      {/* ── HEADER ── */}
+   201→   201→      <section className="pt-10 pb-8">
+   202→   202→        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+   203→   203→          {/* Breadcrumb */}
+   204→   204→          <div className="flex items-center gap-2 mb-6">
+   205→   205→            <Link href="/track" className="text-[13px] text-[#A1A1AA] hover:text-[#0891B2] transition-colors">
+   206→   206→              Vendors
+   207→   207→            </Link>
+   208→   208→            <span className="text-[#E4E4E7]">/</span>
+   209→   209→            <span className="text-[13px] text-[#52525B] font-medium">{vendorLabel}</span>
+   210→   210→          </div>
+   211→   211→
+   212→   212→          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+   213→   213→            <div>
+   214→   214→              {/* Vendor name + status */}
+   215→   215→              <div className="flex items-center gap-4 mb-3">
+   216→   216→                <h1 className="text-[28px] font-semibold text-[#09090B] tracking-[-0.02em]">
+   217→   217→                  {vendorLabel}
+   218→   218→                </h1>
+   219→   219→                <span className={cn(
+   220→   220→                  'inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] px-2.5 py-1 rounded-md border',
+   221→   221→                  statusStyle.bg, statusStyle.textColor, statusStyle.borderColor
+   222→   222→                )}>
+   223→   223→                  <span className={cn('h-1.5 w-1.5 rounded-full', statusStyle.dotColor,
+   224→   224→                    (overallStatus === 'degraded' || overallStatus === 'degraded_performance' || overallStatus === 'partial_outage') && 'animate-pulse'
+   225→   225→                  )} />
+   226→   226→                  {statusStyle.label}
+   227→   227→                </span>
+   228→   228→              </div>
+   229→   229→
+   230→   230→              <p className="text-sm text-[#52525B] max-w-xl leading-relaxed">
+   231→   231→                {detail?.category ? `${detail.category} · ` : ''}Vendor intelligence measured continuously by Reliastra.
+   232→   232→                Data collected independently from {vendorLabel}&apos;s own status reporting.
+   233→   233→              </p>
+   234→   234→            </div>
+   235→   235→
+   236→   236→            {/* Refresh */}
+   237→   237→            <div className="flex items-center gap-3 shrink-0">
+   238→   238→              {lastFetch && (
+   239→   239→                <span className="text-[11px] font-mono text-[#A1A1AA]">
+   240→   240→                  {format(new Date(lastFetch), 'HH:mm:ss')} UTC
+   241→   241→                </span>
+   242→   242→              )}
+   243→   243→              <button
+   244→   244→                onClick={() => fetchData(true)}
+   245→   245→                disabled={refreshing}
+   246→   246→                className="p-2 rounded-md border border-[#E4E4E7] hover:bg-[#F8F9FA] transition-colors text-[#52525B] disabled:opacity-50"
+   247→   247→                aria-label="Refresh data"
+   248→   248→              >
+   249→   249→                <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
+   250→   250→              </button>
+   251→   251→            </div>
+   252→   252→          </div>
+   253→   253→
+   254→   254→          {/* Live measurement bar */}
+   255→   255→          <div className="mt-5 px-4 py-3 rounded-lg bg-[#F8F9FA] border border-[#F0F0F0]">
+   256→   256→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px]">
+   257→   257→              <div className="flex items-center gap-2">
+   258→   258→                <span className={cn(
+   259→   259→                  'h-1.5 w-1.5 rounded-full',
+   260→   260→                  isStale ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+   261→   261→                )} />
+   262→   262→                {isStale ? (
+   263→   263→                  <span className="text-amber-700 font-medium">
+   264→   264→                    Measurement delayed &middot; Last observation {detail?.last_check_at ? formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true }) : 'unknown'}
+   265→   265→                  </span>
+   266→   266→                ) : (
+   267→   267→                  <span className="text-emerald-700 font-medium">
+   268→   268→                    Measured {detail?.last_check_at ? formatDistanceToNow(new Date(detail.last_check_at), { addSuffix: true }) : 'recently'}
+   269→   269→                  </span>
+   270→   270→                )}
+   271→   271→              </div>
+   272→   272→              {detail?.endpoints && (
+   273→   273→                <span className="text-[#A1A1AA]">
+   274→   274→                  {detail.endpoints.length} endpoint{detail.endpoints.length !== 1 ? 's' : ''} monitored
+   275→   275→                </span>
+   276→   276→              )}
+   277→   277→              {totalChecks !== null && (
+   278→   278→                <span className="text-[#A1A1AA]">
+   279→   279→                  {totalChecks.toLocaleString()} observations (24h)
+   280→   280→                </span>
+   281→   281→              )}
+   282→   282→            </div>
+   283→   283→          </div>
+   284→   284→        </motion.div>
+   285→   285→      </section>
+   286→   286→
+   287→   287→      <div className="border-t border-[#E4E4E7]" />
+   288→   288→
+   289→   289→      {/* ── RELIABILITY SUMMARY ── */}
+   290→   290→      <section className="py-8">
+   291→   291→        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   292→   292→          Reliability
+   293→   293→        </p>
+   294→   294→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   295→   295→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   296→   296→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   297→   297→              24h uptime
+   298→   298→            </span>
+   299→   299→            {uptimeValue !== null ? (
+   300→   300→              <p className={cn(
+   301→   301→                'text-[22px] font-semibold font-mono tracking-tight',
+   302→   302→                uptimeValue >= 99.95 ? 'text-emerald-600' : uptimeValue >= 99 ? 'text-amber-600' : 'text-red-600'
+   303→   303→              )}>
+   304→   304→                {uptimeValue.toFixed(2)}%
+   305→   305→              </p>
+   306→   306→            ) : (
+   307→   307→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   308→   308→            )}
+   309→   309→          </div>
+   310→   310→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   311→   311→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   312→   312→              Median latency
+   313→   313→            </span>
+   314→   314→            {avgLatency !== null ? (
+   315→   315→              <p className={cn(
+   316→   316→                'text-[22px] font-semibold font-mono tracking-tight',
+   317→   317→                avgLatency > 500 ? 'text-red-600' : avgLatency > 200 ? 'text-amber-600' : 'text-[#09090B]'
+   318→   318→              )}>
+   319→   319→                {Math.round(avgLatency)}<span className="text-[13px] font-normal text-[#A1A1AA] ml-1">ms</span>
+   320→   320→              </p>
+   321→   321→            ) : (
+   322→   322→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   323→   323→            )}
+   324→   324→          </div>
+   325→   325→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   326→   326→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   327→   327→              P95 latency
+   328→   328→            </span>
+   329→   329→            {latestP95 !== null ? (
+   330→   330→              <p className={cn(
+   331→   331→                'text-[22px] font-semibold font-mono tracking-tight',
+   332→   332→                latestP95 > 500 ? 'text-red-600' : latestP95 > 300 ? 'text-amber-600' : 'text-[#09090B]'
+   333→   333→              )}>
+   334→   334→                {latestP95}<span className="text-[13px] font-normal text-[#A1A1AA] ml-1">ms</span>
+   335→   335→              </p>
+   336→   336→            ) : (
+   337→   337→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   338→   338→            )}
+   339→   339→          </div>
+   340→   340→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-4">
+   341→   341→            <span className="text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] block mb-2">
+   342→   342→              Observations
+   343→   343→            </span>
+   344→   344→            {totalChecks !== null ? (
+   345→   345→              <p className="text-[22px] font-semibold font-mono tracking-tight text-[#09090B]">
+   346→   346→                {totalChecks.toLocaleString()}
+   347→   347→              </p>
+   348→   348→            ) : (
+   349→   349→              <p className="text-sm text-[#A1A1AA]">No data</p>
+   350→   350→            )}
+   351→   351→          </div>
+   352→   352→        </div>
+   353→   353→      </section>
+   354→   354→
+   355→   355→      {/* ── LATENCY CHART ── */}
+   356→   356→      <section className="pb-8">
+   357→   357→        <div className="flex items-center justify-between mb-4">
+   358→   358→          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA]">
+   359→   359→            Response Latency
+   360→   360→          </p>
+   361→   361→          <div className="flex items-center gap-4 text-[11px] text-[#A1A1AA]">
+   362→   362→            <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]" /> Median</div>
+   363→   363→            <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#0891B2]/25" /> P95</div>
+   364→   364→          </div>
+   365→   365→        </div>
+   366→   366→        {chartData.length > 0 ? (
+   367→   367→          <div className="rounded-lg border border-[#E4E4E7] p-5 bg-white">
+   368→   368→            <div className="flex items-end gap-[2px] h-48">
+   369→   369→              {chartData.map((d, idx) => {
+   370→   370→                const avgH = (d.latency / maxLatency) * 100;
+   371→   371→                const p95H = (d.p95 / maxLatency) * 100;
+   372→   372→                return (
+   373→   373→                  <div key={idx} className="flex-1 flex flex-col items-center group relative min-w-0">
+   374→   374→                    {/* Tooltip */}
+   375→   375→                    <div className="absolute -top-10 bg-[#09090B] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 font-mono">
+   376→   376→                      Avg: {d.latency}ms / P95: {d.p95}ms
+   377→   377→                    </div>
+   378→   378→                    <div className="w-full flex gap-[1px] items-end">
+   379→   379→                      <div
+   380→   380→                        className="flex-1 rounded-t-sm bg-[#0891B2]/20 transition-all min-h-[1px]"
+   381→   381→                        style={{ height: `${Math.max(p95H, 1)}%` }}
+   382→   382→                      />
+   383→   383→                      <div
+   384→   384→                        className={cn(
+   385→   385→                          'flex-1 rounded-t-sm transition-all min-h-[1px]',
+   386→   386→                          d.latency > 500 ? 'bg-red-400' : d.latency > 300 ? 'bg-amber-400' : 'bg-[#0891B2]'
+   387→   387→                        )}
+   388→   388→                        style={{ height: `${Math.max(avgH, 1)}%` }}
+   389→   389→                      />
+   390→   390→                    </div>
+   391→   391→                  </div>
+   392→   392→                );
+   393→   393→              })}
+   394→   394→            </div>
+   395→   395→            <div className="flex justify-between mt-2 text-[10px] text-[#A1A1AA] font-mono">
+   396→   396→              {chartData.filter((_, i) => i % Math.max(Math.floor(chartData.length / 8), 1) === 0).map(d => (
+   397→   397→                <span key={d.hour}>{d.hour}</span>
+   398→   398→              ))}
+   399→   399→            </div>
+   400→   400→          </div>
+   401→   401→        ) : (
+   402→   402→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+   403→   403→            <p className="text-sm text-[#52525B]">No latency data available yet.</p>
+   404→   404→            <p className="text-xs text-[#A1A1AA] mt-1">
+   405→   405→              Reliastra has not collected enough observations to display latency trends.
+   406→   406→            </p>
+   407→   407→          </div>
+   408→   408→        )}
+   409→   409→      </section>
+   410→   410→
+   411→   411→      {/* ── MONITORED ENDPOINTS ── */}
+   412→   412→      {detail?.endpoints && detail.endpoints.length > 0 && (
+   413→   413→        <section className="pb-8">
+   414→   414→          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   415→   415→            Monitored Endpoints
+   416→   416→          </p>
+   417→   417→          <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
+   418→   418→            <table className="w-full text-sm">
+   419→   419→              <thead>
+   420→   420→                <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+   421→   421→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Endpoint</th>
+   422→   422→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Regions</th>
+   423→   423→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Status</th>
+   424→   424→                  <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden sm:table-cell">Last Check</th>
+   425→   425→                </tr>
+   426→   426→              </thead>
+   427→   427→              <tbody>
+   428→   428→                {detail.endpoints.map(ep => {
+   429→   429→                  const epStatus = statusConfig[ep.health_status] || statusConfig.unknown;
+   430→   430→                  return (
+   431→   431→                    <tr key={ep.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors">
+   432→   432→                      <td className="py-3 px-4 font-mono text-[12px] text-[#09090B] max-w-[300px] truncate">{ep.endpoint_url}</td>
+   433→   433→                      <td className="py-3 px-4">
+   434→   434→                        <div className="flex flex-wrap gap-1">
+   435→   435→                          {ep.regions.map(r => (
+   436→   436→                            <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F8F9FA] text-[#52525B] border border-[#F0F0F0]">
+   437→   437→                              {r}
+   438→   438→                            </span>
+   439→   439→                          ))}
+   440→   440→                        </div>
+   441→   441→                      </td>
+   442→   442→                      <td className="py-3 px-4">
+   443→   443→                        <span className={cn(
+   444→   444→                          'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-md border',
+   445→   445→                          epStatus.bg, epStatus.textColor, epStatus.borderColor
+   446→   446→                        )}>
+   447→   447→                          <span className={cn('h-1.5 w-1.5 rounded-full', epStatus.dotColor)} />
+   448→   448→                          {epStatus.label}
+   449→   449→                        </span>
+   450→   450→                      </td>
+   451→   451→                      <td className="py-3 px-4 text-[12px] text-[#A1A1AA] font-mono text-right hidden sm:table-cell">
+   452→   452→                        {ep.last_check_at ? formatDistanceToNow(new Date(ep.last_check_at), { addSuffix: true }) : 'N/A'}
+   453→   453→                      </td>
+   454→   454→                    </tr>
+   455→   455→                  );
+   456→   456→                })}
+   457→   457→              </tbody>
+   458→   458→            </table>
+   459→   459→          </div>
+   460→   460→        </section>
+   461→   461→      )}
+   462→   462→
+   463→   463→      {/* ── INCIDENT HISTORY ── */}
+   464→   464→      <section className="pb-8">
+   465→   465→        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-4">
+   466→   466→          Incident History
+   467→   467→        </p>
+   468→   468→        {incidents && incidents.incidents.length > 0 ? (
+   469→   469→          <div className="rounded-lg border border-[#E4E4E7] overflow-hidden">
+   470→   470→            <table className="w-full text-sm">
+   471→   471→              <thead>
+   472→   472→                <tr className="bg-[#F8F9FA] border-b border-[#E4E4E7]">
+   473→   473→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Service</th>
+   474→   474→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Severity</th>
+   475→   475→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA]">Status</th>
+   476→   476→                  <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden md:table-cell">Duration</th>
+   477→   477→                  <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-[0.05em] text-[#A1A1AA] hidden sm:table-cell">Started</th>
+   478→   478→                </tr>
+   479→   479→              </thead>
+   480→   480→              <tbody>
+   481→   481→                {incidents.incidents.map((inc: VendorIncident) => {
+   482→   482→                  const sev = severityConfig[inc.severity] || severityConfig.medium;
+   483→   483→                  const isResolved = inc.status === 'resolved';
+   484→   484→                  return (
+   485→   485→                    <tr key={inc.incident_id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors">
+   486→   486→                      <td className="py-3 px-4">
+   487→   487→                        <div className="flex items-center gap-2">
+   488→   488→                          <span className="text-[#09090B] font-medium">{inc.dependency_name}</span>
+   489→   489→                        </div>
+   490→   490→                      </td>
+   491→   491→                      <td className="py-3 px-4">
+   492→   492→                        <span className={cn('inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium', sev.color)}>
+   493→   493→                          {sev.label}
+   494→   494→                        </span>
+   495→   495→                      </td>
+   496→   496→                      <td className="py-3 px-4">
+   497→   497→                        <div className="flex items-center gap-1.5">
+   498→   498→                          <span className={cn('h-1.5 w-1.5 rounded-full', isResolved ? 'bg-emerald-500' : 'bg-amber-500')} />
+   499→   499→                          <span className={cn('text-[12px] font-medium', isResolved ? 'text-emerald-700' : 'text-amber-700')}>
+   500→   500→                            {isResolved ? 'Resolved' : inc.status}
+   501→   501→                          </span>
+   502→   502→                        </div>
+   503→   503→                      </td>
+   504→   504→                      <td className="py-3 px-4 font-mono text-[12px] text-[#52525B] hidden md:table-cell">
+   505→   505→                        {formatDuration(inc.duration_seconds)}
+   506→   506→                      </td>
+   507→   507→                      <td className="py-3 px-4 text-[12px] text-[#A1A1AA] font-mono text-right hidden sm:table-cell">
+   508→   508→                        {format(new Date(inc.started_at), 'MMM d, HH:mm')} UTC
+   509→   509→                      </td>
+   510→   510→                    </tr>
+   511→   511→                  );
+   512→   512→                })}
+   513→   513→              </tbody>
+   514→   514→            </table>
+   515→   515→          </div>
+   516→   516→        ) : (
+   517→   517→          <div className="rounded-lg border border-[#E4E4E7] bg-white p-12 text-center">
+   518→   518→            <CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto mb-3" />
+   519→   519→            <p className="text-sm font-medium text-[#09090B]">No incidents recorded</p>
+   520→   520→            <p className="text-xs text-[#A1A1AA] mt-1">{vendorLabel} has maintained a clean record in the observed period.</p>
+   521→   521→          </div>
+   522→   522→        )}
+   523→   523→      </section>
+   524→   524→
+   525→   525→      {/* ── METHODOLOGY ── */}
+   526→   526→      <section className="pb-8 pt-4 border-t border-[#E4E4E7]">
+   527→   527→        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A1A1AA] mb-3">
+   528→   528→          Measurement Methodology
+   529→   529→        </p>
+   530→   530→        <div className="max-w-2xl">
+   531→   531→          <p className="text-xs text-[#52525B] leading-relaxed">
+   532→   532→            Reliastra measures vendor endpoints from independent probe regions at defined intervals.
+   533→   533→            Measurements include HTTP availability, response latency, status codes, regional consistency,
+   534→   534→            and observation timestamps. Reliability calculations are derived from observed measurements
+   535→   535→            and reflect actual endpoint behavior, not vendor-reported SLAs. Data is collected independently
+   536→   536→            of the vendor&apos;s own infrastructure or status reporting.
+   537→   537→          </p>
+   538→   538→        </div>
+   539→   539→      </section>
+   540→   540→
+   541→   541→      {/* ── CTA ── */}
+   542→   542→      <section className="py-16 border-t border-[#E4E4E7]">
+   543→   543→        <div className="max-w-lg mx-auto text-center">
+   544→   544→          <h2 className="text-[18px] font-semibold text-[#09090B] tracking-[-0.02em] mb-2">
+   545→   545→            Want deeper intelligence?
+   546→   546→          </h2>
+   547→   547→          <p className="text-sm text-[#52525B] mb-6">
+   548→   548→            Create a Reliastra account to monitor your own dependencies and build evidence-driven reliability records.
+   549→   549→          </p>
+   550→   550→          <div className="flex items-center justify-center gap-3">
+   551→   551→            <Link
+   552→   552→              href="/register"
+   553→   553→              className="inline-flex items-center gap-2 bg-[#09090B] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#09090B]/90 transition-colors"
+   554→   554→            >
+   555→   555→              Create account
+   556→   556→              <ArrowRight className="w-3.5 h-3.5" />
+   557→   557→            </Link>
+   558→   558→            <div className="flex items-center gap-2">
+   559→   559→              <Input
+   560→   560→                type="email"
+   561→   561→                placeholder="you@company.com"
+   562→   562→                value={email}
+   563→   563→                onChange={(e) => setEmail(e.target.value)}
+   564→   564→                className="h-9 text-sm w-[200px]"
+   565→   565→                onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
+   566→   566→              />
+   567→   567→              <Button
+   568→   568→                onClick={handleSubscribe}
+   569→   569→                disabled={subscribing}
+   570→   570→                variant="outline"
+   571→   571→                className="h-9 text-sm border-[#E4E4E7] text-[#52525B] hover:bg-[#F8F9FA] shrink-0"
+   572→   572→              >
+   573→   573→                {subscribing ? '...' : 'Alerts'}
+   574→   574→              </Button>
+   575→   575→            </div>
+   576→   576→          </div>
+   577→   577→        </div>
+   578→   578→      </section>
+   579→   579→    </div>
+   580→   580→  );
+   581→   581→}
+   582→   582→

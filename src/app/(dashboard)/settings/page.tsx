@@ -9,7 +9,7 @@ import { BillingCard } from "@/components/dashboard/BillingCard";
 import { orgService, type OrgMemberResponse } from "@/services/orgService";
 import { apiKeyService, type ApiKeyResponse } from "@/services/apiKeyService";
 import { notificationService, type AlertConfig } from "@/services/notificationService";
-import { billingService, type BillingPlanResponse } from "@/services/billingService";
+import { billingService, type PlanDetailsResponse } from "@/services/billingService";
 import { apiClient, BackendError } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export default function SettingsPage() {
   const [channels, setChannels] = useState<AlertConfig[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [channelsError, setChannelsError] = useState<string | null>(null);
-  const [plan, setPlan] = useState<BillingPlanResponse | null>(null);
+  const [plan, setPlan] = useState<PlanDetailsResponse | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
 

@@ -4,19 +4,20 @@ import { useState } from "react";
 import { Check, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { billingService } from "@/services/billingService";
-import type { BillingPlanResponse } from "@/services/billingService";
+import type { PlanDetailsResponse } from "@/services/billingService";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 interface BillingCardProps {
-  plan: BillingPlanResponse;
+  plan: PlanDetailsResponse;
 }
 
 const planDetails: Record<string, { label: string; price: string }> = {
   free: { label: "Free", price: "$0" },
+  starter: { label: "Starter", price: "$19" },
   standard: { label: "Standard", price: "$49" },
   professional: { label: "Professional", price: "$99" },
-  agency: { label: "Agency", price: "Custom" },
+  agency: { label: "Agency", price: "$199" },
 };
 
 export function BillingCard({ plan }: BillingCardProps) {
@@ -28,7 +29,8 @@ export function BillingCard({ plan }: BillingCardProps) {
       toast.info("Contact Reliastra for Agency pricing.");
       return;
     }
-    const targetPlan = plan.plan === "free" ? "standard" : plan.plan === "standard" ? "professional" : null;
+    const planOrder: Record<string, string> = { free: "starter", starter: "standard", standard: "professional", professional: "agency" };
+    const targetPlan = planOrder[plan.plan] || null;
     if (!targetPlan) {
       toast.info("You are on the highest available plan.");
       return;
@@ -55,7 +57,7 @@ export function BillingCard({ plan }: BillingCardProps) {
             <p className="text-sm text-[#52525B]">{details.price}/month</p>
           </div>
         </div>
-        {plan.plan !== "professional" && plan.plan !== "agency" && (
+        {plan.plan !== "agency" && (
           <Button onClick={handleUpgrade} disabled={upgrading} className="bg-[#0891B2] hover:bg-[#0891B2]/90 text-white text-xs h-9">
             {upgrading ? (
               <span className="inline-flex items-center gap-2">
@@ -86,6 +88,19 @@ export function BillingCard({ plan }: BillingCardProps) {
           {plan.current_period_end && (
             <span className="text-xs text-[#A1A1AA]">
               Renews {format(new Date(plan.current_period_end), "MMM d, yyyy")}
+            </span>
+          )}
+        </div>
+      )}
+
+      {plan.is_founding_customer && plan.founding_discount_pct > 0 && (
+        <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+          <span className="text-xs font-semibold text-amber-700">
+            Founding Customer: -{plan.founding_discount_pct}% discount applied
+          </span>
+          {plan.discounted_price_usd != null && (
+            <span className="text-xs font-medium text-amber-600">
+              (${plan.discounted_price_usd}/mo instead of ${plan.price_usd}/mo)
             </span>
           )}
         </div>

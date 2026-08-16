@@ -2,6 +2,7 @@
 
 import { Shield } from "lucide-react";
 import type { SlaDegradationResponse } from "@/services/dashboardService";
+import { cn } from "@/lib/utils";
 
 interface SlaDegradationWidgetProps {
   data: SlaDegradationResponse;
@@ -46,6 +47,4 @@ export function SlaDegradationWidget({ data }: SlaDegradationWidgetProps) {
   );
 }
 
-function cn(...classes: (string | false | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
-}
+

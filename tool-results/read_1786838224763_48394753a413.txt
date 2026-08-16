@@ -1,0 +1,1212 @@
+     1→# Reliastra Frontend & Dashboard Integration Guide
+     2→
+     3→This guide provides frontend and dashboard developers with complete integration specifications, TypeScript type definitions, exact request/response payloads, and UI patterns for integrating with the **Reliastra External Dependency Intelligence Backend**.
+     4→
+     5→---
+     6→
+     7→## 1. Core Integration Concepts
+     8→
+     9→- **Base URL**: All REST endpoints are prefixed with `/v1`.
+    10→  - Local development: `http://localhost:8000/v1`
+    11→  - OpenAPI Spec: `http://localhost:8000/openapi.json` (exported locally to `docs/openapi.json`)
+    12→  - Swagger UI: `http://localhost:8000/docs`
+    13→- **CORS**: The backend is configured via `CORS_ORIGINS` env var. Default: `http://localhost:3000`, `http://localhost:8000`. Set this to your production frontend domain when deploying.
+    14→- **Idempotency Header**: For mutation requests (`POST`, `PUT`, `DELETE`), include a unique UUID in the `Idempotency-Key` HTTP header. The backend caches the response in Redis for 24 hours to prevent duplicate submissions on network retries.
+    15→- **Error Responses**: Standardized JSON error envelope across all endpoints:
+    16→  ```json
+    17→  {
+    18→    "error": {
+    19→      "code": "VALIDATION_ERROR",
+    20→      "message": "Input validation failed",
+    21→      "details": {
+    22→        "errors": [{"loc": ["field"], "msg": "error description"}]
+    23→      }
+    24→    }
+    25→  }
+    26→  ```
+    27→
+    28→---
+    29→
+    30→## 2. Authentication & Session Lifecycle
+    31→
+    32→The platform supports **Triple Authentication**:
+    33→1. **Email/Password** — traditional registration and login with bcrypt-hashed passwords.
+    34→2. **Google OAuth 2.0** — one-click sign-up/sign-in via Google account.
+    35→3. **GitHub OAuth 2.0** — one-click sign-up/sign-in via GitHub account.
+    36→4. **API Keys** (`rel_...`) for automated CI/CD and script integrations.
+    37→
+    38→All human-facing auth methods (email, Google, GitHub) return the same JWT token pair (`access_token` + `refresh_token`). OAuth flows also return additional user metadata (`is_new_user`, `user_id`, `email`, `full_name`).
+    39→
+    40→### 2.1 HTTP Authentication Headers
+    41→- For user sessions:  
+    42→  `Authorization: Bearer <access_token>`
+    43→- For API key integrations:  
+    44→  `Authorization: ApiKey rel_xxxxxxxxxxxx...`
+    45→
+    46→### 2.2 Endpoints & Payloads
+    47→
+    48→#### **POST /v1/auth/register**
+    49→Creates a new user account.
+    50→```json
+    51→// Request Body
+    52→{
+    53→  "email": "admin@reliastra.dev",
+    54→  "password": "SecurePassword123!",
+    55→  "full_name": "Jane Doe"
+    56→}
+    57→
+    58→// Response (201 Created)
+    59→{
+    60→  "user": {
+    61→    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    62→    "email": "admin@reliastra.dev",
+    63→    "full_name": "Jane Doe",
+    64→    "is_active": true
+    65→  },
+    66→  "access_token": "eyJhbGciOiJIUzI1NiIsIn...",
+    67→  "refresh_token": "eyJhbGciOiJIUzI1NiIsIn...",
+    68→  "token_type": "bearer",
+    69→  "expires_in": 900
+    70→}
+    71→```
+    72→
+    73→#### **POST /v1/auth/login**
+    74→```json
+    75→// Request Body
+    76→{
+    77→  "email": "admin@reliastra.dev",
+    78→  "password": "SecurePassword123!"
+    79→}
+    80→
+    81→// Response (200 OK) -> Same TokenResponse structure as register
+    82→```
+    83→
+    84→#### **POST /v1/auth/refresh**
+    85→Rotate tokens transparently when an access token expires (`401 Unauthorized`).
+    86→```json
+    87→// Request Body
+    88→{
+    89→  "refresh_token": "eyJhbGciOiJIUzI1NiIsIn..."
+    90→}
+    91→
+    92→// Response (200 OK) -> Returns a new TokenResponse
+    93→```
+    94→
+    95→#### **POST /v1/auth/logout**
+    96→Revokes the refresh token in Redis and PostgreSQL.
+    97→```json
+    98→// Request Body
+    99→{
+   100→  "refresh_token": "eyJhbGciOiJIUzI1NiIsIn..."
+   101→}
+   102→// Response (204 No Content — empty body)
+   103→```
+   104→
+   105→### 2.3 Google OAuth 2.0 Flow
+   106→
+   107→#### **GET /v1/auth/google/url**
+   108→Returns the Google OAuth consent screen URL and a CSRF `state` token.
+   109→```json
+   110→// Response (200 OK)
+   111→{
+   112→  "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...&scope=openid+email+profile&...",
+   113→  "state": "random_csrf_state_token_32_bytes"
+   114→}
+   115→```
+   116→
+   117→**Frontend implementation:**
+   118→1. Call this endpoint to get the URL and state.
+   119→2. Store the `state` in session storage (for CSRF validation).
+   120→3. Redirect `window.location.href` to the `authorization_url`.
+   121→4. Google redirects back to your `GOOGLE_REDIRECT_URI` with `?code=...&state=...`.
+   122→5. Verify the `state` matches, then call `/v1/auth/google` with the code.
+   123→
+   124→#### **POST /v1/auth/google**
+   125→Exchange the Google authorization code for Reliastra JWT tokens.
+   126→```json
+   127→// Request Body
+   128→{
+   129→  "code": "4/0AX4XfWg..."
+   130→}
+   131→
+   132→// Response (200 OK)
+   133→{
+   134→  "access_token": "eyJhbGciOiJIUzI1NiIsIn...",
+   135→  "refresh_token": "eyJhbGciOiJIUzI1NiIsIn...",
+   136→  "token_type": "bearer",
+   137→  "expires_in": 900,
+   138→  "is_new_user": true,
+   139→  "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+   140→  "email": "user@gmail.com",
+   141→  "full_name": "John Doe"
+   142→}
+   143→```
+   144→
+   145→**Key response fields:**
+   146→- `is_new_user`: `true` if this was a first-time Google sign-up (new account created). `false` if the user already existed (sign-in or account link).
+   147→- Use `is_new_user` to show a "Welcome! Complete your profile" onboarding flow vs. a direct redirect to the dashboard.
+   148→- Store tokens in `localStorage` exactly like email auth (same token format).
+   149→
+   150→### 2.4 GitHub OAuth 2.0 Flow
+   151→
+   152→#### **GET /v1/auth/github/url**
+   153→Returns the GitHub OAuth authorization URL and a CSRF `state` token.
+   154→```json
+   155→// Response (200 OK)
+   156→{
+   157→  "authorization_url": "https://github.com/login/oauth/authorize?client_id=...&scope=read:user+user:email&...",
+   158→  "state": "random_csrf_state_token_32_bytes"
+   159→}
+   160→```
+   161→
+   162→**Frontend implementation:**
+   163→1. Call this endpoint to get the URL and state.
+   164→2. Store the `state` in session storage (for CSRF validation).
+   165→3. Redirect `window.location.href` to the `authorization_url`.
+   166→4. GitHub redirects back to your `GITHUB_REDIRECT_URI` with `?code=...&state=...`.
+   167→5. Verify the `state` matches, then call `/v1/auth/github` with the code.
+   168→
+   169→#### **POST /v1/auth/github**
+   170→Exchange the GitHub authorization code for Reliastra JWT tokens.
+   171→```json
+   172→// Request Body
+   173→{
+   174→  "code": "a28f3eb5e6b1e7d2c9a0..."
+   175→}
+   176→
+   177→// Response (200 OK)
+   178→{
+   179→  "access_token": "eyJhbGciOiJIUzI1NiIsIn...",
+   180→  "refresh_token": "eyJhbGciOiJIUzI1NiIsIn...",
+   181→  "token_type": "bearer",
+   182→  "expires_in": 900,
+   183→  "is_new_user": true,
+   184→  "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+   185→  "email": "user@users.noreply.github.com",
+   186→  "full_name": "octocat"
+   187→}
+   188→```
+   189→
+   190→**GitHub-specific notes:**
+   191→- GitHub users can keep their email private. The backend uses a multi-tier resolution: public profile email > primary verified email > any verified email > `login@users.noreply.github.com`.
+   192→- If the response email is a `noreply.github.com` address, prompt the user to update their email in account settings.
+   193→- The `full_name` field uses the GitHub `name` if available, otherwise falls back to the GitHub `login` (username).
+   194→
+   195→### 2.5 Email Verification Flow
+   196→
+   197→New users are created with `is_email_verified=false`. To verify, the frontend triggers the two-step flow below.
+   198→
+   199→#### **POST /v1/auth/send-verification**
+   200→Sends a verification email with a one-time link to the user's inbox. **Rate limited.** All previous unexpired tokens for this user are automatically revoked.
+   201→```json
+   202→// Request Body
+   203→{
+   204→  "email": "admin@reliastra.dev"
+   205→}
+   206→
+   207→// Response (200 OK)
+   208→{
+   209→  "message": "Verification email sent. Check your inbox.",
+   210→  "email": "admin@reliastra.dev"
+   211→}
+   212→
+   213→// Error (404) — if no account exists with this email
+   214→// Error (400, EMAIL_ALREADY_VERIFIED) — if email is already verified
+   215→```
+   216→
+   217→#### **POST /v1/auth/verify-email**
+   218→Consumes the token from the verification link and marks the user's email as verified.
+   219→```json
+   220→// Request Body
+   221→{
+   222→  "token": "token_from_email_link"
+   223→}
+   224→
+   225→// Response (200 OK)
+   226→{
+   227→  "message": "Email verified successfully.",
+   228→  "is_email_verified": true
+   229→}
+   230→
+   231→// Error (422, INVALID_TOKEN) — token not found
+   232→// Error (422, TOKEN_ALREADY_USED) — token was already consumed
+   233→// Error (422, TOKEN_EXPIRED) — token expired (> 60 minutes)
+   234→```
+   235→
+   236→**Frontend implementation:**
+   237→1. After registration, show a "Verify your email" banner with a "Resend verification" button.
+   238→2. On click, call `POST /v1/auth/send-verification` with the user's email.
+   239→3. The email contains a link to `{FRONTEND_BASE_URL}/verify-email?token={token}`.
+   240→4. On the verification page, extract the token from the URL query parameter and call `POST /v1/auth/verify-email`.
+   241→5. On success, update the user's local state to reflect `is_email_verified: true`.
+   242→
+   243→### 2.6 Password Reset Flow
+   244→
+   245→The password reset flow uses anti-enumeration — the same generic message is returned whether or not the email exists in the database, preventing attackers from discovering which emails are registered.
+   246→
+   247→#### **POST /v1/auth/forgot-password**
+   248→Sends a password reset email if an account exists with the given email. **Rate limited.** All previous unexpired tokens for this user are automatically revoked.
+   249→```json
+   250→// Request Body
+   251→{
+   252→  "email": "admin@reliastra.dev"
+   253→}
+   254→
+   255→// Response (200 OK) — ALWAYS returns this, even if email doesn't exist
+   256→{
+   257→  "message": "If an account with this email exists, a password reset link has been sent."
+   258→}
+   259→```
+   260→
+   261→#### **POST /v1/auth/reset-password**
+   262→Consumes the token from the reset link and sets the new password.
+   263→```json
+   264→// Request Body
+   265→{
+   266→  "token": "token_from_email_link",
+   267→  "new_password": "NewSecurePassword123!"
+   268→}
+   269→
+   270→// Response (200 OK)
+   271→{
+   272→  "message": "Password has been reset successfully. You can now log in with your new password."
+   273→}
+   274→
+   275→// Validation Error (422) — password must be at least 8 characters
+   276→// Error (422, INVALID_TOKEN) — token not found
+   277→// Error (422, TOKEN_ALREADY_USED) — token was already consumed
+   278→// Error (422, TOKEN_EXPIRED) — token expired (> 15 minutes)
+   279→```
+   280→
+   281→**Frontend implementation:**
+   282→1. On the "Forgot Password" page, collect the email and call `POST /v1/auth/forgot-password`.
+   283→2. Always show the success message ("Check your inbox") regardless of the response — do not reveal whether the email exists.
+   284→3. The email contains a link to `{FRONTEND_BASE_URL}/reset-password?token={token}`.
+   285→4. On the reset password page, extract the token from the URL, collect the new password (with confirmation), and call `POST /v1/auth/reset-password`.
+   286→5. On success, redirect to the login page with a success flash message.
+   287→
+   288→### 2.7 Account Linking Across Providers
+   289→
+   290→All three auth methods (email, Google, GitHub) are unified by **email address**. If a user registers with `admin@reliastra.dev` via email and later signs in with Google using the same email, the Google identity is linked to the existing account — no duplicate is created. The same applies for GitHub.
+   291→
+   292→**Frontend UX recommendations:**
+   293→- On the login page, show "Continue with Google" and "Continue with GitHub" buttons alongside the email/password form.
+   294→- After OAuth redirect, check `is_new_user` to route to either onboarding or dashboard.
+   295→- In account settings, display the user's linked providers (show badges for Google, GitHub, Email).
+   296→
+   297→---
+   298→
+   299→## 3. Multi-Tenancy & Organization Context
+   300→
+   301→Every operational endpoint requires an `{org_id}` path parameter. When a user logs in, the dashboard should load `/v1/users/me` and `/v1/orgs` to populate the workspace switcher.
+   302→
+   303→### 3.1 Get Current User (`GET /v1/users/me`)
+   304→```json
+   305→// Response (200 OK)
+   306→{
+   307→  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+   308→  "email": "admin@reliastra.dev",
+   309→  "full_name": "Jane Doe",
+   310→  "is_active": true
+   311→}
+   312→```
+   313→
+   314→### 3.2 List User Organizations (`GET /v1/orgs`)
+   315→Returns all organizations where the user is a member, along with their role.
+   316→```json
+   317→// Response (200 OK)
+   318→[
+   319→  {
+   320→    "id": "c1a01c80-60b5-4b35-8664-884bf6a2de62",
+   321→    "name": "Acme Corp Production",
+   322→    "slug": "acme-corp",
+   323→    "plan": "pro",
+   324→    "role": "owner"
+   325→  }
+   326→]
+   327→```
+   328→
+   329→### 3.3 Role-Based Access Control (RBAC) Matrix
+   330→Frontend components should hide/disable action buttons based on the user's role in the active organization:
+   331→
+   332→| Role | Hierarchy Weight | Can View Dashboard | Can Add/Edit Dependencies | Can Acknowledge/Resolve Incidents | Can Manage Members & Billing | Can Delete Org |
+   333→|---|---|---|---|---|---|---|
+   334→| **Owner** | `40` | ✅ | ✅ | ✅ | ✅ | ✅ |
+   335→| **Admin** | `30` | ✅ | ✅ | ✅ | ✅ | ❌ |
+   336→| **Member** | `20` | ✅ | ✅ | ✅ | ❌ | ❌ |
+   337→| **Viewer** | `10` | ✅ | ❌ | ❌ | ❌ | ❌ |
+   338→
+   339→---
+   340→
+   341→## 4. Dashboard Integration (Main Landing Screen)
+   342→
+   343→The dashboard module provides pre-aggregated analytics endpoints designed for single-query widget rendering.
+   344→
+   345→### 4.1 Executive Summary Cards (`GET /v1/orgs/{org_id}/dashboard/summary`)
+   346→Use this endpoint for top-level KPI cards.
+   347→
+   348→```json
+   349→// Response (200 OK)
+   350→{
+   351→  "total_dependencies": 12,
+   352→  "active_incidents": 1,
+   353→  "uptime_24h": 99.94,
+   354→  "uptime_7d": 99.88,
+   355→  "avg_latency_ms": 142.5,
+   356→  "checks_24h": 8640
+   357→}
+   358→```
+   359→
+   360→### 4.2 Multi-Region Latency Chart (`GET /v1/orgs/{org_id}/dashboard/latency?hours=24`)
+   361→**IMPLEMENTED IN PHASE 8.** Returns organization-scoped observation time-series data suitable for charting libraries (**Recharts**, **Chart.js**, **Tremor**, or **ECharts**).
+   362→
+   363→```json
+   364→// Response (200 OK)
+   365→[
+   366→  {
+   367→    "timestamp": "2026-08-11T16:00:00Z",
+   368→    "region": "us-east-1",
+   369→    "latency_ms": 110.2
+   370→  },
+   371→  {
+   372→    "timestamp": "2026-08-11T16:00:00Z",
+   373→    "region": "eu-west-1",
+   374→    "latency_ms": 145.8
+   375→  }
+   376→]
+   377→```
+   378→
+   379→### 4.3 SLA Degradation Widget (`GET /v1/orgs/{org_id}/dashboard/sla-degradation?period_days=30`)
+   380→**IMPLEMENTED IN PHASE 8.** Aggregates degradation from immutable observations.
+   381→
+   382→```json
+   383→// Response (200 OK)
+   384→{
+   385→  "total_degradation_pct": 0.12,
+   386→  "affected_services": 1,
+   387→  "period": "30d"
+   388→}
+   389→```
+   390→
+   391→---
+   392→
+   393→## 5. Dependencies & Live Check Monitoring Grid
+   394→
+   395→### 5.1 List Monitored Dependencies (`GET /v1/orgs/{org_id}/dependencies`)
+   396→```json
+   397→// Response (200 OK)
+   398→[
+   399→  {
+   400→    "id": "e0cf5c49-d191-4a41-b01c-343285cf4432",
+   401→    "name": "Stripe Billing API",
+   402→    "target_url": "https://api.stripe.com/v1/charges",
+   403→    "check_interval_seconds": 10,
+   404→    "expected_status_code": 200,
+   405→    "is_active": true,
+   406→    "headers": {
+   407→      "Authorization": "Bearer sk_test_..."
+   408→    },
+   409→    "created_at": "2026-08-11T10:00:00Z"
+   410→  }
+   411→]
+   412→```
+   413→
+   414→### 5.2 Create Dependency (`POST /v1/orgs/{org_id}/dependencies`)
+   415→```json
+   416→// Request Body
+   417→{
+   418→  "name": "OpenAI Chat Completions",
+   419→  "target_url": "https://api.openai.com/v1/models",
+   420→  "check_interval_seconds": 10,
+   421→  "expected_status_code": 200,
+   422→  "headers": {
+   423→    "Authorization": "Bearer sk-proj-..."
+   424→  }
+   425→}
+   426→```
+   427→
+   428→### 5.3 Recent Check Execution Live Feed (`GET /v1/orgs/{org_id}/checks/recent?limit=50`)
+   429→Poll this endpoint (or use SWR / TanStack Query with a 10s refresh interval) to render live status badges and regional consensus indicators.
+   430→
+   431→```json
+   432→// Response (200 OK)
+   433→[
+   434→  {
+   435→    "id": "7f8b9a23-45c1-4d3e-9021-123456789abc",
+   436→    "dependency_id": "e0cf5c49-d191-4a41-b01c-343285cf4432",
+   437→    "region": "us-east-1",
+   438→    "status_code": 200,
+   439→    "response_time_ms": 115.4,
+   440→    "is_up": true,
+   441→    "quorum_confirmed": true,
+   442→    "executed_at": "2026-08-11T17:15:10Z"
+   443→  }
+   444→]
+   445→```
+   446→
+   447→---
+   448→
+   449→## 6. Incidents & SLA Evidence Pipeline UI
+   450→
+   451→### 6.1 List Incidents & Correlated Vendor Outages (`GET /v1/orgs/{org_id}/incidents?status_filter=open`)
+   452→Each incident object includes **Temporal Correlation** data showing if another vendor service failed in the same $\pm5\text{ minute}$ window.
+   453→
+   454→```json
+   455→// Response (200 OK)
+   456→[
+   457→  {
+   458→    "id": "90123456-789a-bcde-f012-3456789abcde",
+   459→    "title": "Outage detected on Stripe Billing API",
+   460→    "status": "open",
+   461→    "severity": "critical",
+   462→    "started_at": "2026-08-11T16:50:00Z",
+   463→    "resolved_at": null,
+   464→    "correlations": [
+   465→      {
+   466→        "correlated_dependency_id": "a1b2c3d4-e5f6-7890-1234-56789abcdef0",
+   467→        "correlation_type": "temporal_coincidence",
+   468→        "confidence_score": 0.85
+   469→      }
+   470→    ]
+   471→  }
+   472→]
+   473→```
+   474→
+   475→### 6.2 Resolve an Incident (`PATCH /v1/orgs/{org_id}/incidents/{inc_id}`)
+   476→```json
+   477→// Request Body
+   478→{
+   479→  "status": "resolved"
+   480→}
+   481→
+   482→// Response (200 OK)
+   483→{
+   484→  "id": "90123456-789a-bcde-f012-3456789abcde",
+   485→  "status": "resolved",
+   486→  "resolved_at": "2026-08-11T17:10:00Z"
+   487→}
+   488→```
+   489→
+   490→### 6.3 SLA Evidence Generation (Automatic)
+   491→Resolving an incident automatically runs deterministic 5-signal attribution and queues immutable PDF and JSON evidence generation. Use `GET /v1/orgs/{org_id}/incidents/{inc_id}/evidence` to retrieve the generated report.
+   492→
+   493→### 6.4 Public Evidence Verification (`GET /v1/verify/{verification_id}`)
+   494→This public endpoint requires no authentication and provides cryptographic verification of any evidence snapshot:
+   495→```json
+   496→// Response (200 OK)
+   497→{
+   498→  "found": true,
+   499→  "incident_id": "uuid",
+   500→  "dependency_id": "uuid",
+   501→  "org_id": "uuid",
+   502→  "time_window": {
+   503→    "start": "2026-08-11T16:00:00Z",
+   504→    "end": "2026-08-11T17:00:00Z"
+   505→  },
+   506→  "data_hash": "sha256:...",
+   507→  "report_checksum": "sha256:...",
+   508→  "methodology_version": "1.0",
+   509→  "created_at": "2026-08-11T17:05:00Z"
+   510→}
+   511→```
+   512→
+   513→---
+   514→
+   515→## 7. Global Public Vendor Status Board
+   516→
+   517→### 7.1 List Vendors (`GET /v1/public/vendors`)
+   518→Public endpoint (no auth required). Returns tracked vendor status.
+   519→
+   520→### 7.2 Vendor Detail (`GET /v1/public/vendors/{vendor_name}`)
+   521→Returns detailed status for a specific vendor.
+   522→
+   523→### 7.3 Vendor History (`GET /v1/public/vendors/{vendor_name}/history`)
+   524→Returns historical uptime data.
+   525→
+   526→### 7.4 Vendor Incidents (`GET /v1/public/vendors/{vendor_name}/incidents`)
+   527→Returns incidents associated with a vendor.
+   528→
+   529→### 7.5 Vendor Metrics (`GET /v1/public/vendors/{vendor_name}/metrics`)
+   530→Returns uptime and latency metrics for charting.
+   531→
+   532→```json
+   533→// Response (200 OK)
+   534→[
+   535→  {
+   536→    "id": "11111111-1111-1111-1111-111111111111",
+   537→    "vendor_name": "Stripe API",
+   538→    "slug": "stripe",
+   539→    "current_status": "operational",
+   540→    "uptime_90d": 99.99,
+   541→    "last_checked_at": "2026-08-11T17:15:00Z"
+   542→  }
+   543→]
+   544→```
+   545→
+   546→### 7.6 Vendor Timeline (`GET /v1/public/vendors/{vendor_name}/timeline`)
+   547→
+   548→Returns aggregated time-series data for the **Reliastra Public Reliability Graph**. This is the primary data source for rendering latency, availability, and incident markers on the frontend timeline visualization.
+   549→
+   550→**Public endpoint** — no authentication required. Subject to public vendor rate limits.
+   551→
+   552→#### Query Parameters
+   553→
+   554→| Parameter   | Type   | Default | Description                                                         |
+   555→|-------------|--------|---------|---------------------------------------------------------------------|
+   556→| `window`    | string | `24h`   | Time window. Supported: `1h`, `6h`, `24h`, `7d`, `30d`, `90d`.    |
+   557→| `resolution`| string | `auto`  | Bucket resolution. Supported: `auto`, `1m`, `5m`, `15m`, `1h`, `6h`. |
+   558→| `region`    | string | `us-east-1` | Probe region filter. Currently `us-east-1`. Schema supports future multi-region. |
+   559→
+   560→#### Auto-Resolution Defaults
+   561→
+   562→| Window | Auto Resolution |
+   563→|--------|----------------|
+   564→| `1h`   | `1m`           |
+   565→| `6h`   | `1m`           |
+   566→| `24h`  | `5m`           |
+   567→| `7d`   | `15m`          |
+   568→| `30d`  | `1h`           |
+   569→| `90d`  | `6h`           |
+   570→
+   571→#### Response Schema (200 OK)
+   572→
+   573→```json
+   574→{
+   575→  "vendor_name": "stripe",
+   576→  "window": "24h",
+   577→  "resolution": "5m",
+   578→  "region": "us-east-1",
+   579→  "from": "2026-08-15T17:00:00Z",
+   580→  "to": "2026-08-16T17:00:00Z",
+   581→  "current": {
+   582→    "timestamp": "2026-08-16T16:59:55Z",
+   583→    "latency_ms": 184.0,
+   584→    "status_code": 200,
+   585→    "is_up": true
+   586→  },
+   587→  "points": [
+   588→    {
+   589→      "timestamp": "2026-08-16T16:55:00Z",
+   590→      "avg_latency_ms": 182.5,
+   591→      "status_code": 200,
+   592→      "is_up": true,
+   593→      "observation_count": 5,
+   594→      "incident_id": null
+   595→    },
+   596→    {
+   597→      "timestamp": "2026-08-16T14:30:00Z",
+   598→      "avg_latency_ms": 3500.0,
+   599→      "status_code": 503,
+   600→      "is_up": false,
+   601→      "observation_count": 12,
+   602→      "incident_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   603→    }
+   604→  ]
+   605→}
+   606→```
+   607→
+   608→#### Field Reference
+   609→
+   610→| Field              | Type               | Description                                                    |
+   611→|--------------------|--------------------|----------------------------------------------------------------|
+   612→| `vendor_name`      | string             | Vendor slug identifier.                                        |
+   613→| `window`           | string             | Requested time window (e.g. `24h`).                            |
+   614→| `resolution`       | string             | Resolved bucket resolution (human-readable when `auto`).       |
+   615→| `region`           | string             | Probe region used for observations.                            |
+   616→| `from`             | ISO 8601 datetime  | Window start time (UTC).                                       |
+   617→| `to`               | ISO 8601 datetime  | Window end time (UTC).                                         |
+   618→| `current`          | object             | Most recent observation, independent of the window.            |
+   619→| `current.timestamp`| ISO 8601 datetime  | Time of the latest observation (`null` if none).              |
+   620→| `current.latency_ms`| float \| null     | Latency of the latest observation (`null` if none).           |
+   621→| `current.status_code`| int \| null       | HTTP status code (`null` if no observation).                   |
+   622→| `current.is_up`    | bool \| null       | `true` if the latest observation has a valid status code and no errors. |
+   623→| `points`           | array              | Aggregated time buckets, ordered chronologically.              |
+   624→| `points[].timestamp`| ISO 8601 datetime  | Bucket start time (UTC).                                       |
+   625→| `points[].avg_latency_ms`| float         | Average latency across observations in this bucket.           |
+   626→| `points[].status_code`| int \| null       | Representative status code for the bucket.                    |
+   627→| `points[].is_up`    | bool              | `true` if ALL observations in the bucket are healthy.         |
+   628→| `points[].observation_count`| int          | Number of raw observations in this bucket.                      |
+   629→| `points[].incident_id`| UUID \| null     | Incident ID if this bucket overlaps an active incident.        |
+   630→
+   631→#### Frontend Rendering Guide
+   632→
+   633→The `points` array is designed for direct rendering into three visual layers:
+   634→
+   635→1. **Latency Graph** — Plot `points[].avg_latency_ms` on the Y-axis against `points[].timestamp` on the X-axis. Use `observation_count` to indicate data density (thicker line or opacity for higher counts).
+   636→
+   637→2. **Availability Graph** — Plot `points[].is_up` as a binary state (1/0) or as a colored background band. Green for `is_up: true`, red for `is_up: false`.
+   638→
+   639→3. **Incident Markers** — For any point where `incident_id` is not `null`, render a visible marker (e.g., vertical line, shaded region, or icon) on the timeline. Cross-reference with the `/incidents` endpoint for incident details.
+   640→
+   641→#### Polling Recommendation
+   642→
+   643→- **Poll interval**: 15–30 seconds for the `1h` or `6h` window.
+   644→- **Recommended default**: `GET /v1/public/vendors/stripe/timeline?window=1h&resolution=1m`
+   645→- **Use `current` for live display**: Show "Observed X seconds ago" by computing `Date.now() - new Date(current.timestamp)`.
+   646→- **Do not use WebSocket/SSE** for this endpoint in the current version. Polling is sufficient and simpler.
+   647→- The response is cached server-side with shorter TTLs for recent windows. Do not poll faster than every 10 seconds.
+   648→
+   649→#### Error Responses
+   650→
+   651→| Status | Code                  | When                                |
+   652→|--------|-----------------------|-------------------------------------|
+   653→| 404    | `RESOURCE_NOT_FOUND`  | Vendor not found or not public.     |
+   654→| 422    | `VALIDATION_ERROR`    | Invalid `window` or `resolution`.   |
+   655→| 429    | `RATE_LIMIT_EXCEEDED` | Public vendor rate limit exceeded.  |
+   656→
+   657→#### TypeScript Types
+   658→
+   659→```typescript
+   660→interface TimelineBucket {
+   661→  timestamp: string;
+   662→  avg_latency_ms: number;
+   663→  status_code: number | null;
+   664→  is_up: boolean;
+   665→  observation_count: number;
+   666→  incident_id: string | null;
+   667→}
+   668→
+   669→interface TimelineCurrent {
+   670→  timestamp: string | null;
+   671→  latency_ms: number | null;
+   672→  status_code: number | null;
+   673→  is_up: boolean | null;
+   674→}
+   675→
+   676→interface VendorTimelineResponse {
+   677→  vendor_name: string;
+   678→  window: string;
+   679→  resolution: string;
+   680→  region: string;
+   681→  from: string;
+   682→  to: string;
+   683→  current: TimelineCurrent;
+   684→  points: TimelineBucket[];
+   685→}
+   686→```
+   687→
+   688→---
+   689→
+   690→## 8. Notification Alert Channels (`GET | POST /v1/orgs/{org_id}/notifications`)
+   691→
+   692→Supports four extensible Strategy Pattern channels: `email`, `slack`, `pagerduty`, and `webhook`.
+   693→
+   694→```json
+   695→// POST /v1/orgs/{org_id}/notifications - Create Channel Request
+   696→{
+   697→  "channel_type": "slack",
+   698→  "config": {
+   699→    "webhook_url": "https://hooks.slack.com/services/T000/B000/XXXX"
+   700→  },
+   701→  "is_active": true
+   702→}
+   703→```
+   704→
+   705→---
+   706→
+   707→## 9. API Keys (`GET | POST /v1/orgs/{org_id}/api-keys`)
+   708→
+   709→Creates SHA-256 hashed API keys for programmatic access. **Important for Frontend**: The raw API key string is returned **only once upon creation**. Display it in a secure modal with a copy button.
+   710→
+   711→```json
+   712→// POST /v1/orgs/{org_id}/api-keys - Request Body
+   713→{
+   714→  "name": "GitHub Actions CI Production Key"
+   715→}
+   716→
+   717→// Response (201 Created)
+   718→{
+   719→  "id": "f5e4d3c2-b1a0-9876-5432-10abcdef9876",
+   720→  "name": "GitHub Actions CI Production Key",
+   721→  "key_prefix": "rel_c8a9...",
+   722→  "raw_key": "rel_c8a9f0e1d2c3b4a59687786950413223", // DISPLAY ONCE!
+   723→  "created_at": "2026-08-11T17:15:00Z"
+   724→}
+   725→```
+   726→
+   727→---
+   728→
+   729→## 10. Paystack Billing & Plan Usage
+   730→
+   731→Use `GET /v1/orgs/{org_id}/billing/plan` to render plan limits and subscription state.
+   732→
+   733→```json
+   734→// Response (200 OK)
+   735→{
+   736→  "org_id": "11111111-1111-1111-1111-111111111111",
+   737→  "plan": "standard",
+   738→  "max_dependencies": 25,
+   739→  "min_check_interval_seconds": 60,
+   740→  "subscription_status": "active",
+   741→  "current_period_end": "2026-09-12T00:00:00Z"
+   742→}
+   743→```
+   744→
+   745→Initialize Paystack checkout with `POST /v1/orgs/{org_id}/billing/initialize` and body `{"plan":"standard","email":"owner@example.com"}`. After checkout, verify the Paystack reference with `POST /v1/billing/verify?reference={reference}`. Payment state is finalized from signed Paystack webhooks; never update an organization plan from client-side state alone.
+   746→
+   747→---
+   748→
+   749→## 11. TypeScript Integration Reference & Axios Client Wrapper
+   750→
+   751→Copy and paste this TypeScript API client wrapper into your frontend project (`src/lib/api.ts`):
+   752→
+   753→```typescript
+   754→import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+   755→
+   756→export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/v1";
+   757→
+   758→export const apiClient = axios.create({
+   759→  baseURL: API_BASE_URL,
+   760→  headers: {
+   761→    "Content-Type": "application/json",
+   762→  },
+   763→  timeout: 10000,
+   764→});
+   765→
+   766→// Request Interceptor: Attach access token & idempotency keys
+   767→apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+   768→  const token = localStorage.getItem("reliastra_access_token");
+   769→  if (token && config.headers) {
+   770→    config.headers.Authorization = `Bearer ${token}`;
+   771→  }
+   772→
+   773→  // Attach idempotency key for mutations
+   774→  if (["post", "put", "delete", "patch"].includes(config.method || "")) {
+   775→    config.headers["Idempotency-Key"] = crypto.randomUUID();
+   776→  }
+   777→  return config;
+   778→});
+   779→
+   780→// Response Interceptor: Silent token rotation on 401
+   781→apiClient.interceptors.response.use(
+   782→  (response) => response,
+   783→  async (error: AxiosError) => {
+   784→    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+   785→
+   786→    if (error.response?.status === 401 && !originalRequest._retry) {
+   787→      originalRequest._retry = true;
+   788→      const refreshToken = localStorage.getItem("reliastra_refresh_token");
+   789→
+   790→      if (refreshToken) {
+   791→        try {
+   792→          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+   793→            refresh_token: refreshToken,
+   794→          });
+   795→          localStorage.setItem("reliastra_access_token", data.access_token);
+   796→          if (data.refresh_token) {
+   797→            localStorage.setItem("reliastra_refresh_token", data.refresh_token);
+   798→          }
+   799→          if (originalRequest.headers) {
+   800→            originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+   801→          }
+   802→          return apiClient(originalRequest);
+   803→        } catch (refreshError) {
+   804→          localStorage.removeItem("reliastra_access_token");
+   805→          localStorage.removeItem("reliastra_refresh_token");
+   806→          window.location.href = "/login";
+   807→        }
+   808→      }
+   809→    }
+   810→    return Promise.reject(error);
+   811→  }
+   812→);
+   813→```
+   814→
+   815→### 11.2 Typed API Functions Example (`src/services/dashboardService.ts`)
+   816→
+   817→```typescript
+   818→import { apiClient } from "@/lib/api";
+   819→
+   820→export interface DashboardSummary {
+   821→  total_dependencies: number;
+   822→  active_incidents: number;
+   823→  uptime_24h: number;
+   824→  uptime_7d: number;
+   825→  avg_latency_ms: number;
+   826→  checks_24h: number;
+   827→}
+   828→
+   829→export interface LatencyPoint {
+   830→  timestamp: string;
+   831→  region: string;
+   832→  latency_ms: number;
+   833→}
+   834→
+   835→export const getDashboardSummary = async (orgId: string): Promise<DashboardSummary> => {
+   836→  const { data } = await apiClient.get<DashboardSummary>(`/orgs/${orgId}/dashboard/summary`);
+   837→  return data;
+   838→};
+   839→
+   840→export const getDashboardLatency = async (orgId: string, hours = 24): Promise<LatencyPoint[]> => {
+   841→  const { data } = await apiClient.get<LatencyPoint[]>(`/orgs/${orgId}/dashboard/latency?hours=${hours}`);
+   842→  return data;
+   843→};
+   844→```
+   845→
+   846→### 11.3 OAuth Typed API Functions (`src/services/authService.ts`)
+   847→
+   848→```typescript
+   849→import { apiClient } from "@/lib/api";
+   850→
+   851→// ── Shared OAuth Types ──────────────────────────────────────────────
+   852→
+   853→export interface OAuthUrlResponse {
+   854→  authorization_url: string;
+   855→  state: string;
+   856→}
+   857→
+   858→export interface OAuthCallbackResponse {
+   859→  access_token: string;
+   860→  refresh_token: string;
+   861→  token_type: string;
+   862→  expires_in: number;
+   863→  is_new_user: boolean;
+   864→  user_id: string;
+   865→  email: string;
+   866→  full_name: string;
+   867→}
+   868→
+   869→// ── Google OAuth ──────────────────────────────────────────────────────
+   870→
+   871→export const getGoogleAuthUrl = async (): Promise<OAuthUrlResponse> => {
+   872→  const { data } = await apiClient.get<OAuthUrlResponse>("/auth/google/url");
+   873→  return data;
+   874→};
+   875→
+   876→export const exchangeGoogleCode = async (code: string): Promise<OAuthCallbackResponse> => {
+   877→  const { data } = await apiClient.post<OAuthCallbackResponse>("/auth/google", { code });
+   878→  return data;
+   879→};
+   880→
+   881→/** Initiates Google OAuth flow: stores state, redirects to Google consent screen. */
+   882→export const initiateGoogleLogin = async () => {
+   883→  const { authorization_url, state } = await getGoogleAuthUrl();
+   884→  sessionStorage.setItem("google_oauth_state", state);
+   885→  window.location.href = authorization_url;
+   886→};
+   887→
+   888→/** Handles Google OAuth callback: extracts code, exchanges for tokens. */
+   889→export const handleGoogleCallback = async () => {
+   890→  const params = new URLSearchParams(window.location.search);
+   891→  const code = params.get("code");
+   892→  const returnedState = params.get("state");
+   893→  const savedState = sessionStorage.getItem("google_oauth_state");
+   894→
+   895→  if (!code) throw new Error("No authorization code received from Google");
+   896→  if (returnedState !== savedState) throw new Error("OAuth state mismatch — possible CSRF");
+   897→
+   898→  sessionStorage.removeItem("google_oauth_state");
+   899→  return await exchangeGoogleCode(code);
+   900→};
+   901→
+   902→// ── GitHub OAuth ──────────────────────────────────────────────────────
+   903→
+   904→export const getGitHubAuthUrl = async (): Promise<OAuthUrlResponse> => {
+   905→  const { data } = await apiClient.get<OAuthUrlResponse>("/auth/github/url");
+   906→  return data;
+   907→};
+   908→
+   909→export const exchangeGitHubCode = async (code: string): Promise<OAuthCallbackResponse> => {
+   910→  const { data } = await apiClient.post<OAuthCallbackResponse>("/auth/github", { code });
+   911→  return data;
+   912→};
+   913→
+   914→/** Initiates GitHub OAuth flow: stores state, redirects to GitHub consent screen. */
+   915→export const initiateGitHubLogin = async () => {
+   916→  const { authorization_url, state } = await getGitHubAuthUrl();
+   917→  sessionStorage.setItem("github_oauth_state", state);
+   918→  window.location.href = authorization_url;
+   919→};
+   920→
+   921→/** Handles GitHub OAuth callback: extracts code, exchanges for tokens. */
+   922→export const handleGitHubCallback = async () => {
+   923→  const params = new URLSearchParams(window.location.search);
+   924→  const code = params.get("code");
+   925→  const returnedState = params.get("state");
+   926→  const savedState = sessionStorage.getItem("github_oauth_state");
+   927→
+   928→  if (!code) throw new Error("No authorization code received from GitHub");
+   929→  if (returnedState !== savedState) throw new Error("OAuth state mismatch — possible CSRF");
+   930→
+   931→  sessionStorage.removeItem("github_oauth_state");
+   932→  return await exchangeGitHubCode(code);
+   933→};
+   934→```
+   935→
+   936→### 11.4 OAuth Callback Page Example (`src/app/auth/callback/page.tsx`)
+   937→
+   938→```typescript
+   939→"use client";
+   940→
+   941→import { useEffect } from "react";
+   942→import { useRouter, useSearchParams } from "next/navigation";
+   943→import { handleGoogleCallback, handleGitHubCallback } from "@/services/authService";
+   944→
+   945→export default function OAuthCallbackPage() {
+   946→  const router = useRouter();
+   947→  const searchParams = useSearchParams();
+   948→  const provider = searchParams.get("provider"); // "google" or "github"
+   949→
+   950→  useEffect(() => {
+   951→    const completeOAuth = async () => {
+   952→      try {
+   953→        const result = provider === "github"
+   954→          ? await handleGitHubCallback()
+   955→          : await handleGoogleCallback();
+   956→
+   957→        // Store JWT tokens
+   958→        localStorage.setItem("reliastra_access_token", result.access_token);
+   959→        localStorage.setItem("reliastra_refresh_token", result.refresh_token);
+   960→
+   961→        // Route based on whether this is a new user
+   962→        if (result.is_new_user) {
+   963→          router.push("/onboarding");
+   964→        } else {
+   965→          router.push("/dashboard");
+   966→        }
+   967→      } catch (error) {
+   968→        console.error("OAuth callback failed:", error);
+   969→        router.push("/login?error=oauth_failed");
+   970→      }
+   971→    };
+   972→
+   973→    completeOAuth();
+   974→  }, [provider, router]);
+   975→
+   976→  return (
+   977→    <div className="flex items-center justify-center min-h-screen">
+   978→      <p className="text-gray-500">Completing sign-in...</p>
+   979→    </div>
+   980→  );
+   981→}
+   982→```
+   983→
+   984→### 11.5 Email Verification & Password Reset Typed Functions (`src/services/emailAuthService.ts`)
+   985→
+   986→```typescript
+   987→import { apiClient } from "@/lib/api";
+   988→
+   989→// ── Email Verification ──────────────────────────────────────────────
+   990→
+   991→export interface SendVerificationResponse {
+   992→  message: string;
+   993→  email: string;
+   994→}
+   995→
+   996→export interface VerifyEmailResponse {
+   997→  message: string;
+   998→  is_email_verified: boolean;
+   999→}
+  1000→
+  1001→/** Requests a new email verification link. Rate limited (ip_limiter). */
+  1002→export const sendVerificationEmail = async (email: string): Promise<SendVerificationResponse> => {
+  1003→  const { data } = await apiClient.post<SendVerificationResponse>("/auth/send-verification", { email });
+  1004→  return data;
+  1005→};
+  1006→
+  1007→/** Verifies email using the token from the verification link. */
+  1008→export const verifyEmail = async (token: string): Promise<VerifyEmailResponse> => {
+  1009→  const { data } = await apiClient.post<VerifyEmailResponse>("/auth/verify-email", { token });
+  1010→  return data;
+  1011→};
+  1012→
+  1013→// ── Password Reset ──────────────────────────────────────────────────
+  1014→
+  1015→export interface ForgotPasswordResponse {
+  1016→  message: string;
+  1017→}
+  1018→
+  1019→export interface ResetPasswordResponse {
+  1020→  message: string;
+  1021→}
+  1022→
+  1023→/**
+  1024→ * Requests a password reset email. Always returns a generic success message
+  1025→ * (anti-enumeration — does not reveal whether the email exists). Rate limited.
+  1026→ */
+  1027→export const forgotPassword = async (email: string): Promise<ForgotPasswordResponse> => {
+  1028→  const { data } = await apiClient.post<ForgotPasswordResponse>("/auth/forgot-password", { email });
+  1029→  return data;
+  1030→};
+  1031→
+  1032→/** Resets the user's password using the token from the reset email link. */
+  1033→export const resetPassword = async (token: string, newPassword: string): Promise<ResetPasswordResponse> => {
+  1034→  const { data } = await apiClient.post<ResetPasswordResponse>("/auth/reset-password", {
+  1035→    token,
+  1036→    new_password: newPassword,
+  1037→  });
+  1038→  return data;
+  1039→};
+  1040→```
+  1041→
+  1042→### 11.6 Verification & Reset Page Example (`src/app/auth/verify-email/page.tsx`)
+  1043→
+  1044→```typescript
+  1045→"use client";
+  1046→
+  1047→import { useEffect, useState } from "react";
+  1048→import { useRouter, useSearchParams } from "next/navigation";
+  1049→import { verifyEmail } from "@/services/emailAuthService";
+  1050→
+  1051→export default function VerifyEmailPage() {
+  1052→  const router = useRouter();
+  1053→  const searchParams = useSearchParams();
+  1054→  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  1055→  const [errorMsg, setErrorMsg] = useState("");
+  1056→
+  1057→  useEffect(() => {
+  1058→    const token = searchParams.get("token");
+  1059→    if (!token) {
+  1060→      setStatus("error");
+  1061→      setErrorMsg("No verification token found in URL.");
+  1062→      return;
+  1063→    }
+  1064→
+  1065→    const doVerify = async () => {
+  1066→      try {
+  1067→        const result = await verifyEmail(token);
+  1068→        if (result.is_email_verified) {
+  1069→          setStatus("success");
+  1070→          // Redirect to dashboard after a brief success message
+  1071→          setTimeout(() => router.push("/dashboard"), 2000);
+  1072→        }
+  1073→      } catch (error: any) {
+  1074→        setStatus("error");
+  1075→        setErrorMsg(error?.response?.data?.error?.message || "Verification failed. The link may have expired.");
+  1076→      }
+  1077→    };
+  1078→
+  1079→    doVerify();
+  1080→  }, [searchParams, router]);
+  1081→
+  1082→  return (
+  1083→    <div className="flex items-center justify-center min-h-screen">
+  1084→      {status === "loading" && <p className="text-gray-500">Verifying your email...</p>}
+  1085→      {status === "success" && (
+  1086→        <div className="text-center">
+  1087→          <p className="text-green-600 font-medium">Email verified successfully!</p>
+  1088→          <p className="text-gray-400 text-sm mt-1">Redirecting to dashboard...</p>
+  1089→        </div>
+  1090→      )}
+  1091→      {status === "error" && (
+  1092→        <div className="text-center">
+  1093→          <p className="text-red-500 font-medium">{errorMsg}</p>
+  1094→          <button
+  1095→            className="mt-4 text-sm text-blue-600 hover:underline"
+  1096→            onClick={() => router.push("/login")}
+  1097→          >
+  1098→            Go to Login
+  1099→          </button>
+  1100→        </div>
+  1101→      )}
+  1102→    </div>
+  1103→  );
+  1104→}
+  1105→```
+  1106→
+  1107→### 11.7 Reset Password Page Example (`src/app/auth/reset-password/page.tsx`)
+  1108→
+  1109→```typescript
+  1110→"use client";
+  1111→
+  1112→import { useEffect, useState, FormEvent } from "react";
+  1113→import { useRouter, useSearchParams } from "next/navigation";
+  1114→import { resetPassword } from "@/services/emailAuthService";
+  1115→
+  1116→export default function ResetPasswordPage() {
+  1117→  const router = useRouter();
+  1118→  const searchParams = useSearchParams();
+  1119→  const [status, setStatus] = useState<"loading" | "form" | "success" | "error">("loading");
+  1120→  const [errorMsg, setErrorMsg] = useState("");
+  1121→  const [password, setPassword] = useState("");
+  1122→  const [confirmPassword, setConfirmPassword] = useState("");
+  1123→
+  1124→  useEffect(() => {
+  1125→    // If there's no token, show the "forgot password" entry point instead
+  1126→    const token = searchParams.get("token");
+  1127→    if (token) {
+  1128→      setStatus("form");
+  1129→    } else {
+  1130→      router.push("/forgot-password");
+  1131→    }
+  1132→  }, [searchParams, router]);
+  1133→
+  1134→  const handleSubmit = async (e: FormEvent) => {
+  1135→    e.preventDefault();
+  1136→
+  1137→    if (password.length < 8) {
+  1138→      setErrorMsg("Password must be at least 8 characters long.");
+  1139→      return;
+  1140→    }
+  1141→    if (password !== confirmPassword) {
+  1142→      setErrorMsg("Passwords do not match.");
+  1143→      return;
+  1144→    }
+  1145→
+  1146→    try {
+  1147→      const token = searchParams.get("token")!;
+  1148→      await resetPassword(token, password);
+  1149→      setStatus("success");
+  1150→      setTimeout(() => router.push("/login?reset=success"), 2000);
+  1151→    } catch (error: any) {
+  1152→      setStatus("error");
+  1153→      setErrorMsg(error?.response?.data?.error?.message || "Failed to reset password. The link may have expired.");
+  1154→    }
+  1155→  };
+  1156→
+  1157→  if (status === "loading") {
+  1158→    return <div className="flex items-center justify-center min-h-screen"><p className="text-gray-500">Loading...</p></div>;
+  1159→  }
+  1160→
+  1161→  if (status === "success") {
+  1162→    return (
+  1163→      <div className="flex items-center justify-center min-h-screen">
+  1164→        <div className="text-center">
+  1165→          <p className="text-green-600 font-medium">Password reset successfully!</p>
+  1166→          <p className="text-gray-400 text-sm mt-1">Redirecting to login...</p>
+  1167→        </div>
+  1168→      </div>
+  1169→    );
+  1170→  }
+  1171→
+  1172→  return (
+  1173→    <div className="flex items-center justify-center min-h-screen">
+  1174→      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-6 bg-white rounded-lg shadow-md">
+  1175→        <h2 className="text-xl font-semibold text-center">Set New Password</h2>
+  1176→
+  1177→        {status === "error" && (
+  1178→          <p className="text-red-500 text-sm text-center">{errorMsg}</p>
+  1179→        )}
+  1180→
+  1181→        <input
+  1182→          type="password"
+  1183→          placeholder="New password (min. 8 characters)"
+  1184→          value={password}
+  1185→          onChange={(e) => setPassword(e.target.value)}
+  1186→          className="w-full px-3 py-2 border rounded-md"
+  1187→          minLength={8}
+  1188→          required
+  1189→        />
+  1190→
+  1191→        <input
+  1192→          type="password"
+  1193→          placeholder="Confirm new password"
+  1194→          value={confirmPassword}
+  1195→          onChange={(e) => setConfirmPassword(e.target.value)}
+  1196→          className="w-full px-3 py-2 border rounded-md"
+  1197→          minLength={8}
+  1198→          required
+  1199→        />
+  1200→
+  1201→        <button
+  1202→          type="submit"
+  1203→          className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+  1204→        >
+  1205→          Reset Password
+  1206→        </button>
+  1207→      </form>
+  1208→    </div>
+  1209→  );
+  1210→}
+  1211→```
+  1212→

@@ -17,6 +17,9 @@ export interface User {
   email: string;
   full_name: string;
   is_active: boolean;
+  is_superuser: boolean;
+  avatar_url: string | null;
+  auth_provider: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +31,7 @@ export interface Org {
   plan: string;
   has_agency_mode: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface OrgMember {

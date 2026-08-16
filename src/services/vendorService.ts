@@ -70,6 +70,35 @@ export interface VendorIncidentsResponse {
   incidents: VendorIncident[];
 }
 
+// ── Timeline Types (from OpenAPI) ──────────────────────────────────────────────
+
+export interface TimelineBucket {
+  timestamp: string;
+  avg_latency_ms: number;
+  status_code: number | null;
+  is_up: boolean;
+  observation_count: number;
+  incident_id: string | null;
+}
+
+export interface TimelineCurrent {
+  timestamp: string | null;
+  latency_ms: number | null;
+  status_code: number | null;
+  is_up: boolean | null;
+}
+
+export interface VendorTimelineResponse {
+  vendor_name: string;
+  window: string;
+  resolution: string;
+  region: string;
+  from: string;
+  to: string;
+  current: TimelineCurrent;
+  points: TimelineBucket[];
+}
+
 // --- Service: PUBLIC endpoints (no auth required) ---
 
 export const vendorService = {
@@ -98,6 +127,26 @@ export const vendorService = {
     const res = await apiClient.get<VendorIncidentsResponse>(`/public/vendors/${vendorName}/incidents`, {
       params: { limit },
     });
+    return res.data;
+  },
+
+  /**
+   * Get vendor timeline data for chart rendering.
+   * Public endpoint. Poll every 15-30s for live data.
+   */
+  async getVendorTimeline(
+    vendorName: string,
+    window: "1h" | "6h" | "24h" | "7d" | "30d" | "90d" = "24h",
+    resolution?: "auto" | "1m" | "5m" | "15m" | "1h" | "6h",
+    region?: string,
+  ): Promise<VendorTimelineResponse> {
+    const params: Record<string, string> = { window };
+    if (resolution && resolution !== "auto") params.resolution = resolution;
+    if (region) params.region = region;
+    const res = await apiClient.get<VendorTimelineResponse>(
+      `/public/vendors/${vendorName}/timeline`,
+      { params },
+    );
     return res.data;
   },
 };

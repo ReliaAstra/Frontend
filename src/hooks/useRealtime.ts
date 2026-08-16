@@ -169,8 +169,8 @@ export function useRealtime(options: UseRealtimeOptions = {}): UseRealtimeReturn
       }
     };
 
-    const interval = setInterval(checkForChanges, interval);
-    return () => clearInterval(interval);
+    const changeInterval = setInterval(checkForChanges, interval);
+    return () => clearInterval(changeInterval);
   }, [queryClient, interval]);
 
   const clearEvents = useCallback(() => {

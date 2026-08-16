@@ -218,58 +218,7 @@ function Divider({ label }: { label: string }) {
   );
 }
 
-// ── Founding Customer Program ────────────────────────────────────────────
 
-function FoundingProgram() {
-  const filled = 8;
-  const total = 25;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.6 }}
-      className="mt-6 p-4 bg-[#F8F9FA] rounded-xl border border-[#E4E4E7]"
-    >
-      <p className="text-xs font-bold uppercase tracking-widest text-[#0891B2]">
-        Founding Customer Program
-      </p>
-      <p className="text-sm text-[#52525B] mt-1">
-        Lock your rate forever. <span className="font-semibold">{total - filled} of {total} spots remaining.</span>
-      </p>
-
-      {/* Progress dots */}
-      <div className="flex gap-1 mt-3 flex-wrap">
-        {Array.from({ length: total }).map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "h-2.5 w-2.5 rounded-full transition-colors",
-              i < filled ? "bg-[#0891B2]" : "bg-[#E4E4E7]"
-            )}
-            style={i < filled ? { animation: "pulse-dot 2s ease-in-out infinite", animationDelay: `${i * 0.1}s` } : {}}
-          />
-        ))}
-      </div>
-
-      <p className="text-xs text-[#A1A1AA] mt-2">
-        Join the first 25 customers and your price never increases.
-      </p>
-
-      <style jsx>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-          }
-        }
-      `}</style>
-    </motion.div>
-  );
-}
 
 // ── Register Form ────────────────────────────────────────────────────────
 
@@ -572,9 +521,6 @@ function RegisterForm() {
           Sign in
         </Link>
       </p>
-
-      {/* Founding Customer Program */}
-      <FoundingProgram />
     </AuthCard>
   );
 }

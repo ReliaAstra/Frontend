@@ -93,19 +93,6 @@ export function BillingCard({ plan }: BillingCardProps) {
         </div>
       )}
 
-      {plan.is_founding_customer && plan.founding_discount_pct > 0 && (
-        <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-          <span className="text-xs font-semibold text-amber-700">
-            Founding Customer: -{plan.founding_discount_pct}% discount applied
-          </span>
-          {plan.discounted_price_usd != null && (
-            <span className="text-xs font-medium text-amber-600">
-              (${plan.discounted_price_usd}/mo instead of ${plan.price_usd}/mo)
-            </span>
-          )}
-        </div>
-      )}
-
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-[#52525B]">Dependencies</span>

@@ -11,8 +11,6 @@ export interface PlanDetailsResponse {
   min_check_interval_seconds: number;
   subscription_status: string | null;
   current_period_end: string | null;
-  is_founding_customer: boolean;
-  founding_discount_pct: number;
   price_usd: number;
   discounted_price_usd: number | null;
 }
@@ -27,22 +25,6 @@ export interface VerifyTransactionResponse {
   verified: boolean;
   plan: string;
   reference: string;
-}
-
-export interface FoundingSpotsResponse {
-  total_spots: number;
-  spots_taken: number;
-  spots_remaining: number;
-  founding_discount_pct: number;
-  eligible_plans: string[];
-  plan_discounts: Record<string, number>;
-}
-
-export interface ClaimFoundingSpotResponse {
-  success: boolean;
-  message: string;
-  is_founding_customer: boolean;
-  founding_discount_pct: number;
 }
 
 export interface PricingPlanResponse {
@@ -88,25 +70,6 @@ export const billingService = {
     const res = await apiClient.get<VerifyTransactionResponse>("/billing/verify", {
       params: { reference },
     });
-    return res.data;
-  },
-
-  /** Get founding spots availability and discount info */
-  async getFoundingSpots(): Promise<FoundingSpotsResponse> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<FoundingSpotsResponse>(`/orgs/${orgId}/billing/founding-spots`);
-    return res.data;
-  },
-
-  /** Claim a founding spot discount */
-  async claimFoundingSpot(email?: string): Promise<ClaimFoundingSpotResponse> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<ClaimFoundingSpotResponse>(
-      `/orgs/${orgId}/billing/founding-spot/claim`,
-      { email: email || null },
-    );
     return res.data;
   },
 

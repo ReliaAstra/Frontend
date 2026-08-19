@@ -1,8 +1,19 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { DEMO_FLAG, getDemoMock } from "./demo";
 
 // Live production backend; NEXT_PUBLIC_API_URL overrides for local dev
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://reliastra-backend.zevcloud.app/v1";
+
+// Demo mode helper — true when user opened the offline demo workspace
+export function isDemoMode(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(DEMO_FLAG) === "true";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Standard backend error envelope:
@@ -154,7 +165,33 @@ function clearTokens() {
 }
 
 // Request interceptor: attach Bearer token & idempotency keys
+// Demo mode: short-circuit network with offline mocks so the dashboard is usable with no backend
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (isDemoMode()) {
+    try {
+      const mockData = getDemoMock({
+        url: config.url,
+        method: config.method,
+        params: (config as any).params,
+        data: config.data,
+      });
+      if (mockData !== undefined) {
+        // Attach a custom adapter that resolves immediately with the mock — no network call
+        (config as any).adapter = async () => ({
+          data: mockData,
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config,
+          request: {},
+        });
+        return config;
+      }
+    } catch {
+      // fall through to normal flow if mock fails
+    }
+  }
+
   const token = getAccessToken();
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -199,6 +236,11 @@ function redirectToLogin() {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    // In demo mode never attempt token refresh or redirect — it's fully offline
+    if (isDemoMode()) {
+      return Promise.reject(toBackendError(error));
+    }
+
     const originalRequest = error.config as
       | (InternalAxiosRequestConfig & { _retry?: boolean })
       | undefined;

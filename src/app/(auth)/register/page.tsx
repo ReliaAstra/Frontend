@@ -9,6 +9,7 @@ import { AuthCard } from "@/components/auth/AuthSplitLayout";
 import { AlertCircle, AlertTriangle, Loader2, Eye, EyeOff, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { DemoLoginCard } from "@/components/demo/DemoBanner";
 
 // ── Password Strength ─────────────────────────────────────────────────────
 
@@ -323,6 +324,10 @@ function RegisterForm() {
           Build an independent reliability record for the infrastructure you operate.
         </p>
       </div>
+
+      {/* Demo shortcut */}
+      <DemoLoginCard />
+      <Divider label="or register with email" />
 
       {/* OAuth */}
       <OAuthButtons loading={isSubmitting} />

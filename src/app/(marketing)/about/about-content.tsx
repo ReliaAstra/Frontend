@@ -22,6 +22,13 @@ const values = [
   },
 ];
 
+const team = [
+  { name: 'Emmanuel Osei', role: 'Founder & CEO', initials: 'EO', color: 'bg-[#0891B2]' },
+  { name: 'Alex Rivera', role: 'CTO', initials: 'AR', color: 'bg-[#0E7490]' },
+  { name: 'Jane Park', role: 'Head of Product', initials: 'JP', color: 'bg-[#7C3AED]' },
+  { name: 'Samir Patel', role: 'Lead Engineer', initials: 'SP', color: 'bg-[#16A34A]' },
+];
+
 export function AboutContent() {
   return (
     <>

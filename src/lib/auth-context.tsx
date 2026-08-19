@@ -11,6 +11,13 @@ import React, {
 } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { apiClient, BackendError, setOrgContext } from "./api";
+import {
+  isDemoMode,
+  MOCK_USER,
+  MOCK_ORG,
+  DEMO_TOKEN,
+  DEMO_REFRESH_TOKEN,
+} from "./demo";
 
 export interface User {
   id: string;
@@ -87,8 +94,26 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p));
   const isDashboardPage = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
 
-  // Restore session from stored tokens
+  // Restore session from stored tokens — with offline demo shortcut
   const refreshSession = useCallback(async () => {
+    // Demo mode bypasses the backend entirely: inject mock user/org so all dashboard pages render offline
+    if (isDemoMode()) {
+      const demoUser = MOCK_USER as unknown as User;
+      const demoOrg = MOCK_ORG as unknown as Org;
+      setUser(demoUser);
+      setCurrentOrg(demoOrg);
+      setOrgContext(demoOrg.id);
+      setMemberRole("owner");
+      try {
+        if (!localStorage.getItem("reliastra_access_token")) {
+          localStorage.setItem("reliastra_access_token", DEMO_TOKEN);
+          localStorage.setItem("reliastra_refresh_token", DEMO_REFRESH_TOKEN);
+        }
+      } catch {}
+      setIsLoading(false);
+      return;
+    }
+
     const token = typeof window !== "undefined" ? localStorage.getItem("reliastra_access_token") : null;
     if (!token) {
       setIsLoading(false);
@@ -159,6 +184,28 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     clearErrors();
+
+    // Demo shortcut: allow demo@reliastra.design / demo to enter demo mode without backend
+    const isDemoCreds =
+      email.trim().toLowerCase() === "demo@reliastra.design" &&
+      (password === "demo" || password === "demo123" || password === "password");
+
+    if (isDemoCreds) {
+      try {
+        const { enableDemoMode } = await import("./demo");
+        enableDemoMode();
+      } catch {}
+      const demoUser = MOCK_USER as unknown as User;
+      const demoOrg = MOCK_ORG as unknown as Org;
+      setUser(demoUser);
+      setCurrentOrg(demoOrg);
+      setOrgContext(demoOrg.id);
+      setMemberRole("owner");
+      const returnTo = searchParams?.get("returnTo");
+      router.push(returnTo || "/dashboard");
+      return;
+    }
+
     try {
       const { data } = await apiClient.post<{
         access_token: string;
@@ -249,6 +296,24 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // If demo mode is active, clear demo flag locally and skip backend revoke
+    if (isDemoMode()) {
+      try {
+        const { disableDemoMode } = await import("./demo");
+        disableDemoMode();
+      } catch {
+        localStorage.removeItem("reliastra_demo_mode");
+        localStorage.removeItem("reliastra_access_token");
+        localStorage.removeItem("reliastra_refresh_token");
+      }
+      setUser(null);
+      setCurrentOrg(null);
+      setMemberRole(null);
+      setOrgContext(null);
+      router.push("/login");
+      return;
+    }
+
     const refreshToken = typeof window !== "undefined" ? localStorage.getItem("reliastra_refresh_token") : null;
     // Best-effort revoke refresh token on server
     if (refreshToken) {

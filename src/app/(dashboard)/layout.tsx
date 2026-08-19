@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { Providers } from "@/components/Providers";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DemoBanner } from "@/components/demo/DemoBanner";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -36,6 +37,7 @@ export default function DashboardLayout({
   return (
     <Providers>
       <AuthProvider>
+        <DemoBanner />
         <div className="min-h-screen bg-[#0A0A0F]">
           {/* Sidebar — separate on desktop, overlay on mobile */}
           <DashboardSidebar

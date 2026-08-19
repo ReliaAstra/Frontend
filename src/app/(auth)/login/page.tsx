@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import { DemoLoginCard } from "@/components/demo/DemoBanner";
 
 // ── Google SVG ──────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -130,6 +131,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [oauthError, setOAuthError] = useState<string | null>(null);
+  const [demoHint, setDemoHint] = useState(false);
 
   // Sync with auth context errors
   if (loginError && !error) setError(loginError);
@@ -164,11 +166,18 @@ function LoginForm() {
     }
   };
 
+  const fillDemo = () => {
+    setEmail("demo@reliastra.design");
+    setPassword("demo");
+    setDemoHint(true);
+    setTimeout(() => setDemoHint(false), 2500);
+  };
+
   const isSubmitting = loading || isLoading;
 
   return (
     <AuthCard>
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-[#09090B]">
           Sign in to Reliastra
         </h1>
@@ -176,6 +185,11 @@ function LoginForm() {
           Access your dependency intelligence console.
         </p>
       </div>
+
+      {/* Demo workspace — no backend required */}
+      <DemoLoginCard />
+
+      <Divider label="or sign in with real account" />
 
       <OAuthButtons loading={isSubmitting} action="Continue" oauthError={oauthError} onClearOAuthError={() => setOAuthError(null)} />
       <Divider label="or continue with email" />
@@ -192,9 +206,18 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-[#09090B]">
-            Email
-          </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label htmlFor="email" className="block text-[13px] font-medium text-[#09090B]">
+              Email
+            </label>
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="text-[11px] font-medium text-[#0891B2] hover:text-[#0E7490] transition-colors"
+            >
+              Use demo account →
+            </button>
+          </div>
           <Input
             id="email"
             type="email"
@@ -205,6 +228,9 @@ function LoginForm() {
             required
             className="h-[42px] border-[#E4E4E7] bg-white text-[13px] text-[#09090B] placeholder:text-[#A1A1AA] focus-visible:border-[#0891B2] focus-visible:ring-[#0891B2]"
           />
+          {demoHint && (
+            <p className="mt-1.5 text-[11px] text-[#0891B2] font-medium">Filled demo credentials — press Sign in</p>
+          )}
         </div>
 
         <div>
@@ -240,6 +266,9 @@ function LoginForm() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          <p className="mt-1.5 text-[11px] text-[#A1A1AA]">
+            Demo: <span className="font-mono text-[#52525B]">demo@reliastra.design / demo</span> works offline — no backend needed.
+          </p>
         </div>
 
         <Button

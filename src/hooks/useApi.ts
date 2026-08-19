@@ -23,9 +23,15 @@ const STALE_1HR = 60 * 60 * 1000;
 /**
  * Whether an authenticated session is available (used as the query `enabled` guard).
  * The live API resolves the org from the bearer token, so a stored access token
- * is all that's required.
+ * is all that's required. Demo mode is treated as ready without a real token
+ * so the offline mocks can hydrate the dashboard.
  */
 function sessionReady(): boolean {
+  if (typeof window !== "undefined") {
+    try {
+      if (localStorage.getItem("reliastra_demo_mode") === "true") return true;
+    } catch {}
+  }
   return !!getAccessToken();
 }
 

@@ -1,651 +1,460 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { dependencyService, type Dependency, type DependencyHistory } from "@/services/dependencyService";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-import {
-  Layers,
-  Plus,
-  MoreVertical,
-  Pause,
-  Play,
-  Trash2,
-  Edit3,
-  X,
-} from "lucide-react";
-import { StatusDot } from "@/components/dashboard/ConsoleLayout";
-import { ConsoleCard } from "@/components/dashboard/ConsoleLayout";
-import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
-import { EmptyState } from "@/components/dashboard/EmptyState";
-import { getPlanConfig } from "@/lib/tierLimits";
-import type { Plan } from "@/services/billingService";
+import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, Radio, Pencil, Trash2, ChevronRight, X } from "lucide-react";
+import { toast } from "sonner";
 import {
   useDependencies,
-  useDependencyHistory,
+  useDependencyHealth,
   useCreateDependency,
   useUpdateDependency,
   useDeleteDependency,
-  useBillingPlan,
 } from "@/hooks/useApi";
+import type { Dependency, CreateDependencyRequest, HttpMethod } from "@/services/dependencyService";
+import type { DependencyHealth } from "@/services/dashboardService";
+import { Card, EmptyState, PageHeader, Skeleton, StatusPill, Button, fmtUptime, fmtLatency } from "@/components/rs/ui";
+import { cn } from "@/lib/utils";
 
-// ── Constants ────────────────────────────────────────────────────────────────
+/* ── Modal ──────────────────────────────────────────────────────────────── */
 
-const CHECK_INTERVAL_OPTIONS = [
-  { value: 15, label: "15s" },
-  { value: 30, label: "30s" },
-  { value: 60, label: "60s" },
-  { value: 300, label: "5m" },
-  { value: 600, label: "10m" },
-];
-
-const REGION_OPTIONS = [
-  { value: "us-east", label: "US East" },
-  { value: "us-west", label: "US West" },
-  { value: "eu-west", label: "EU West" },
-  { value: "apac-south", label: "APAC South" },
-];
-
-type StatusBadgeType = "operational" | "degraded" | "down" | "unknown";
-
-function deriveStatus(dep: Dependency): StatusBadgeType {
-  if (!dep.is_active) return "unknown";
-  return "operational";
-}
-
-const STATUS_CONFIG: Record<
-  StatusBadgeType,
-  { label: string; color: string; bg: string }
-> = {
-  operational: {
-    label: "Operational",
-    color: "#16A34A",
-    bg: "rgba(22,163,74,0.12)",
-  },
-  degraded: {
-    label: "Degraded",
-    color: "#D97706",
-    bg: "rgba(217,119,6,0.12)",
-  },
-  down: {
-    label: "Down",
-    color: "#DC2626",
-    bg: "rgba(220,38,38,0.12)",
-  },
-  unknown: {
-    label: "Unknown",
-    color: "#52525B",
-    bg: "rgba(82,82,91,0.12)",
-  },
-};
-
-function uptimeColor(pct: number | null): string {
-  if (pct === null) return "#52525B";
-  if (pct >= 99) return "#16A34A";
-  if (pct >= 95) return "#D97706";
-  return "#DC2626";
-}
-
-function formatUptime(pct: number | null): string {
-  if (pct === null) return "—";
-  return pct.toFixed(2) + "%";
-}
-
-// ── Component ────────────────────────────────────────────────────────────────
-
-export default function DependenciesPage() {
-  const { user } = useAuth();
-
-  // TanStack Query hooks
-  const { data: dependencies = [], isLoading: loading, isError: error, refetch } = useDependencies();
-  const { data: billingPlan } = useBillingPlan();
-  const createMutation = useCreateDependency();
-  const updateMutation = useUpdateDependency();
-  const deleteMutation = useDeleteDependency();
-
-  const plan = (billingPlan?.plan || "free") as Plan;
-
-  // History state (fetched on-demand per dependency)
-  const [historyMap, setHistoryMap] = useState<Record<string, DependencyHistory>>({});
-
-  // Modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formName, setFormName] = useState("");
-  const [formEndpoint, setFormEndpoint] = useState("");
-  const [formExpectedStatus, setFormExpectedStatus] = useState(200);
-  const [formInterval, setFormInterval] = useState(60);
-  const [formRegions, setFormRegions] = useState<string[]>(["us-east"]);
-  const [formEndpointError, setFormEndpointError] = useState("");
-
-  // Actions
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // ── Derived ──────────────────────────────────────────────────────────────
-
-  const planConfig = getPlanConfig(plan);
-  const depLimit = planConfig.limits.dependencies;
-  const maxRegions = planConfig.limits.regions;
-  const minInterval = planConfig.limits.interval;
-  const atLimit = dependencies.length >= depLimit;
-  const isFreeOrStarter = plan === "free" || plan === "starter";
-
-  // Fetch history for all deps once they load
-  useEffect(() => {
-    dependencies.forEach((dep) => {
-      if (!historyMap[dep.id]) {
-        dependencyService.getHistory(dep.id).then((history) => {
-          setHistoryMap((prev) => ({ ...prev, [dep.id]: history }));
-        }).catch(() => {
-          // silently ignore
-        });
-      }
-    });
-  }, [dependencies]);
-
-  // Close dropdown menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setActiveMenuId(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const openModal = () => {
-    setFormName("");
-    setFormEndpoint("");
-    setFormExpectedStatus(200);
-    setFormInterval(60);
-    setFormRegions(["us-east"]);
-    setFormEndpointError("");
-    setModalOpen(true);
-  };
-
-  const handleCreate = async () => {
-    // Validate HTTPS
-    if (
-      !formEndpoint.startsWith("https://") &&
-      !formEndpoint.startsWith("http://")
-    ) {
-      setFormEndpointError("Endpoint must be a valid URL (https:// or http://)");
-      return;
-    }
-    if (!formName.trim() || !formEndpoint.trim()) {
-      setFormEndpointError("Name and endpoint URL are required.");
-      return;
-    }
-    setFormEndpointError("");
-    try {
-      await createMutation.mutateAsync({
-        name: formName.trim(),
-        endpoint_url: formEndpoint.trim(),
-        expected_status_codes: [formExpectedStatus],
-        check_interval_seconds: formInterval,
-        regions: formRegions,
-      });
-      setModalOpen(false);
-    } catch {
-      setFormEndpointError("Failed to create dependency. Please try again.");
-    }
-  };
-
-  const handleToggle = async (dep: Dependency) => {
-    setActiveMenuId(null);
-    try {
-      await updateMutation.mutateAsync({
-        id: dep.id,
-        data: { is_active: !dep.is_active },
-      });
-    } catch {
-      // Silently ignore
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    setActiveMenuId(null);
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch {
-      // Silently ignore
-    }
-  };
-
-  const toggleRegion = (region: string) => {
-    setFormRegions((prev) => {
-      if (prev.includes(region)) {
-        if (prev.length > 1) return prev.filter((r) => r !== region);
-        return prev;
-      }
-      if (plan === "free" && prev.length >= 1) return prev;
-      if (plan === "starter" && prev.length >= 2) return prev;
-      return [...prev, region];
-    });
-  };
-
-  // ── Render ──────────────────────────────────────────────────────────────
-
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen bg-[#0A0A0F]">
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[#FAFAFA]">Dependencies</h1>
-            <p className="text-sm text-[#52525B] mt-1">
-              Monitor and manage your external service endpoints
-            </p>
-          </div>
-          <button
-            onClick={openModal}
-            className="bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-white transition-colors inline-flex items-center gap-2 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Add dependency
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-[520px] max-w-[92vw] rounded-xl bg-[#111827] border border-[#1F2937] shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2937]">
+          <h3 className="text-base font-semibold text-[#F9FAFB]">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-md text-[#6B7280] hover:text-[#F9FAFB] transition-colors">
+            <X className="h-4 w-4" />
           </button>
         </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Upgrade Banner */}
-        {isFreeOrStarter && (
-          <UpgradeBanner
-            plan={plan}
-            usage={dependencies.length}
-            limit={depLimit}
-            resource="dependencies"
-            onUpgrade={() => {}}
-          />
-        )}
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-[#F9FAFB] mb-1.5">{label}</label>
+      {children}
+      {hint && <p className="text-xs text-[#6B7280] mt-1">{hint}</p>}
+    </div>
+  );
+}
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-5 py-4 flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-[#DC2626] mt-1.5 shrink-0" />
-            <p className="text-sm text-[#FAFAFA]">Unable to load dependencies. Please try again.</p>
-            <button
-              onClick={() => refetch()}
-              className="text-xs font-medium text-[#0891B2] ml-auto shrink-0 hover:underline"
-            >
+const inputCls =
+  "w-full bg-[#0B0F19] border border-[#374151] rounded-lg px-3.5 py-2.5 text-sm text-[#F9FAFB] placeholder:text-[#6B7280] focus:outline-none focus:border-[#3B82F6] focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)] transition-[border-color,box-shadow]";
+
+/* ── Dependency form ────────────────────────────────────────────────────── */
+
+function DependencyForm({
+  initial,
+  onSubmit,
+  submitLabel,
+  submitting,
+  onCancel,
+}: {
+  initial?: Dependency;
+  onSubmit: (data: CreateDependencyRequest) => void;
+  submitLabel: string;
+  submitting: boolean;
+  onCancel: () => void;
+}) {
+  const [name, setName] = React.useState(initial?.name || "");
+  const [endpointUrl, setEndpointUrl] = React.useState(initial?.endpoint_url || "");
+  const [method, setMethod] = React.useState<HttpMethod>((initial?.method as HttpMethod) || "GET");
+  const [regions, setRegions] = React.useState((initial?.regions || ["us-east"]).join(", "));
+  const [timeoutSec, setTimeoutSec] = React.useState(String(initial?.timeout_seconds ?? 10));
+  const [intervalSec, setIntervalSec] = React.useState(String(initial?.check_interval_seconds ?? 60));
+  const [thresholdMs, setThresholdMs] = React.useState(
+    initial?.alert_threshold_ms != null ? String(initial.alert_threshold_ms) : "300",
+  );
+  const [expectedCodes, setExpectedCodes] = React.useState(
+    (initial?.expected_status_codes || [200]).join(", "),
+  );
+
+  const valid = name.trim().length > 0 && endpointUrl.trim().length > 0;
+
+  const handleSubmit = () => {
+    if (!valid) return;
+    onSubmit({
+      name: name.trim(),
+      endpoint_url: endpointUrl.trim(),
+      method,
+      regions: regions.split(",").map((r) => r.trim()).filter(Boolean),
+      timeout_seconds: parseInt(timeoutSec) || 10,
+      check_interval_seconds: parseInt(intervalSec) || 60,
+      alert_threshold_ms: thresholdMs.trim() ? parseInt(thresholdMs) || null : null,
+      expected_status_codes: expectedCodes.split(",").map((c) => parseInt(c.trim())).filter((n) => !Number.isNaN(n)),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <Field label="Name">
+        <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Stripe API" />
+      </Field>
+      <Field label="Endpoint URL" hint="Full URL of the endpoint to monitor.">
+        <input
+          className={inputCls}
+          value={endpointUrl}
+          onChange={(e) => setEndpointUrl(e.target.value)}
+          placeholder="https://api.stripe.com/v1/charges"
+          style={{ fontFamily: "var(--font-geist-mono)" }}
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Method">
+          <select
+            className={inputCls}
+            value={method}
+            onChange={(e) => setMethod(e.target.value as HttpMethod)}
+          >
+            <option value="GET">GET</option>
+            <option value="HEAD">HEAD</option>
+            <option value="POST">POST</option>
+          </select>
+        </Field>
+        <Field label="Regions" hint="Comma-separated check regions.">
+          <input className={inputCls} value={regions} onChange={(e) => setRegions(e.target.value)} placeholder="us-east, eu-west" />
+        </Field>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <Field label="Timeout (s)">
+          <input className={inputCls} value={timeoutSec} onChange={(e) => setTimeoutSec(e.target.value)} inputMode="numeric" />
+        </Field>
+        <Field label="Interval (s)">
+          <input className={inputCls} value={intervalSec} onChange={(e) => setIntervalSec(e.target.value)} inputMode="numeric" />
+        </Field>
+        <Field label="Alert at (ms)">
+          <input className={inputCls} value={thresholdMs} onChange={(e) => setThresholdMs(e.target.value)} inputMode="numeric" />
+        </Field>
+      </div>
+      <Field label="Expected status codes" hint="Comma-separated, e.g. 200, 202.">
+        <input className={inputCls} value={expectedCodes} onChange={(e) => setExpectedCodes(e.target.value)} placeholder="200" />
+      </Field>
+
+      <div className="flex justify-end gap-3 pt-2">
+        <Button variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={!valid || submitting}>
+          {submitting ? "Saving…" : submitLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Page ───────────────────────────────────────────────────────────────── */
+
+export default function DependenciesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: deps = [], isLoading, isError, refetch } = useDependencies();
+  const { data: health = [] } = useDependencyHealth();
+  const createDep = useCreateDependency();
+  const updateDep = useUpdateDependency();
+  const deleteDep = useDeleteDependency();
+
+  const [modal, setModal] = React.useState<"add" | "edit" | "delete" | null>(null);
+  const [editing, setEditing] = React.useState<Dependency | null>(null);
+  const [deleting, setDeleting] = React.useState<Dependency | null>(null);
+
+  // Auto-open the "add" modal via ?new=1
+  React.useEffect(() => {
+    if (searchParams.get("new") === "1") setModal("add");
+  }, [searchParams]);
+
+  const healthById = React.useMemo(() => {
+    const map: Record<string, DependencyHealth> = {};
+    for (const h of health) map[h.dependency_id] = h;
+    return map;
+  }, [health]);
+
+  const closeModal = () => {
+    setModal(null);
+    setEditing(null);
+    setDeleting(null);
+    if (searchParams.get("new")) router.replace("/dependencies");
+  };
+
+  const handleCreate = async (data: CreateDependencyRequest) => {
+    try {
+      await createDep.mutateAsync(data);
+      toast.success("Dependency added.");
+      closeModal();
+      refetch();
+    } catch {
+      toast.error("Could not add dependency.");
+    }
+  };
+
+  const handleUpdate = async (data: CreateDependencyRequest) => {
+    if (!editing) return;
+    try {
+      await updateDep.mutateAsync({ id: editing.id, data });
+      toast.success("Dependency updated.");
+      closeModal();
+    } catch {
+      toast.error("Could not update dependency.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    try {
+      await deleteDep.mutateAsync(deleting.id);
+      toast.success("Dependency deleted.");
+      closeModal();
+    } catch {
+      toast.error("Could not delete dependency.");
+    }
+  };
+
+  return (
+    <div>
+      <PageHeader
+        title="Dependencies"
+        subtitle="External services and endpoints your stack depends on."
+        right={
+          <button
+            onClick={() => setModal("add")}
+            className="inline-flex items-center gap-2 bg-[#3B82F6] text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-[filter]"
+          >
+            <Plus className="h-4 w-4" />
+            Add dependency
+          </button>
+        }
+      />
+
+      {/* Error */}
+      {isError && (
+        <Card className="p-4">
+          <p className="text-sm text-[#EF4444]">
+            Unable to load dependencies.{" "}
+            <button onClick={() => refetch()} className="text-[#3B82F6] hover:underline">
               Retry
             </button>
-          </div>
-        )}
+          </p>
+        </Card>
+      )}
 
-        {/* Loading Skeleton */}
-        {loading && (
-          <ConsoleCard>
-            <div className="px-5 py-3 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-3 w-12 rounded bg-[rgba(255,255,255,0.06)]"
-                />
-              ))}
-            </div>
-            {Array.from({ length: 5 }).map((_, rowIdx) => (
-              <div
-                key={rowIdx}
-                className="px-5 py-4 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)]"
-              >
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-4 w-full rounded bg-[rgba(255,255,255,0.06)]"
-                  />
-                ))}
-              </div>
-            ))}
-          </ConsoleCard>
-        )}
+      {/* Loading */}
+      {isLoading && !isError && (
+        <Card className="p-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </Card>
+      )}
 
-        {/* Empty State */}
-        {!loading && dependencies.length === 0 && !error && (
+      {/* Empty */}
+      {!isLoading && !isError && deps.length === 0 && (
+        <Card>
           <EmptyState
-            icon={Layers}
-            title="No dependencies configured"
-            description="Add a dependency to start monitoring its uptime and reliability. Track response times, get alerted on outages, and correlate incidents automatically."
+            icon={Radio}
+            title="No dependencies monitored"
+            body="Add your first vendor to start tracking external health."
             actionLabel="Add dependency"
-            onAction={openModal}
+            onAction={() => setModal("add")}
           />
-        )}
+        </Card>
+      )}
 
-        {/* Dependencies Table */}
-        {!loading && dependencies.length > 0 && (
-          <ConsoleCard className="overflow-hidden">
-            {/* Table Header */}
-            <div className="px-5 py-3 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]">
-              <div>Name</div>
-              <div>Endpoint</div>
-              <div>Status</div>
-              <div>Uptime</div>
-              <div>Last check</div>
-              <div className="w-8" />
-            </div>
+      {/* Table (desktop) */}
+      {!isLoading && !isError && deps.length > 0 && (
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden hidden md:block">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-[#1F2937]" style={{ height: 40 }}>
+                <th className="text-left px-4 text-[11px] font-medium uppercase text-[#6B7280]" style={{ letterSpacing: "0.05em" }}>
+                  Name
+                </th>
+                <th className="text-left text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 140, letterSpacing: "0.05em" }}>
+                  Status
+                </th>
+                <th className="text-right text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 120, letterSpacing: "0.05em" }}>
+                  Uptime (24h)
+                </th>
+                <th className="text-right text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 110, letterSpacing: "0.05em" }}>
+                  Latency
+                </th>
+                <th className="text-left px-4 text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 160, letterSpacing: "0.05em" }}>
+                  Regions
+                </th>
+                <th className="text-right pr-4" style={{ width: 100 }} />
+              </tr>
+            </thead>
+            <tbody>
+              {deps.map((dep, i) => {
+                const h = healthById[dep.id];
+                return (
+                  <tr
+                    key={dep.id}
+                    className={cn("cursor-pointer hover:bg-[#1F2937] transition-colors", i < deps.length - 1 && "border-b border-[#1F2937]")}
+                    style={{ height: 52 }}
+                    onClick={() => router.push(`/dependencies/${dep.id}`)}
+                  >
+                    <td className="px-4">
+                      <div className="text-sm font-medium text-[#F9FAFB]">{dep.name}</div>
+                      <div className="text-xs text-[#6B7280] truncate mt-0.5" style={{ fontFamily: "var(--font-geist-mono)", maxWidth: 280 }}>
+                        {dep.endpoint_url}
+                      </div>
+                    </td>
+                    <td>
+                      <StatusPill status={h?.current_status || (dep.is_active ? "unknown" : "unknown")} />
+                    </td>
+                    <td className="text-right text-sm text-[#F9FAFB]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                      {h ? fmtUptime(h.uptime_percentage_24h) : "—"}
+                    </td>
+                    <td className="text-right text-sm text-[#F9FAFB]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                      {h ? `${fmtLatency(h.avg_latency_ms_24h)} ms` : "—"}
+                    </td>
+                    <td className="px-4">
+                      <span className="text-xs text-[#9CA3AF] capitalize">{(dep.regions || []).join(", ")}</span>
+                    </td>
+                    <td className="text-right pr-4">
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => {
+                            setEditing(dep);
+                            setModal("edit");
+                          }}
+                          className="p-1.5 rounded-md text-[#374151] hover:text-[#9CA3AF] transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeleting(dep);
+                            setModal("delete");
+                          }}
+                          className="p-1.5 rounded-md text-[#374151] hover:text-[#EF4444] transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <ChevronRight className="h-4 w-4 text-[#374151]" />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-            {/* Rows */}
-            {dependencies.map((dep, idx) => {
-              const status = deriveStatus(dep);
-              const statusCfg = STATUS_CONFIG[status];
-              const history = historyMap[dep.id] || null;
-              const uptime = history ? history.uptime_percentage : null;
-
-              return (
-                <div
-                  key={dep.id}
-                  className="px-5 py-3.5 grid grid-cols-[1.5fr,1fr,auto,auto,auto,auto] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center"
-                >
-                  {/* Name */}
+      {/* Cards (mobile) */}
+      {!isLoading && !isError && deps.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {deps.map((dep) => {
+            const h = healthById[dep.id];
+            return (
+              <div
+                key={dep.id}
+                className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 cursor-pointer"
+                onClick={() => router.push(`/dependencies/${dep.id}`)}
+              >
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-[#FAFAFA] truncate">
-                      {dep.name}
-                    </div>
-                    <div className="text-xs text-[#52525B] font-mono truncate mt-0.5">
-                      {dep.regions.length > 0
-                        ? dep.regions.join(", ")
-                        : "—"}
-                    </div>
-                  </div>
-
-                  {/* Endpoint */}
-                  <div className="min-w-0">
-                    <div className="text-xs text-[#A1A1AA] font-mono truncate">
+                    <div className="text-sm font-medium text-[#F9FAFB]">{dep.name}</div>
+                    <div className="text-xs text-[#6B7280] truncate mt-0.5" style={{ fontFamily: "var(--font-geist-mono)" }}>
                       {dep.endpoint_url}
                     </div>
                   </div>
-
-                  {/* Status */}
-                  <div className="flex items-center gap-2">
-                    <StatusDot status={status} pulse={status === "down"} />
-                    <span
-                      className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{
-                        color: statusCfg.color,
-                        backgroundColor: statusCfg.bg,
-                      }}
-                    >
-                      {statusCfg.label}
-                    </span>
-                  </div>
-
-                  {/* Uptime */}
-                  <div
-                    className="font-mono text-sm"
-                    style={{ color: uptimeColor(uptime) }}
-                  >
-                    {formatUptime(uptime)}
-                  </div>
-
-                  {/* Last check */}
-                  <div className="text-xs text-[#52525B] font-mono whitespace-nowrap">
-                    {dep.updated_at
-                      ? formatDistanceToNow(new Date(dep.updated_at), {
-                          addSuffix: true,
-                        })
-                      : "—"}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="relative w-8 flex justify-center" ref={idx === dependencies.findIndex(d => d.id === activeMenuId) ? menuRef : undefined}>
-                    <button
-                      onClick={() =>
-                        setActiveMenuId(
-                          activeMenuId === dep.id ? null : dep.id
-                        )
-                      }
-                      className="p-1 rounded-md hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[#52525B] hover:text-[#A1A1AA]"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-
-                    {/* Dropdown */}
-                    {activeMenuId === dep.id && (
-                      <div className="absolute right-0 top-full mt-1 z-20 bg-[#1A1A20] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-console-dropdown py-1 min-w-[160px]">
-                        <button
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
-                          onClick={() => setActiveMenuId(null)}
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          className={cn(
-                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors",
-                            updateMutation.isPending && "opacity-50 pointer-events-none"
-                          )}
-                          onClick={() => handleToggle(dep)}
-                        >
-                          {dep.is_active ? (
-                            <>
-                              <Pause className="w-3.5 h-3.5" />
-                              Pause
-                            </>
-                          ) : (
-                            <>
-                              <Play className="w-3.5 h-3.5" />
-                              Resume
-                            </>
-                          )}
-                        </button>
-                        <div className="my-1 border-t border-[rgba(255,255,255,0.06)]" />
-                        <button
-                          className={cn(
-                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#DC2626] hover:bg-[rgba(220,38,38,0.08)] transition-colors",
-                            deleteMutation.isPending && "opacity-50 pointer-events-none"
-                          )}
-                          onClick={() => handleDelete(dep.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <StatusPill status={h?.current_status} />
                 </div>
-              );
-            })}
-          </ConsoleCard>
-        )}
-      </div>
-
-      {/* ── Add Dependency Modal ──────────────────────────────────────────────── */}
-      {modalOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setModalOpen(false);
-          }}
-        >
-          <div className="bg-[#1A1A20] rounded-2xl border border-[rgba(255,255,255,0.08)] max-w-lg w-full p-6 animate-[fadeIn_200ms_ease-out]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-[#FAFAFA]">
-                Add dependency
-              </h2>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[#52525B] hover:text-[#A1A1AA]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <div className="space-y-4">
-              {/* Name */}
-              <div>
-                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Stripe API"
-                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors"
-                />
-              </div>
-
-              {/* Endpoint URL */}
-              <div>
-                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
-                  Endpoint URL
-                </label>
-                <input
-                  type="text"
-                  value={formEndpoint}
-                  onChange={(e) => {
-                    setFormEndpoint(e.target.value);
-                    setFormEndpointError("");
-                  }}
-                  placeholder="https://api.stripe.com/v1/charges"
-                  className={cn(
-                    "w-full bg-[#1C1C22] border text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors font-mono",
-                    formEndpointError
-                      ? "border-[rgba(220,38,38,0.5)]"
-                      : "border-[rgba(255,255,255,0.08)]"
-                  )}
-                />
-                {formEndpointError && (
-                  <p className="text-xs text-[#DC2626] mt-1.5">
-                    {formEndpointError}
-                  </p>
-                )}
-              </div>
-
-              {/* Expected status + Check interval */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
-                    Expected status
-                  </label>
-                  <input
-                    type="number"
-                    value={formExpectedStatus}
-                    onChange={(e) =>
-                      setFormExpectedStatus(Number(e.target.value))
-                    }
-                    className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
-                    Check interval
-                  </label>
-                  <select
-                    value={formInterval}
-                    onChange={(e) => setFormInterval(Number(e.target.value))}
-                    className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors appearance-none cursor-pointer"
-                  >
-                    {CHECK_INTERVAL_OPTIONS.map((opt) => {
-                      const disabled = opt.value < minInterval;
-                      return (
-                        <option
-                          key={opt.value}
-                          value={opt.value}
-                          disabled={disabled}
-                          className={disabled ? "opacity-40" : ""}
-                        >
-                          {opt.label}
-                          {disabled && " (upgrade)"}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              </div>
-
-              {/* Regions */}
-              <div>
-                <label className="text-sm font-medium text-[#A1A1AA] mb-2 block">
-                  Regions
-                  {(plan === "free" || plan === "starter") && (
-                    <span className="text-[#52525B] ml-1.5 font-normal">
-                      (max {maxRegions} on {planConfig.name})
-                    </span>
-                  )}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {REGION_OPTIONS.map((region) => {
-                    const isSelected = formRegions.includes(region.value);
-                    const canSelect =
-                      !isSelected &&
-                      plan === "free" &&
-                      formRegions.length >= 1;
-                    const canSelectStarter =
-                      !isSelected &&
-                      plan === "starter" &&
-                      formRegions.length >= 2;
-
-                    return (
-                      <button
-                        key={region.value}
-                        type="button"
-                        onClick={() => toggleRegion(region.value)}
-                        disabled={canSelect || canSelectStarter}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
-                          isSelected
-                            ? "bg-[rgba(8,145,178,0.15)] border-[rgba(8,145,178,0.3)] text-[#0891B2]"
-                            : canSelect || canSelectStarter
-                              ? "bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] text-[#52525B] opacity-50 cursor-not-allowed"
-                              : "bg-[#1C1C22] border-[rgba(255,255,255,0.08)] text-[#A1A1AA] hover:border-[rgba(255,255,255,0.15)] hover:text-[#FAFAFA]"
-                        )}
-                      >
-                        {region.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Error message */}
-              {formEndpointError && !formEndpoint.startsWith("http") && null}
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
-                <button
-                  onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 rounded-lg text-sm font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
-                >
-                  Cancel
-                </button>
-                <div className="relative">
-                  <button
-                    onClick={handleCreate}
-                    disabled={createMutation.isPending || atLimit}
-                    className={cn(
-                      "bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2",
-                      atLimit || createMutation.isPending
-                        ? "opacity-40 cursor-not-allowed"
-                        : "hover:bg-white hover:shadow-lg"
-                    )}
-                  >
-                    {createMutation.isPending ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="w-3.5 h-3.5 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
-                        Adding…
-                      </span>
-                    ) : (
-                      "Add dependency"
-                    )}
-                  </button>
-                  {atLimit && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#1A1A20] border border-[rgba(255,255,255,0.08)] rounded-lg text-xs text-[#A1A1AA] whitespace-nowrap shadow-console-dropdown pointer-events-none">
-                      Upgrade to add more dependencies
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-[#1A1A20] border-r border-b border-[rgba(255,255,255,0.08)] rotate-45" />
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <div className="text-[11px] uppercase text-[#6B7280]" style={{ letterSpacing: "0.05em" }}>Uptime</div>
+                    <div className="text-sm text-[#F9FAFB]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                      {h ? fmtUptime(h.uptime_percentage_24h) : "—"}
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase text-[#6B7280]" style={{ letterSpacing: "0.05em" }}>Latency</div>
+                    <div className="text-sm text-[#F9FAFB]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                      {h ? `${fmtLatency(h.avg_latency_ms_24h)} ms` : "—"}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Modals */}
+      {modal === "add" && (
+        <Modal title="Add dependency" onClose={closeModal}>
+          <DependencyForm
+            onSubmit={handleCreate}
+            submitLabel="Add dependency"
+            submitting={createDep.isPending}
+            onCancel={closeModal}
+          />
+        </Modal>
+      )}
+
+      {modal === "edit" && editing && (
+        <Modal title="Edit dependency" onClose={closeModal}>
+          <DependencyForm
+            initial={editing}
+            onSubmit={handleUpdate}
+            submitLabel="Save changes"
+            submitting={updateDep.isPending}
+            onCancel={closeModal}
+          />
+        </Modal>
+      )}
+
+      {modal === "delete" && deleting && (
+        <Modal title="Delete dependency" onClose={closeModal}>
+          <p className="text-sm text-[#9CA3AF]">
+            This will permanently remove <span className="text-[#F9FAFB] font-medium">{deleting.name}</span> and
+            stop all checks for it. This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3 mt-5">
+            <Button variant="ghost" onClick={closeModal}>
+              Cancel
+            </Button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteDep.isPending}
+              className="inline-flex items-center justify-center gap-2 text-sm font-medium rounded-lg px-4 py-2 bg-[#EF4444] text-white hover:brightness-110 transition-[filter] disabled:opacity-50"
+            >
+              {deleteDep.isPending ? "Deleting…" : "Delete dependency"}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

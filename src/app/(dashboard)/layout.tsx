@@ -1,84 +1,92 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import * as React from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/lib/auth-context";
 import { Providers } from "@/components/Providers";
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DemoBanner } from "@/components/demo/DemoBanner";
+import { TopBar } from "@/components/shell/TopBar";
+import { Sidebar } from "@/components/shell/Sidebar";
+import { CommandPalette } from "@/components/shell/CommandPalette";
+import { useUiStore } from "@/lib/uiStore";
 import { cn } from "@/lib/utils";
 
-/* ------------------------------------------------------------------ */
-/*  Layout                                                             */
-/* ------------------------------------------------------------------ */
+const PAGE_LABELS: { match: (p: string) => boolean; label: string }[] = [
+  { match: (p) => p === "/dashboard", label: "Dashboard" },
+  { match: (p) => p === "/dependencies" || p.startsWith("/dependencies/"), label: "Dependencies" },
+  { match: (p) => p === "/incidents" || p.startsWith("/incidents/"), label: "Incidents" },
+  { match: (p) => p === "/evidence" || p.startsWith("/evidence/"), label: "Evidence" },
+  { match: (p) => p === "/settings" || p.startsWith("/settings/"), label: "Settings" },
+  { match: (p) => p === "/vendors" || p.startsWith("/vendors/"), label: "Vendors" },
+  { match: (p) => p === "/agency" || p.startsWith("/agency/"), label: "Agency" },
+  { match: (p) => p === "/clients" || p.startsWith("/clients/"), label: "Clients" },
+];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
+  const pushRecentPage = useUiStore((s) => s.pushRecentPage);
 
-  /* ---------- responsive detection ---------- */
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+  React.useEffect(() => {
+    const check = () => {
+      const w = window.innerWidth;
+      setIsMobile(w < 768);
+      // Spec breakpoints: icon-only sidebar on tablet (768–1024), full on desktop.
+      if (w >= 768 && w < 1024) setCollapsed(true);
+      else if (w >= 1024) setCollapsed(false);
+    };
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const toggleCollapse = () => setCollapsed((v) => !v);
+  // Track recent pages for the command palette.
+  React.useEffect(() => {
+    const found = PAGE_LABELS.find((p) => p.match(pathname));
+    if (found) pushRecentPage({ label: found.label, href: pathname });
+  }, [pathname, pushRecentPage]);
+
+  const handleMenuClick = () => {
+    if (isMobile) setMobileOpen(true);
+    else setCollapsed((v) => !v);
+  };
+
+  const marginLeft = isMobile ? 0 : collapsed ? 64 : 220;
 
   return (
     <Providers>
       <AuthProvider>
-        <DemoBanner />
-        <div className="min-h-screen bg-[#0A0A0F]">
-          {/* Sidebar — separate on desktop, overlay on mobile */}
-          <DashboardSidebar
+        <div className="min-h-screen bg-[#0B0F19]">
+          <TopBar onMenuClick={handleMenuClick} />
+          <Sidebar
             collapsed={collapsed}
-            onToggleCollapse={toggleCollapse}
             mobileOpen={mobileOpen}
-            setMobileOpen={setMobileOpen}
+            onCloseMobile={() => setMobileOpen(false)}
           />
 
-          {/* Main content area */}
-          <div
-            className={cn(
-              "transition-[margin] duration-200 ease-out",
-              isMobile ? "ml-0" : collapsed ? "ml-[72px]" : "ml-[260px]"
-            )}
+          <main
+            className="min-h-[calc(100vh-56px)]"
+            style={{
+              marginLeft,
+              marginTop: 56,
+              paddingTop: isMobile ? 16 : 32,
+              paddingBottom: isMobile ? 48 : 64,
+              paddingLeft: isMobile ? 16 : 32,
+              paddingRight: isMobile ? 16 : 32,
+            }}
           >
-            {/* Sticky header */}
-            <DashboardHeader
-              sidebarCollapsed={collapsed}
-              onToggleSidebar={toggleCollapse}
-              onOpenMobileSidebar={() => setMobileOpen(true)}
-            />
+            <div
+              key={pathname}
+              className="rs-fade-in mx-auto max-w-[1440px]"
+              style={{ fontFamily: "var(--font-geist-sans)" }}
+            >
+              {children}
+            </div>
+          </main>
 
-            {/* Page content with AnimatePresence */}
-            <main className="p-8 min-h-[calc(100vh-56px)]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={pathname}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
-            </main>
-          </div>
+          <CommandPalette />
         </div>
-
-        {/* Mobile sidebar backdrop is rendered by DashboardSidebar */}
       </AuthProvider>
     </Providers>
   );

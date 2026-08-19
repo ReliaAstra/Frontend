@@ -1,0 +1,261 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* RELIASTRA custom colors */
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-ra-status: var(--ra-status);
+  --color-ra-warning: var(--ra-warning);
+  --color-ra-incident: var(--ra-incident);
+  --color-ra-healthy: var(--ra-healthy);
+  --color-ra-accent: var(--ra-accent);
+  --color-ra-accent-dim: var(--ra-accent-dim);
+  --color-ra-border: var(--ra-border);
+  --color-ra-text-secondary: var(--ra-text-secondary);
+  --color-ra-text-tertiary: var(--ra-text-tertiary);
+}
+
+:root {
+  /* Base radius - smaller for infrastructure aesthetic */
+  --radius: 0.375rem;
+
+  /* RELIASTRA Dark-First Palette */
+  --background: #080B10;
+  --foreground: #F3F5F7;
+
+  /* Surface hierarchy */
+  --surface: #0E131B;
+  --surface-elevated: #121923;
+  --surface-overlay: #181F2B;
+
+  /* Card */
+  --card: #0E131B;
+  --card-foreground: #F3F5F7;
+
+  /* Popover */
+  --popover: #121923;
+  --popover-foreground: #F3F5F7;
+
+  /* Primary - the accent blue for interactive elements */
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary */
+  --secondary: #161D28;
+  --secondary-foreground: #F3F5F7;
+
+  /* Muted - subtle backgrounds */
+  --muted: #0C1018;
+  --muted-foreground: #8D98A8;
+
+  /* Accent - hover/active states */
+  --accent: #161D28;
+  --accent-foreground: #F3F5F7;
+
+  /* Destructive - incidents/failures */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* Borders and inputs */
+  --border: rgba(148, 163, 184, 0.08);
+  --input: rgba(148, 163, 184, 0.12);
+  --ring: #3B82F6;
+
+  /* RELIASTRA semantic colors */
+  --ra-status: #8D98A8;
+  --ra-warning: #F59E0B;
+  --ra-incident: #EF4444;
+  --ra-healthy: #22C55E;
+  --ra-accent: #3B82F6;
+  --ra-accent-dim: rgba(59, 130, 246, 0.12);
+  --ra-border: rgba(148, 163, 184, 0.08);
+  --ra-text-secondary: #8D98A8;
+  --ra-text-tertiary: #5A6577;
+
+  /* Chart colors */
+  --chart-1: #3B82F6;
+  --chart-2: #22C55E;
+  --chart-3: #F59E0B;
+  --chart-4: #EF4444;
+  --chart-5: #8B5CF6;
+
+  /* Sidebar */
+  --sidebar: #0E131B;
+  --sidebar-foreground: #F3F5F7;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #161D28;
+  --sidebar-accent-foreground: #F3F5F7;
+  --sidebar-border: rgba(148, 163, 184, 0.08);
+  --sidebar-ring: #3B82F6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Selection */
+ ::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: #F3F5F7;
+  }
+  /* Focus visible */
+ :focus-visible {
+    outline: 1px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* RELIASTRA utility classes */
+  .ra-surface {
+    background: var(--surface);
+  }
+  .ra-surface-elevated {
+    background: var(--surface-elevated);
+  }
+  .ra-surface-overlay {
+    background: var(--surface-overlay);
+  }
+  .ra-border {
+    border-color: var(--ra-border);
+  }
+  .ra-text-secondary {
+    color: var(--ra-text-secondary);
+  }
+  .ra-text-tertiary {
+    color: var(--ra-text-tertiary);
+  }
+  .ra-accent-bg {
+    background: var(--ra-accent-dim);
+  }
+  /* Monospace numbers */
+  .font-mono-numeric {
+    font-family: var(--font-geist-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Custom scrollbar for dark theme */
+  .ra-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .ra-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .ra-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.15);
+    border-radius: 3px;
+  }
+  .ra-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.25);
+  }
+  /* Status indicator pulse */
+  @keyframes ra-pulse-healthy {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes ra-pulse-incident {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .animate-pulse-healthy {
+    animation: ra-pulse-healthy 2s ease-in-out infinite;
+  }
+  .animate-pulse-incident {
+    animation: ra-pulse-incident 1s ease-in-out infinite;
+  }
+  /* Graph line drawing animation */
+  @keyframes ra-draw-line {
+    from { stroke-dashoffset: 1000; }
+    to { stroke-dashoffset: 0; }
+  }
+  .animate-draw-line {
+    stroke-dasharray: 1000;
+    animation: ra-draw-line 2s ease-out forwards;
+  }
+  /* Fade in up */
+  @keyframes ra-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in-up {
+    animation: ra-fade-in-up 0.6s ease-out forwards;
+  }
+  /* Fade in */
+  @keyframes ra-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: ra-fade-in 0.4s ease-out forwards;
+  }
+  /* Counter animation helper */
+  .animate-count-up {
+    animation: ra-fade-in 0.3s ease-out forwards;
+  }
+}

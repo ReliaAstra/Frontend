@@ -32,10 +32,9 @@ export function EvidenceSection() {
               SLA evidence reports.
             </h2>
             <p className="text-[#52525B] leading-relaxed mb-8">
-              Screenshots and Slack messages don&apos;t cut it. Reliastra generates
-              structured, timestamped evidence reports with independent verification
-              from multiple regions: exactly what vendor support teams need to process
-              your SLA credit claim.
+              Screenshots and Slack messages don&apos;t cut it. Reliastra keeps
+              independent, timestamped observations of the endpoints you depend on.
+              Credit decisions still sit with the vendor; the record is yours.
             </p>
             <ul className="space-y-4">
               {FEATURES.map((feature, i) => (

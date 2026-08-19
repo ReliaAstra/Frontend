@@ -1,29 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
 const TABS = ['SaaS Teams', 'Agencies', 'DevOps'] as const;
 type TabKey = (typeof TABS)[number];
-
-function AnimatedCounter({ target }: { target: number }) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (v) => `$${Math.round(v).toLocaleString()}`);
-  const [display, setDisplay] = useState('$0');
-
-  useEffect(() => {
-    const unsub = rounded.on('change', (v) => setDisplay(v));
-    return () => unsub();
-  }, [rounded]);
-
-  useEffect(() => {
-    animate(count, target, { duration: 1.2, ease: 'easeOut' });
-  }, [count, target]);
-
-  return <span>{display}</span>;
-}
 
 const TAB_CONTENT: Record<
   TabKey,
@@ -37,24 +20,17 @@ const TAB_CONTENT: Record<
     headline: 'Protect Your SLA Commitments',
     body: 'Your customers pay for 99.9% uptime. When a vendor like PagerDuty or Stripe drops the ball, your SLA is on the line: not theirs. Reliastra gives you the independent evidence to claim vendor SLA credits and protect your margins.',
     visual: (
-      <div className="bg-[#F8F9FA] rounded-2xl p-6 border border-[#E4E4E7] space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1AA]">
-            SLA Credit Eligible
-          </span>
-          <span className="text-[10px] font-mono text-[#A1A1AA]">RPT-2024-0847</span>
-        </div>
-        <div className="bg-[#0891B2]/10 rounded-xl p-6 text-center">
-          <p className="text-sm text-[#52525B] mb-1">Estimated Credit</p>
-          <p className="text-4xl font-bold text-[#09090B]">
-            <AnimatedCounter target={4200} key="saas" />
-          </p>
-        </div>
-        <div className="space-y-2 text-xs text-[#52525B]">
-          <div className="flex justify-between"><span>Vendor</span><span className="font-semibold text-[#09090B]">PagerDuty</span></div>
-          <div className="flex justify-between"><span>Duration</span><span className="font-semibold text-[#DC2626]">2h 14m</span></div>
-          <div className="flex justify-between"><span>Confidence</span><span className="font-semibold text-[#0891B2]">98.7%</span></div>
-        </div>
+      <div className="bg-white rounded-2xl p-6 border border-[#E4E4E7] space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#A1A1AA]">
+          What you can show a vendor
+        </p>
+        <p className="text-sm text-[#52525B] leading-relaxed">
+          Independent check times, HTTP results, and latency from Reliastra probes — not a credit estimate.
+          The vendor still decides whether to pay.
+        </p>
+        <a href="/track" className="inline-block text-sm font-semibold text-[#0891B2] hover:underline">
+          See live public checks
+        </a>
       </div>
     ),
   },
@@ -125,7 +101,7 @@ const TAB_CONTENT: Record<
               </div>
             </div>
           </div>
-          <p className="text-[10px] text-[#DC2626] mt-1">Stripe API returning 5xx from 2 regions</p>
+          <p className="text-[10px] text-[#52525B] mt-1">Independent probes can disagree with internal green dashboards</p>
         </div>
       </div>
     ),

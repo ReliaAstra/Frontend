@@ -1,131 +1,85 @@
-'use client';
-import { useRef, useEffect, useState } from 'react';
-import { useInView, useMotionValue, useTransform, animate } from 'framer-motion';
-import { BrowserMockup } from '@/components/BrowserMockup';
+"use client";
+
+import { format } from "date-fns";
+import { BrowserMockup } from "@/components/BrowserMockup";
+import { usePublicVendorLive } from "@/hooks/usePublicVendorLive";
 
 export function EvidenceReportPreview() {
-  const reportRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(reportRef, { once: true, margin: '-50px' });
-  const motionCount = useMotionValue(0);
-  const displayAmount = useTransform(motionCount, (v) => `$${Math.round(v).toLocaleString()}`);
-  const [displayValue, setDisplayValue] = useState('$0');
-
-  useEffect(() => {
-    const unsubscribe = displayAmount.on('change', (v) => setDisplayValue(v));
-    return () => unsubscribe();
-  }, [displayAmount]);
-
-  useEffect(() => {
-    if (isInView) {
-      // Small delay ensures transform listener is active before animation starts
-      const timer = setTimeout(() => {
-        animate(motionCount, 2840, {
-          type: 'spring',
-          stiffness: 80,
-          damping: 20,
-          duration: 1.5,
-        });
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isInView, motionCount]);
+  const { data: vendors, isLoading, isError } = usePublicVendorLive(1);
+  const vendor = vendors?.[0];
+  const points = vendor?.points.slice(-6) ?? [];
 
   return (
-    <BrowserMockup url="reliastra.com/reports/RPT-2024-0847.pdf" className="max-w-md">
-      <div ref={reportRef} className="relative p-5 space-y-4 bg-white scan-line">
-        {/* Report Header */}
+    <BrowserMockup
+      url={vendor ? `reliastra.com/track/${vendor.vendor_name}` : "reliastra.com/track"}
+      className="max-w-md"
+    >
+      <div className="relative p-5 space-y-4 bg-white">
         <div className="border-b border-[#E4E4E7] pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] text-[#A1A1AA] font-mono uppercase tracking-wider">SLA Evidence Report</p>
-              <p className="text-sm font-bold text-[#09090B]">RPT-2024-0847</p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-              <span className="text-[10px] font-medium text-[#16A34A]">VERIFIED</span>
-            </div>
-          </div>
+          <p className="text-[10px] text-[#A1A1AA] font-mono uppercase tracking-wider">
+            Live observation
+          </p>
+          <p className="text-sm font-bold text-[#09090B]">
+            {vendor?.display_name ?? "Public vendor"}
+          </p>
         </div>
 
-        {/* Incident Summary */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider">Incident Summary</p>
-          <div className="bg-[#F8F9FA] rounded-lg p-3 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-[#52525B]">Vendor</span>
-              <span className="font-semibold text-[#09090B]">Stripe Payments API</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#52525B]">Duration</span>
-              <span className="font-semibold text-[#DC2626]">47 min 12s</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#52525B]">Impact</span>
-              <span className="font-semibold text-[#09090B]">1,247 failed transactions</span>
-            </div>
-          </div>
-        </div>
+        {isLoading && <p className="text-sm text-[#71717A]">Loading latest check…</p>}
+        {isError && <p className="text-sm text-[#71717A]">Public vendor API unavailable.</p>}
 
-        {/* Verification Regions */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider">Independent Verification</p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'US East', status: '✓', color: 'text-[#16A34A]' },
-              { label: 'US West', status: '✓', color: 'text-[#16A34A]' },
-              { label: 'EU West', status: '✓', color: 'text-[#16A34A]' },
-            ].map((region) => (
-              <div key={region.label} className="bg-[#F8F9FA] rounded-lg p-2 text-center">
-                <span className={`text-sm font-bold ${region.color}`}>{region.status}</span>
-                <p className="text-[10px] text-[#52525B] mt-0.5">{region.label}</p>
+        {vendor && (
+          <>
+            <div className="bg-[#F8F9FA] rounded-lg p-3 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-[#52525B]">Status</span>
+                <span className="font-semibold text-[#09090B] capitalize">
+                  {vendor.status.replace(/_/g, " ")}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Evidence Timeline */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider">Evidence Timeline</p>
-          <div className="space-y-1.5">
-            {[
-              { time: '14:31:52 UTC', event: 'First 5xx detected', type: 'error' },
-              { time: '14:31:54 UTC', event: 'Latency spike 4,200ms', type: 'warning' },
-              { time: '14:32:01 UTC', event: 'Independent confirmation', type: 'info' },
-              { time: '14:32:15 UTC', event: 'All 3 regions affected', type: 'error' },
-              { time: '15:18:39 UTC', event: 'Service restored', type: 'success' },
-            ].map((entry) => (
-              <div key={entry.time} className="flex items-center gap-2 text-[11px]">
-                <span className="font-mono text-[#A1A1AA] w-24 shrink-0">{entry.time}</span>
-                <div
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    entry.type === 'error'
-                      ? 'bg-[#DC2626]'
-                      : entry.type === 'warning'
-                      ? 'bg-[#D97706]'
-                      : entry.type === 'success'
-                      ? 'bg-[#16A34A]'
-                      : 'bg-[#0891B2]'
-                  }`}
-                />
-                <span className="text-[#52525B]">{entry.event}</span>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#52525B]">Latency</span>
+                <span className="font-semibold text-[#09090B]">
+                  {vendor.latency_ms != null ? `${vendor.latency_ms} ms` : "—"}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#52525B]">24h uptime</span>
+                <span className="font-semibold text-[#09090B]">
+                  {vendor.uptime_24h != null ? `${vendor.uptime_24h.toFixed(2)}%` : "—"}
+                </span>
+              </div>
+            </div>
 
-        {/* SLA Impact */}
-        <div className="bg-[#ECFEFF] border border-[#0891B2]/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold text-[#0891B2] uppercase tracking-wider">SLA Credit Eligible</p>
-              <p className="text-2xl font-bold text-[#0891B2] mt-0.5">{displayValue}</p>
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                Recent 1h samples
+              </p>
+              {points.length === 0 && (
+                <p className="text-[11px] text-[#71717A]">No timeline samples yet.</p>
+              )}
+              {points.map((p) => (
+                <div key={p.timestamp} className="flex items-center gap-2 text-[11px]">
+                  <span className="font-mono text-[#A1A1AA] w-28 shrink-0">
+                    {format(new Date(p.timestamp), "HH:mm:ss")} UTC
+                  </span>
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      p.is_up ? "bg-[#16A34A]" : "bg-[#DC2626]"
+                    }`}
+                  />
+                  <span className="text-[#52525B]">{p.latency_ms} ms</span>
+                </div>
+              ))}
             </div>
-            <div className="text-right">
-              <p className="text-[10px] text-[#0891B2]">Confidence</p>
-              <p className="text-lg font-bold text-[#0891B2]">98.7%</p>
-            </div>
-          </div>
-        </div>
+
+            <a
+              href={`/track/${vendor.vendor_name}`}
+              className="block text-center text-xs font-semibold text-[#0891B2] hover:underline"
+            >
+              View full public history
+            </a>
+          </>
+        )}
       </div>
     </BrowserMockup>
   );

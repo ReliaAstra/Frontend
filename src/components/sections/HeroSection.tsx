@@ -117,7 +117,7 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease }}
           >
-            <BrowserMockup url="reliastra.com/incidents/1842" aria-label="Live incident correlation card showing checkout degradation traced to Stripe EU outage">
+            <BrowserMockup url="reliastra.com/track" aria-label="Live independent vendor latency from Reliastra public checks">
               <div className="flex justify-center py-6 px-4 md:px-8">
                 <IncidentCorrelationCard />
               </div>

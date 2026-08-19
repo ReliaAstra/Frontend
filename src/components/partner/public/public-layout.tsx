@@ -1,0 +1,107 @@
+'use client';
+
+import { AnimatePresence, motion } from 'framer-motion';
+import { usePartnerStore } from '@/stores/partner-store';
+import type { PartnerPage } from '@/types/partner';
+import { PartnerNav } from './partner-nav';
+import { PartnerFooter } from './partner-footer';
+import { PageHome } from './page-home';
+import { PageEarn } from './page-earn';
+import { PageHowItWorks } from './page-how-it-works';
+import { PageCommission } from './page-commission';
+import { PageFaq } from './page-faq';
+import { PageApply } from './page-apply';
+import { PageLogin } from './page-login';
+import { PageSignup } from './page-signup';
+import { PageActivation } from './page-activation';
+import { PageOnboarding } from './page-onboarding';
+
+const publicPages: PartnerPage[] = [
+  'home',
+  'earn',
+  'how-it-works',
+  'commission',
+  'faq',
+  'apply',
+  'login',
+  'signup',
+  'activation',
+  'onboarding',
+];
+
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
+function PageContent({ page }: { page: PartnerPage }) {
+  switch (page) {
+    case 'home':
+      return <PageHome />;
+    case 'earn':
+      return <PageEarn />;
+    case 'how-it-works':
+      return <PageHowItWorks />;
+    case 'commission':
+      return <PageCommission />;
+    case 'faq':
+      return <PageFaq />;
+    case 'apply':
+      return <PageApply />;
+    case 'login':
+      return <PageLogin />;
+    case 'signup':
+      return <PageSignup />;
+    case 'activation':
+      return <PageActivation />;
+    case 'onboarding':
+      return <PageOnboarding />;
+    default:
+      return <PageHome />;
+  }
+}
+
+export function PublicLayout() {
+  const currentPage = usePartnerStore((s) => s.currentPage);
+  const isPublicPage = publicPages.includes(currentPage);
+
+  if (!isPublicPage) {
+    // If user navigates to a dashboard page without auth, show a placeholder
+    // This is handled by page.tsx
+    return null;
+  }
+
+  const isAuthPage = currentPage === 'login' || currentPage === 'signup' || currentPage === 'activation' || currentPage === 'onboarding';
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <PartnerNav />
+
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className={isAuthPage ? 'flex flex-col py-12 sm:py-16' : ''}
+          >
+            <PageContent page={currentPage} />
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      <PartnerFooter />
+    </div>
+  );
+}

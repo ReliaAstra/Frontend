@@ -105,7 +105,7 @@ export function Footer() {
         {/* Bottom Row */}
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/30">
-            © 2025 Reliastra, Inc. All rights reserved.
+            © {new Date().getFullYear()} Reliastra, Inc. All rights reserved.
           </p>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">

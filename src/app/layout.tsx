@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/Providers";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
 // Self-hosted fonts via Fontsource (no network access required at build time).
 import "@fontsource/inter/400.css";
@@ -15,10 +16,40 @@ import "@fontsource/ibm-plex-mono/600.css";
 import "@fontsource/ibm-plex-mono/700.css";
 
 export const metadata: Metadata = {
-  title: "Reliastra: External Dependency Intelligence",
-  description:
-    "Monitor third-party APIs independently. When vendors fail, generate timestamped SLA evidence reports to claim credits and prove fault.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Reliastra: External Dependency Intelligence",
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   icons: { icon: "/favicon.svg" },
+  alternates: {
+    canonical: "/",
+    types: {
+      "application/atom+xml": [
+        { url: absoluteUrl("/changelog/feed.xml"), title: `${SITE_NAME} Changelog` },
+      ],
+    },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+    url: SITE_URL,
+    title: "Reliastra: External Dependency Intelligence",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Reliastra: External Dependency Intelligence",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
 };
 
 export default function RootLayout({

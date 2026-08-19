@@ -2,44 +2,9 @@
 
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { Rss } from 'lucide-react';
+import { changelogEntries as entries } from '@/lib/changelog-data';
 
-const entries = [
-  {
-    version: 'v0.3.0',
-    date: 'Aug 2025',
-    title: 'Initial public beta',
-    description: 'Live vendor tracking for 6 major providers. Open signups, free tier, and core monitoring dashboard.',
-    type: 'major' as const,
-  },
-  {
-    version: 'v0.2.0',
-    date: 'Jul 2025',
-    title: 'Incident correlation engine',
-    description: 'Added automated incident correlation across vendors and SLA evidence report generation with PDF export.',
-    type: 'major' as const,
-  },
-  {
-    version: 'v0.1.1',
-    date: 'Jul 2025',
-    title: 'Monitoring improvements',
-    description: 'Improved monitoring intervals to 30 seconds. Added Slack notification support and alerting rules.',
-    type: 'minor' as const,
-  },
-  {
-    version: 'v0.1.0-beta',
-    date: 'Jun 2025',
-    title: 'Private beta launch',
-    description: 'Private beta. Core monitoring infrastructure deployed with manual alerting.',
-    type: 'major' as const,
-  },
-  {
-    version: 'v0.0.1',
-    date: 'May 2025',
-    title: 'Internal alpha',
-    description: 'Core monitoring infrastructure deployed. Internal testing with synthetic vendor endpoints.',
-    type: 'minor' as const,
-  },
-];
 
 const typeStyles = {
   major: 'bg-[#0891B2] text-white',
@@ -61,6 +26,13 @@ export function ChangelogContent() {
             <p className="mt-4 text-lg text-[#52525B] max-w-2xl mx-auto">
               Every update to Reliastra, documented.
             </p>
+            <a
+              href="/changelog/feed.xml"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#E4E4E7] bg-white px-4 py-2 text-sm font-medium text-[#52525B] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
+            >
+              <Rss className="h-4 w-4" aria-hidden="true" />
+              Subscribe via RSS
+            </a>
           </motion.div>
         </div>
       </section>
@@ -90,7 +62,7 @@ export function ChangelogContent() {
                       <Badge className={typeStyles[entry.type]} variant="secondary">
                         {entry.version}
                       </Badge>
-                      <span className="text-xs text-[#A1A1AA]">{entry.date}</span>
+                      <span className="text-xs text-[#A1A1AA]">{entry.dateLabel}</span>
                     </div>
                     <h3 className="text-lg font-semibold text-[#09090B]">{entry.title}</h3>
                     <p className="mt-2 text-sm text-[#52525B] leading-relaxed">{entry.description}</p>

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const PARTNER_HOSTNAMES = [
   'partnership.frontend.zevcloud.app',
   'partnership.reliastra.com',
+  'partners.reliastra.com',
 ];
 
 const SKIP_PREFIXES = [

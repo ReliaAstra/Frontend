@@ -15,6 +15,7 @@ import "@fontsource/ibm-plex-mono/600.css";
 import "@fontsource/ibm-plex-mono/700.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://reliastra.com'),
   title: "Reliastra: External Dependency Intelligence",
   description:
     "Monitor third-party APIs independently. When vendors fail, generate timestamped SLA evidence reports to claim credits and prove fault.",

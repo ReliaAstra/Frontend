@@ -1,79 +1,94 @@
 'use client';
 
 import { Github } from 'lucide-react';
-
-const LINKS = [
-  {
-    title: 'Program',
-    links: [
-      { label: 'How It Works', href: '#how-it-works' },
-      { label: 'Commission', href: '#commission' },
-      { label: 'FAQ', href: '#faq' },
-      { label: 'Dashboard', href: '/dashboard' },
-    ],
-  },
-  {
-    title: 'Reliastra',
-    links: [
-      { label: 'Features', href: 'https://frontend.zevcloud.app/#solution' },
-      { label: 'Pricing', href: 'https://frontend.zevcloud.app/pricing' },
-      { label: 'Status', href: 'https://frontend.zevcloud.app/status' },
-      { label: 'Blog', href: 'https://frontend.zevcloud.app/blog' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Policy', href: 'https://frontend.zevcloud.app/privacy' },
-      { label: 'Terms of Service', href: 'https://frontend.zevcloud.app/terms' },
-    ],
-  },
-];
-
-const SOCIAL_LINKS = [
-  { icon: Github, href: 'https://github.com/ReliaAstra', label: 'GitHub' },
-];
+import { usePartnerHref, useProductHref } from './usePartnerHref';
+import { trackEvent } from '@/lib/analytics';
 
 export function PartnerFooter() {
+  const partnerHref = usePartnerHref();
+  const productHref = useProductHref();
+
+  const links = [
+    {
+      title: 'Partner',
+      links: [
+        { label: 'How It Works', href: partnerHref('/how-it-works') },
+        { label: 'Earn', href: partnerHref('/earn') },
+        { label: 'Commission', href: partnerHref('/commission') },
+        { label: 'Resources', href: partnerHref('/resources') },
+        { label: 'FAQ', href: partnerHref('/faq') },
+        { label: 'Become a Partner', href: partnerHref('/apply') },
+      ],
+    },
+    {
+      title: 'Product',
+      links: [
+        { label: 'Features', href: productHref('/#solution') },
+        { label: 'Pricing', href: productHref('/pricing') },
+        { label: 'Vendor Intelligence', href: productHref('/track') },
+      ],
+    },
+    {
+      title: 'Company',
+      links: [
+        { label: 'About', href: productHref('/about') },
+        { label: 'Contact', href: productHref('/contact') },
+        { label: 'Blog', href: productHref('/blog') },
+      ],
+    },
+    {
+      title: 'Legal',
+      links: [
+        { label: 'Terms', href: productHref('/terms') },
+        { label: 'Privacy', href: productHref('/privacy') },
+      ],
+    },
+  ];
+
   return (
-    <footer className="bg-[#0A0A0F] border-t border-white/10 pt-20 pb-10">
-      <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-          {/* Brand Column */}
-          <div className="col-span-2 md:col-span-1">
-            <span className="text-white font-bold text-lg">
+    <footer className="border-t border-white/10 bg-[#0A0A0F] pt-20 pb-10">
+      <div className="mx-auto max-w-[1240px] px-6 md:px-12">
+        <div className="grid gap-12 md:grid-cols-[1.2fr_1fr_1fr_1fr_1fr]">
+          <div>
+            <a href={productHref('/')} className="inline-block text-lg font-bold text-white">
               reliastra<span className="text-[#0891B2]">.</span>
-            </span>
-            <p className="text-white/40 text-sm mt-4 max-w-xs leading-relaxed">
-              Partner with RELIASTRA and earn recurring revenue by introducing
-              External Dependency Intelligence to your network.
+            </a>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#67E8F9]">
+              Partner Network
             </p>
-            <div className="flex items-center gap-3 mt-6">
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white/30 hover:text-white hover:bg-white/5 transition-all duration-200"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-5 h-5" aria-hidden="true" />
-                </a>
-              ))}
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/45">
+              A public distribution layer for people who already know the teams RELIASTRA serves.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <a
+                href="https://github.com/ReliaAstra"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="RELIASTRA on GitHub"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <Github className="h-5 w-5" />
+              </a>
             </div>
           </div>
 
-          {/* Link Columns */}
-          {LINKS.map((col) => (
-            <div key={col.title}>
-              <h4 className="text-sm font-semibold text-white mb-4">{col.title}</h4>
-              <ul className="space-y-3">
-                {col.links.map((link) => (
+          {links.map((group) => (
+            <div key={group.title}>
+              <h2 className="text-sm font-semibold text-white">{group.title}</h2>
+              <ul className="mt-4 space-y-3">
+                {group.links.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-white/40 hover:text-white transition-colors duration-200"
+                      onClick={() => {
+                        if (group.title === 'Partner') {
+                          trackEvent('partner_cta_clicked', {
+                            location: 'footer',
+                            target: link.label.toLowerCase().replace(/\s+/g, '_'),
+                          });
+                        }
+                      }}
+                      className="text-sm text-white/45 transition-colors hover:text-white"
                     >
                       {link.label}
                     </a>
@@ -84,15 +99,9 @@ export function PartnerFooter() {
           ))}
         </div>
 
-        {/* Bottom Row */}
-        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-white/30">
-            &copy; {new Date().getFullYear()} Reliastra, Inc. All rights reserved.
-          </p>
-          <a
-            href="https://frontend.zevcloud.app/status"
-            className="text-xs text-white/40 hover:text-white transition-colors"
-          >
+        <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/30 md:flex-row md:items-center">
+          <p>© {new Date().getFullYear()} Reliastra, Inc. All rights reserved.</p>
+          <a href={productHref('/status')} className="transition-colors hover:text-white/60">
             System status
           </a>
         </div>

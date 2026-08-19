@@ -23,13 +23,13 @@ const BENTO_CARDS = [
     icon: FileText,
     sublabel: 'TIMESTAMPED SLA EVIDENCE',
     title: 'Generate SLA Evidence Reports',
-    body: 'One click generates a court-ready report with multi-region verification, timestamped logs, and correlated impact analysis. Accepted by major cloud vendors for SLA credit claims.',
+    body: 'Generate a timestamped report with independent observations, check metadata, and correlated impact. Vendors still decide credits; the report is evidence, not a guarantee.',
   },
 ];
 
 export function SolutionSection() {
   return (
-    <section className="bg-[#F8F9FA] py-32">
+    <section id="solution" className="bg-[#F8F9FA] py-32">
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         {/* Header */}
         <motion.div

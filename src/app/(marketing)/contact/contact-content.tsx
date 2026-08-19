@@ -179,10 +179,10 @@ export function ContactContent() {
                   <div className="flex items-start gap-3">
                     <MessageCircle className="h-5 w-5 text-[#0891B2] mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[#09090B]">Discord</p>
+                      <p className="text-sm font-medium text-[#09090B]">GitHub</p>
                       <p className="text-sm text-[#52525B]">
-                        <a href="https://discord.gg/reliastre" target="_blank" rel="noopener noreferrer" className="text-[#0891B2] hover:underline">
-                          discord.gg/reliastre
+                        <a href="https://github.com/ReliaAstra" target="_blank" rel="noopener noreferrer" className="text-[#0891B2] hover:underline">
+                          github.com/ReliaAstra
                         </a>
                       </p>
                     </div>

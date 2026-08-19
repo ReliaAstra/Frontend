@@ -1,17 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Eye, Zap, ExternalLink } from 'lucide-react';
+import { Shield, Eye, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-
-const team = [
-  { name: 'Emmanuel Osei', role: 'Founder & CEO', initials: 'EO', color: 'bg-[#0891B2]' },
-  { name: 'Sarah Park', role: 'Head of Product', initials: 'SP', color: 'bg-violet-600' },
-  { name: 'Alex Rivera', role: 'Sr. Reliability Engineer', initials: 'AR', color: 'bg-amber-600' },
-  { name: 'Jordan Lee', role: 'Head of Growth', initials: 'JL', color: 'bg-emerald-600' },
-];
 
 const values = [
   {
@@ -47,9 +38,9 @@ export function AboutContent() {
                   often inaccurate, and inherently conflicted. Incident post-mortems take hours. SLA disputes drag on for weeks.
                 </p>
                 <p>
-                  Our founder, Emmanuel Osei, experienced this firsthand during his 4 years as an SRE at Stripe. After one particularly
-                  painful multi-vendor outage that required 40+ hours of manual correlation work, he started building internal tooling
-                  to automate the process. That tooling became the foundation of Reliastra.
+                  Our founder, Emmanuel Osei, started Reliastra after too many incidents that began in a vendor
+                  API and ended in a status-page argument no one could settle. Reliastra is the independent
+                  monitoring and evidence layer built to close that gap.
                 </p>
                 <p>
                   Today, Reliastra provides independent monitoring, automated incident correlation, and SLA evidence generation for
@@ -152,26 +143,16 @@ export function AboutContent() {
         </div>
       </section>
 
-      {/* Press Kit */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-3xl font-bold text-[#09090B] mb-4">Press Kit</h2>
-            <p className="text-[#52525B] mb-6 max-w-md mx-auto">
-              Logo assets, brand guidelines, and company boilerplate for media and partners.
-            </p>
-            <Button variant="outline" className="rounded-lg gap-2" asChild>
-              <a href="#" onClick={(e) => { e.preventDefault(); toast.info('Press kit coming soon.'); }}>
-                <ExternalLink className="h-4 w-4" />
-                Download Press Kit
-              </a>
-            </Button>
-          </motion.div>
+          <h2 className="text-3xl font-bold text-[#09090B] mb-4">Press</h2>
+          <p className="text-[#52525B] mb-6 max-w-md mx-auto">
+            For media or partnership questions, email{' '}
+            <a href="mailto:support@reliastra.com" className="text-[#0891B2] hover:underline">
+              support@reliastra.com
+            </a>
+            .
+          </p>
         </div>
       </section>
     </>

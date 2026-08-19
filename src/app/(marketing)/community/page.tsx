@@ -3,7 +3,7 @@ import { CommunityContent } from './community-content';
 
 export const metadata: Metadata = {
   title: 'Community | Reliastra',
-  description: 'Join 800+ engineers tracking vendor reliability. Connect on Discord, GitHub, and more.',
+  description: 'Documentation, GitHub, and vendor reliability resources from Reliastra.',
 };
 
 export default function CommunityPage() {

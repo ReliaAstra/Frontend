@@ -29,7 +29,7 @@ const entries = [
     version: 'v0.1.0-beta',
     date: 'Jun 2025',
     title: 'Private beta launch',
-    description: 'First 10 founding customers onboarded. Core monitoring infrastructure deployed with manual alerting.',
+    description: 'Private beta. Core monitoring infrastructure deployed with manual alerting.',
     type: 'major' as const,
   },
   {

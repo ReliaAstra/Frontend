@@ -21,9 +21,9 @@ const capabilities = [
 ];
 
 const resources = [
-  { name: 'Documentation', description: 'Set up Reliastra and configure your first monitored dependency.', icon: BookOpen, href: '#' },
-  { name: 'API Reference', description: 'Full REST API docs for custom integrations.', icon: FileText, href: '#' },
-  { name: 'Guides', description: 'Step-by-step tutorials for advanced use cases.', icon: ExternalLink, href: '/blog' },
+  { name: 'Changelog', description: 'What shipped, and when.', icon: BookOpen, href: '/changelog' },
+  { name: 'Blog', description: 'Notes on vendor reliability and SLA evidence.', icon: FileText, href: '/blog' },
+  { name: 'Public tracking', description: 'Live vendor latency and uptime.', icon: ExternalLink, href: '/track' },
 ];
 
 export function CommunityContent() {
@@ -52,7 +52,7 @@ export function CommunityContent() {
         </div>
       </section>
 
-      {/* Discord & GitHub */}
+      {/* GitHub */}
       <section className="pb-24">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,16 +64,16 @@ export function CommunityContent() {
             >
               <Card className="rounded-xl p-6 h-full">
                 <CardContent className="p-0">
-                  <MessageCircle className="h-10 w-10 text-[#5865F2] mb-4" />
-                  <h2 className="text-xl font-bold text-[#09090B]">Discord Community</h2>
+                  <MessageCircle className="h-10 w-10 text-[#0891B2] mb-4" />
+                  <h2 className="text-xl font-bold text-[#09090B]">Talk to us</h2>
                   <p className="mt-2 text-[#52525B]">
-                    Join 800+ engineers in real-time discussions. Get help with setup,
-                    share vendor reliability war stories, and connect with the Reliastra team.
+                    Questions about setup or vendor reliability? Use the contact form.
+                    We do not currently run a public Discord.
                   </p>
-                  <Button className="mt-6 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg" asChild>
-                    <a href="https://discord.gg/reliastre" target="_blank" rel="noopener noreferrer">
+                  <Button className="mt-6 bg-[#0891B2] hover:bg-[#0E7490] text-white rounded-lg" asChild>
+                    <a href="/contact">
                       <MessageCircle className="h-4 w-4" />
-                      Join Discord
+                      Contact
                     </a>
                   </Button>
                 </CardContent>
@@ -91,8 +91,8 @@ export function CommunityContent() {
                   <Github className="h-10 w-10 text-[#09090B] mb-4" />
                   <h2 className="text-xl font-bold text-[#09090B]">GitHub Discussions</h2>
                   <p className="mt-2 text-[#52525B]">
-                    Report bugs, request features, and contribute to open-source
-                    tooling. Our roadmap is publicly visible and community-driven.
+                    Source and issues live on GitHub. Feature requests and bug reports
+                    are welcome there.
                   </p>
                   <Button variant="outline" className="mt-6 rounded-lg" asChild>
                     <a href="https://github.com/ReliaAstra" target="_blank" rel="noopener noreferrer">
@@ -167,8 +167,10 @@ export function CommunityContent() {
                   <Card className="rounded-xl p-6 h-full hover:shadow-md transition-shadow">
                     <CardContent className="p-0">
                       <Icon className="h-8 w-8 text-[#0891B2] mb-3" />
+                      <a href={r.href} className="block">
                       <h3 className="text-base font-semibold text-[#09090B]">{r.name}</h3>
                       <p className="mt-1 text-sm text-[#52525B]">{r.description}</p>
+                      </a>
                     </CardContent>
                   </Card>
                 </motion.div>

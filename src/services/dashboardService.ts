@@ -34,6 +34,7 @@ export interface DependencyHealth {
   current_status: string;
   uptime_percentage_24h: number;
   avg_latency_ms_24h: number;
+  last_check_at?: string | null;
 }
 
 export type CheckResultResponse = CheckResult;

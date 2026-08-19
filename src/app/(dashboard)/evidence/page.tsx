@@ -1,15 +1,16 @@
 "use client";
+
+import * as React from "react";
 import Link from "next/link";
-import { useAuth } from "@/lib/auth-context";
-import { evidenceService } from "@/services/evidenceService";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDistanceToNow } from "date-fns";
-import { ShieldCheck, Download, Eye } from "lucide-react";
-import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
-import { EmptyState } from "@/components/dashboard/EmptyState";
-import { LockedFeature } from "@/components/dashboard/LockedFeature";
-import { useEvidence, useBillingPlan } from "@/hooks/useApi";
+import { FileX, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useEvidence, useBillingPlan } from "@/hooks/useApi";
+import { evidenceService } from "@/services/evidenceService";
+import { canAccessFeature } from "@/lib/tierLimits";
+import type { Plan } from "@/services/billingService";
+import { Card, EmptyState, PageHeader, Skeleton } from "@/components/rs/ui";
+import { reportRef, incidentRef } from "@/components/shell/nav";
+import { cn } from "@/lib/utils";
 
 function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null || Number.isNaN(bytes)) return "—";
@@ -19,21 +20,11 @@ function formatBytes(bytes: number | null | undefined): string {
 }
 
 export default function EvidencePage() {
-  const { isLoading: authLoading } = useAuth();
-
-  const { data: evidence = [], isLoading: loading, isError: error, refetch } = useEvidence();
+  const { data: evidence = [], isLoading, isError, refetch } = useEvidence();
   const { data: billingPlan } = useBillingPlan();
 
-  const currentPlan = billingPlan?.plan || "free";
-
-  if (authLoading) {
-    return (
-      <div className="space-y-5">
-        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
-        <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
-      </div>
-    );
-  }
+  const plan = (billingPlan?.plan || "free") as Plan;
+  const allowed = canAccessFeature(plan, "evidence").allowed;
 
   const handleDownload = async (reportId: string) => {
     try {
@@ -45,147 +36,157 @@ export default function EvidencePage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-[15px] font-semibold text-[#FAFAFA] tracking-tight">
-          Evidence
-        </h1>
-        <p className="text-[12px] text-[#A1A1AA] mt-1">
-          Tamper-proof SLA evidence reports for vendor incidents
-        </p>
-      </div>
+    <div>
+      <PageHeader title="Evidence" subtitle="Tamper-proof SLA evidence reports for vendor incidents." />
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3 flex items-center gap-3">
-          <p className="text-sm text-[#DC2626] flex-1">Unable to load evidence records.</p>
-          <button
-            onClick={() => refetch()}
-            className="text-xs font-medium text-[#0891B2] hover:underline"
-          >
-            Retry
-          </button>
-        </div>
+      {isError && (
+        <Card className="p-4">
+          <p className="text-sm text-[#EF4444]">
+            Unable to load evidence records.{" "}
+            <button onClick={() => refetch()} className="text-[#3B82F6] hover:underline">
+              Retry
+            </button>
+          </p>
+        </Card>
       )}
 
-      <LockedFeature
-        currentPlan={currentPlan as "free" | "starter" | "standard" | "professional" | "agency"}
-        feature="evidence"
-        onUpgrade={() => {}}
-      >
-        {loading ? (
-          <ConsoleCard>
-            <ConsoleCardHeader>
-              <span className="text-[13px] font-semibold text-[#FAFAFA]">
-                Recent Evidence
-              </span>
-            </ConsoleCardHeader>
-            <div className="p-5 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-[52px] bg-[#1C1C22] rounded-lg" />
-              ))}
-            </div>
-          </ConsoleCard>
-        ) : evidence.length > 0 ? (
-          <ConsoleCard>
-            <ConsoleCardHeader className="grid grid-cols-[110px_1fr_110px_1fr_130px_90px] gap-4 items-center">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Report
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Incident
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Size
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Checksum
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Generated
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] text-right">
-                Actions
-              </span>
-            </ConsoleCardHeader>
-            <div className="divide-y divide-[rgba(255,255,255,0.05)]">
-              {evidence.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="px-5 py-3.5 grid grid-cols-[110px_1fr_110px_1fr_130px_90px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
-                >
-                  {/* Report ID */}
-                  <Link
-                    href={`/evidence/${ev.id}`}
-                    className="text-[13px] font-mono font-medium text-[#FAFAFA] hover:text-[#0891B2] transition-colors truncate"
+      {!allowed && !isLoading && (
+        <Card>
+          <EmptyState
+            icon={FileX}
+            title="Evidence reports require a Standard plan"
+            body="Upgrade your plan to generate and share SLA evidence reports."
+            actionLabel="View plans"
+            actionHref="/settings/billing"
+          />
+        </Card>
+      )}
+
+      {allowed && isLoading && (
+        <Card className="p-4 space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </Card>
+      )}
+
+      {allowed && !isLoading && !isError && evidence.length === 0 && (
+        <Card>
+          <EmptyState
+            icon={FileX}
+            title="No reports generated"
+            body="Generate a report from an incident page."
+            actionLabel="View incidents"
+            actionHref="/incidents"
+          />
+        </Card>
+      )}
+
+      {allowed && !isLoading && !isError && evidence.length > 0 && (
+        <>
+          {/* Desktop table */}
+          <div className="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden hidden md:block">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-[#1F2937]" style={{ height: 40 }}>
+                  <th className="text-left px-4 text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 160, letterSpacing: "0.05em" }}>
+                    Report
+                  </th>
+                  <th className="text-left text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 160, letterSpacing: "0.05em" }}>
+                    Incident
+                  </th>
+                  <th className="text-right text-[11px] font-medium uppercase text-[#6B7280]" style={{ width: 120, letterSpacing: "0.05em" }}>
+                    Size
+                  </th>
+                  <th className="text-left px-4 text-[11px] font-medium uppercase text-[#6B7280]" style={{ letterSpacing: "0.05em" }}>
+                    Generated
+                  </th>
+                  <th className="text-right pr-4" style={{ width: 110 }} />
+                </tr>
+              </thead>
+              <tbody>
+                {evidence.map((ev, i) => (
+                  <tr
+                    key={ev.id}
+                    className={cn("hover:bg-[#1F2937] transition-colors", i < evidence.length - 1 && "border-b border-[#1F2937]")}
+                    style={{ height: 52 }}
                   >
-                    {ev.id.slice(0, 8)}
+                    <td className="px-4">
+                      <Link href={`/evidence/${ev.id}`} className="text-sm text-[#3B82F6] hover:underline" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                        {reportRef(ev.id)}
+                      </Link>
+                    </td>
+                    <td>
+                      {ev.incident_id ? (
+                        <Link href={`/incidents/${ev.incident_id}`} className="text-sm text-[#9CA3AF] hover:text-[#F9FAFB]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                          {incidentRef(ev.incident_id)}
+                        </Link>
+                      ) : (
+                        <span className="text-sm text-[#6B7280]">—</span>
+                      )}
+                    </td>
+                    <td className="text-right text-xs text-[#9CA3AF]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                      {formatBytes(ev.file_size_bytes)}
+                    </td>
+                    <td className="px-4 text-xs text-[#6B7280]">
+                      {new Date(ev.generated_at || ev.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="text-right pr-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/evidence/${ev.id}`} className="p-1.5 rounded-md text-[#374151] hover:text-[#9CA3AF] transition-colors" title="View">
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDownload(ev.id)}
+                          className="p-1.5 rounded-md text-[#374151] hover:text-[#9CA3AF] transition-colors"
+                          title="Download PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {evidence.map((ev) => (
+              <div key={ev.id} className="bg-[#111827] border border-[#1F2937] rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <Link href={`/evidence/${ev.id}`} className="text-sm text-[#3B82F6] hover:underline" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                    {reportRef(ev.id)}
                   </Link>
-
-                  {/* Incident */}
-                  {ev.incident_id ? (
-                    <Link
-                      href={`/incidents/${ev.incident_id}`}
-                      className="text-[13px] font-mono text-[#A1A1AA] hover:text-[#0891B2] transition-colors truncate"
-                    >
-                      INC-{ev.incident_id.slice(0, 8)}
-                    </Link>
-                  ) : (
-                    <span className="text-[13px] text-[#52525B]">--</span>
-                  )}
-
-                  {/* Size */}
-                  <span className="text-[12px] font-mono text-[#A1A1AA]">
-                    {formatBytes(ev.file_size_bytes)}
-                  </span>
-
-                  {/* Checksum */}
-                  <span
-                    className="text-[12px] font-mono text-[#52525B] truncate"
-                    title={ev.checksum}
-                  >
-                    {ev.checksum ? `${ev.checksum.slice(0, 12)}…` : "—"}
-                  </span>
-
-                  {/* Generated */}
-                  <span className="text-[12px] text-[#A1A1AA]">
-                    {formatDistanceToNow(new Date(ev.generated_at || ev.created_at), {
-                      addSuffix: true,
+                  <span className="text-xs text-[#6B7280]">{formatBytes(ev.file_size_bytes)}</span>
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-xs text-[#6B7280]">
+                    {new Date(ev.generated_at || ev.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </span>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-1">
-                    <Link
-                      href={`/evidence/${ev.id}`}
-                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-                      title="View"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1">
+                    <Link href={`/evidence/${ev.id}`} className="p-1.5 rounded-md text-[#374151] hover:text-[#9CA3AF]">
+                      <Eye className="h-4 w-4" />
                     </Link>
-                    <button
-                      onClick={() => handleDownload(ev.id)}
-                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-                      title="Download report"
-                    >
-                      <Download className="w-3.5 h-3.5" />
+                    <button onClick={() => handleDownload(ev.id)} className="p-1.5 rounded-md text-[#374151] hover:text-[#9CA3AF]">
+                      <Download className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </ConsoleCard>
-        ) : (
-          <EmptyState
-            icon={ShieldCheck}
-            title="No evidence generated yet"
-            description="Evidence reports are automatically generated when incidents are detected and correlated with your monitored dependencies."
-            actionLabel="View Incidents"
-            actionHref="/incidents"
-          />
-        )}
-      </LockedFeature>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

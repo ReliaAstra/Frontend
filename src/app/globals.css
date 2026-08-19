@@ -309,3 +309,116 @@
   stroke-dasharray: 1000;
   animation: chartDraw 1s ease-out forwards;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Reliastra Dashboard Design System — dark, flat, surgical
+   Spec: #0B0F19 base · #111827 cards · #1F2937 borders · #3B82F6 accent
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --rs-bg: #0B0F19;
+  --rs-surface: #111827;
+  --rs-surface-hover: #1F2937;
+  --rs-border: #1F2937;
+  --rs-border-strong: #374151;
+  --rs-text: #F9FAFB;
+  --rs-text-secondary: #9CA3AF;
+  --rs-text-muted: #6B7280;
+  --rs-text-faint: #374151;
+  --rs-accent: #3B82F6;
+  --rs-success: #22C55E;
+  --rs-warning: #F59E0B;
+  --rs-danger: #EF4444;
+  --font-geist-sans: "Geist Variable", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Geist typography helpers */
+.rs-font-sans { font-family: var(--font-geist-sans); }
+.rs-font-mono { font-family: var(--font-geist-mono), ui-monospace, monospace; }
+
+/* ── Status pulse (spec: opacity 1 → 0.6 → 1) ─────────────────────────── */
+@keyframes rsPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.rs-pulse { animation: rsPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.rs-pulse-fast { animation: rsPulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* Open-incidents value subtle pulse */
+@keyframes rsValuePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.rs-value-pulse { animation: rsValuePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* ── Skeleton shimmer ──────────────────────────────────────────────────── */
+@keyframes rsShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.rs-skeleton {
+  background: linear-gradient(90deg, #111827 25%, #1F2937 50%, #111827 75%);
+  background-size: 200% 100%;
+  animation: rsShimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* ── Fade in on mount ──────────────────────────────────────────────────── */
+@keyframes rsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.rs-fade-in { animation: rsFadeIn 200ms ease-out; }
+
+/* ── Chart line draw ───────────────────────────────────────────────────── */
+@keyframes rsDraw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+.rs-chart-draw {
+  stroke-dasharray: 1000;
+  animation: rsDraw 800ms ease-out forwards;
+}
+
+/* ── Toast slide in ────────────────────────────────────────────────────── */
+@keyframes rsToastIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────── */
+.rs-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.rs-scroll::-webkit-scrollbar-track { background: transparent; }
+.rs-scroll::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 3px; }
+.rs-scroll::-webkit-scrollbar-thumb:hover { background: #374151; }
+.rs-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.rs-no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Sonner toast theme (dark, flat, typed borders) ────────────────────── */
+[data-sonner-toaster][data-sonner-theme="dark"] {
+  --normal-bg: #111827;
+  --normal-bg-hover: #1F2937;
+  --normal-border: #1F2937;
+  --normal-border-hover: #374151;
+  --normal-text: #F9FAFB;
+  --success-bg: #111827;
+  --success-border: rgba(34, 197, 94, 0.3);
+  --success-text: #22C55E;
+  --info-bg: #111827;
+  --info-border: rgba(59, 130, 246, 0.3);
+  --info-text: #3B82F6;
+  --warning-bg: #111827;
+  --warning-border: rgba(245, 158, 11, 0.3);
+  --warning-text: #F59E0B;
+  --error-bg: #111827;
+  --error-border: rgba(239, 68, 68, 0.3);
+  --error-text: #EF4444;
+}
+[data-sonner-toaster][data-sonner-theme="dark"] [data-sonner-toast] {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+}
+[data-sonner-toaster][data-sonner-theme="dark"] [data-close-button] {
+  color: #9CA3AF;
+}

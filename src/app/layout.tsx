@@ -13,6 +13,9 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "@fontsource/ibm-plex-mono/700.css";
+// Geist — the dashboard's primary typeface (Geist Sans + Geist Mono).
+import "@fontsource-variable/geist/index.css";
+import "@fontsource-variable/geist-mono/index.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://reliastra.com'),
@@ -29,7 +32,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
-        <Toaster position="top-right" richColors />
+        <Toaster
+          position="top-right"
+          theme="dark"
+          richColors
+          offset={{ top: 72, right: 24 }}
+          duration={4000}
+          closeButton
+        />
       </body>
     </html>
   );

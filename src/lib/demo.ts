@@ -117,6 +117,7 @@ export const MOCK_DEPENDENCY_HEALTH = [
     current_status: "up",
     uptime_percentage_24h: 99.98,
     avg_latency_ms_24h: 142.3,
+    last_check_at: minutesAgo(2),
   },
   {
     dependency_id: "demo-dep-0002",
@@ -125,6 +126,7 @@ export const MOCK_DEPENDENCY_HEALTH = [
     current_status: "degraded",
     uptime_percentage_24h: 98.12,
     avg_latency_ms_24h: 310.7,
+    last_check_at: minutesAgo(4),
   },
   {
     dependency_id: "demo-dep-0003",
@@ -133,6 +135,7 @@ export const MOCK_DEPENDENCY_HEALTH = [
     current_status: "up",
     uptime_percentage_24h: 99.92,
     avg_latency_ms_24h: 98.4,
+    last_check_at: minutesAgo(1),
   },
   {
     dependency_id: "demo-dep-0004",
@@ -141,6 +144,7 @@ export const MOCK_DEPENDENCY_HEALTH = [
     current_status: "down",
     uptime_percentage_24h: 96.44,
     avg_latency_ms_24h: 540.2,
+    last_check_at: minutesAgo(7),
   },
   {
     dependency_id: "demo-dep-0005",
@@ -149,6 +153,7 @@ export const MOCK_DEPENDENCY_HEALTH = [
     current_status: "up",
     uptime_percentage_24h: 99.99,
     avg_latency_ms_24h: 76.1,
+    last_check_at: hoursAgo(1),
   },
 ];
 
@@ -680,7 +685,7 @@ export const MOCK_VENDOR_DETAILS: Record<string, any> = {
     updated_at: iso(new Date()),
     recent_status: "operational",
     endpoints: [
-      { id: "ep-1", endpoint_url: "https://api.stripe.com/v1", regions: ["us-east", "eu-west"], health_status: "up", is_active: true, last_check_at: iso(new Date()) },
+      { id: "ep-1", endpoint_url: "https://api.stripe.com/v1", regions: ["us-east", "eu-west"], health_status: "up", is_active: true, last_check_at: minutesAgo(1), latency_ms: 118.4 },
     ],
   },
   auth0: {
@@ -694,7 +699,7 @@ export const MOCK_VENDOR_DETAILS: Record<string, any> = {
     updated_at: iso(new Date()),
     recent_status: "degraded",
     endpoints: [
-      { id: "ep-2", endpoint_url: "https://auth.example.com", regions: ["us-east"], health_status: "degraded", is_active: true, last_check_at: iso(new Date()) },
+      { id: "ep-2", endpoint_url: "https://auth.example.com", regions: ["us-east", "eu-west"], health_status: "degraded", is_active: true, last_check_at: minutesAgo(3), latency_ms: 342.1 },
     ],
   },
   sendgrid: {
@@ -708,7 +713,49 @@ export const MOCK_VENDOR_DETAILS: Record<string, any> = {
     updated_at: iso(new Date()),
     recent_status: "operational",
     endpoints: [
-      { id: "ep-3", endpoint_url: "https://api.sendgrid.com/v3", regions: ["us-east"], health_status: "up", is_active: true, last_check_at: iso(new Date()) },
+      { id: "ep-3", endpoint_url: "https://api.sendgrid.com/v3", regions: ["us-east", "eu-west"], health_status: "up", is_active: true, last_check_at: minutesAgo(2), latency_ms: 89.6 },
+    ],
+  },
+  openai: {
+    id: "demo-vendor-0004",
+    vendor_name: "openai",
+    display_name: "OpenAI",
+    category: "ai",
+    is_public: true,
+    last_check_at: iso(new Date()),
+    created_at: daysAgo(90),
+    updated_at: iso(new Date()),
+    recent_status: "operational",
+    endpoints: [
+      { id: "ep-4", endpoint_url: "https://api.openai.com/v1", regions: ["us-east"], health_status: "up", is_active: true, last_check_at: minutesAgo(5), latency_ms: 812.3 },
+    ],
+  },
+  cloudflare: {
+    id: "demo-vendor-0005",
+    vendor_name: "cloudflare",
+    display_name: "Cloudflare",
+    category: "cdn",
+    is_public: true,
+    last_check_at: iso(new Date()),
+    created_at: daysAgo(90),
+    updated_at: iso(new Date()),
+    recent_status: "down",
+    endpoints: [
+      { id: "ep-5", endpoint_url: "https://cdn.cloudflare.com", regions: ["eu-west"], health_status: "down", is_active: true, last_check_at: minutesAgo(6), latency_ms: 0 },
+    ],
+  },
+  twilio: {
+    id: "demo-vendor-0006",
+    vendor_name: "twilio",
+    display_name: "Twilio",
+    category: "communications",
+    is_public: true,
+    last_check_at: iso(new Date()),
+    created_at: daysAgo(90),
+    updated_at: iso(new Date()),
+    recent_status: "operational",
+    endpoints: [
+      { id: "ep-6", endpoint_url: "https://api.twilio.com", regions: ["us-west"], health_status: "up", is_active: true, last_check_at: minutesAgo(4), latency_ms: 224.7 },
     ],
   },
 };
@@ -751,6 +798,7 @@ export function getDemoMock(config: { url?: string; method?: string; params?: an
   // Strip baseURL if present and querystring
   const url = rawUrl.split("?")[0].replace(/^https?:\/\/[^/]+\/v1/, "");
   const method = (config.method || "get").toLowerCase();
+  const params: any = config.params || {};
   // data may be JSON string
   let body: any = config.data;
   if (typeof body === "string") {
@@ -879,9 +927,30 @@ export function getDemoMock(config: { url?: string; method?: string; params?: an
       };
     }
     if (url.endsWith("/results") || url.includes("/results")) {
-      // return paginated checks for that dep
-      const filtered = MOCK_RECENT_CHECKS.filter((c) => c.dependency_id === depId);
-      const items = filtered.length ? filtered : MOCK_RECENT_CHECKS.slice(0, 3).map((c) => ({ ...c, dependency_id: depId }));
+      // Synthesize a 24h series of check results so latency charts render realistically.
+      const base =
+        depId === "demo-dep-0004" ? 540 : depId === "demo-dep-0002" ? 310 : 140;
+      const seed = [...depId].reduce((a, c) => a + c.charCodeAt(0), 0);
+      const regions = ["us-east", "eu-west", "us-west", "apac-south"];
+      const items: any[] = [];
+      for (let i = 48; i >= 0; i--) {
+        const ts = iso(new Date(now.getTime() - i * 30 * 60000));
+        const region = regions[(seed + i) % regions.length];
+        const wave = Math.sin((i + seed) * 0.5) * base * 0.25;
+        const spike = i === 12 ? base * 18 : 0;
+        items.push({
+          id: `res-${depId}-${i}`,
+          dependency_id: depId,
+          org_id: MOCK_ORG.id,
+          region,
+          executed_at: ts,
+          latency_ms: Math.max(15, Math.round(base + wave + spike)),
+          status_code: i === 12 ? 502 : 200,
+          is_up: i !== 12,
+          error_message: i === 12 ? "Bad Gateway" : null,
+          quorum_confirmed: true,
+        });
+      }
       return { items, next_cursor: null, has_more: false };
     }
     const dep = mutableDeps.find((d) => d.id === depId);
@@ -907,7 +976,12 @@ export function getDemoMock(config: { url?: string; method?: string; params?: an
     // list: /incidents?limit
     // detail: /incidents/{id}
     if (url === "/incidents" || url === "/incidents/") {
-      return { items: mutableIncidents, next_cursor: null, has_more: false, total: mutableIncidents.length };
+      // Honor status / severity / limit filters so "open" queries behave like the live API.
+      let list = [...mutableIncidents];
+      if (params?.status) list = list.filter((i) => i.status === params.status);
+      if (params?.severity) list = list.filter((i) => i.severity === params.severity);
+      if (params?.limit) list = list.slice(0, Number(params.limit));
+      return { items: list, next_cursor: null, has_more: false, total: list.length };
     }
     // detail
     const incId = idFrom("/incidents/");
@@ -925,12 +999,33 @@ export function getDemoMock(config: { url?: string; method?: string; params?: an
     const incId = idFrom("/incidents/");
     const cleanId = incId?.split("/")[0] || "";
     const inc: any = mutableIncidents.find((i) => i.id === cleanId) || MOCK_INCIDENT_DETAILS[cleanId];
-    if (inc && body) Object.assign(inc, body, { updated_at: iso(new Date()) });
+    if (inc && body) {
+      Object.assign(inc, body, { updated_at: iso(new Date()) });
+      // Resolving an incident generates immutable evidence (mirrors live behaviour).
+      if (body.status === "resolved" && !inc.evidence_report_id) {
+        const newReport: any = {
+          id: `demo-evid-${Date.now()}`,
+          org_id: MOCK_ORG.id,
+          incident_id: cleanId,
+          file_size_bytes: 284732,
+          checksum: `sha256:demo-${Date.now()}`,
+          generated_at: iso(new Date()),
+          expires_at: null,
+          created_at: iso(new Date()),
+          updated_at: iso(new Date()),
+        };
+        mutableEvidence.unshift(newReport);
+        inc.evidence_report_id = newReport.id;
+        if (!inc.resolved_at) inc.resolved_at = iso(new Date());
+      }
+    }
+    // keep the incident detail cache in sync too
+    if (MOCK_INCIDENT_DETAILS[cleanId]) Object.assign(MOCK_INCIDENT_DETAILS[cleanId], inc);
     return inc || mutableIncidents[0];
   }
   if (url.includes("/correlate") && method === "post") {
     const incId = url.split("/")[2];
-    return {
+    const correlation = {
       id: `demo-corr-${Date.now()}`,
       incident_id: incId,
       correlated_dependency_id: body?.correlated_dependency_id || "demo-dep-0001",
@@ -939,17 +1034,21 @@ export function getDemoMock(config: { url?: string; method?: string; params?: an
       correlation_method: body?.correlation_method || "manual",
       created_at: iso(new Date()),
     };
+    // Persist so a refetch of the incident detail reflects the new correlation.
+    if (MOCK_INCIDENT_DETAILS[incId]) {
+      MOCK_INCIDENT_DETAILS[incId].correlations = [
+        ...(MOCK_INCIDENT_DETAILS[incId].correlations || []),
+        correlation,
+      ];
+    }
+    return correlation;
   }
   if (url.includes("/incidents/") && url.includes("/evidence") && method === "get") {
     const incId = url.split("/")[2];
     const ev = mutableEvidence.find((e) => e.incident_id === incId);
     if (ev) return ev;
-    // 404-like — but for demo return first evidence to avoid error; hooks have retry:false so we should return error?
-    // Instead return empty and let caller handle. We throw to simulate 404 by returning undefined? We'll return undefined to let network attempt?
-    // Better return a mocked 404 response via throwing? For demo we just return null and let hook not error.
-    // We'll return not found by throwing special?
-    // For simplicity return first evidence
-    return mutableEvidence[0];
+    // No evidence for this incident yet → null (caller treats as "no report").
+    return null;
   }
 
   // ---- Evidence ----

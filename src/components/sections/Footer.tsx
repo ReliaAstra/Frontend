@@ -11,16 +11,25 @@ const FOOTER_LINKS = [
       { label: 'Features', href: '/#solution' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Vendor Intelligence', href: '/track' },
+      { label: 'Compare', href: '/compare' },
       { label: 'Partners', href: '/partner' },
       { label: 'Status', href: '/status' },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'SLA Credit Calculator', href: '/tools/sla-credit-calculator' },
+      { label: 'Concepts', href: '/docs/concepts' },
+      { label: 'Blog', href: '/blog' },
       { label: 'Changelog', href: '/changelog' },
+      { label: 'RSS Feed', href: '/changelog/feed.xml' },
     ],
   },
   {
     title: 'Company',
     links: [
       { label: 'About', href: '/about' },
-      { label: 'Blog', href: '/blog' },
       { label: 'Community', href: '/community' },
       { label: 'Investors', href: '/investors' },
       { label: 'Contact', href: '/contact' },
@@ -44,7 +53,7 @@ export function Footer() {
   return (
     <footer className="bg-[#0A0A0F] border-t border-white/10 pt-20 pb-10">
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-5 md:gap-12">
           {/* Brand Column */}
           <motion.div
             className="col-span-2 md:col-span-1"

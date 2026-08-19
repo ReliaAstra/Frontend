@@ -6,11 +6,10 @@ import { Beaker, LogOut, ExternalLink } from "lucide-react";
 import { isDemoMode, disableDemoMode } from "@/lib/demo";
 
 export function DemoBanner() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(() => (typeof window !== 'undefined' ? isDemoMode() : false));
   const router = useRouter();
 
   useEffect(() => {
-    setShow(isDemoMode());
     const onStorage = () => setShow(isDemoMode());
     window.addEventListener("storage", onStorage);
     // also poll for same-tab changes via custom event

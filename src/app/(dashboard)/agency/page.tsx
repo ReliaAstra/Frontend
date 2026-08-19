@@ -37,9 +37,9 @@ import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
 
 
-function healthLabel(uptime: number): string {
-  if (uptime >= 99.95) return "Excellent";
-  if (uptime >= 99.0) return "Warning";
+function portfolioHealthLabel(score: number): string {
+  if (score >= 90) return "Excellent";
+  if (score >= 70) return "Warning";
   return "Critical";
 }
 
@@ -137,12 +137,9 @@ export default function AgencyDashboardPage() {
               <Lock className="w-8 h-8 text-[#52525B] mx-auto mb-4" />
               <h2 className="text-lg font-semibold text-[#FAFAFA]">Agency Dashboard</h2>
               <p className="text-sm text-[#A1A1AA] mt-2 max-w-md mx-auto">
-                Monitor all your clients and dependencies from a single view. The Agency
-                Dashboard is available on the{" "}
-                <span className="font-medium text-[#FAFAFA]">
-                  {getPlanConfig(canAccessClients.requiredPlan).name}
-                </span>{" "}
-                plan and above.
+                Monitor all your clients and dependencies from a single view. Client
+                management and the Agency Dashboard are available on the{" "}
+                <span className="font-medium text-[#FAFAFA]">Agency</span> plan.
               </p>
               <Link
                 href="/settings?tab=billing"
@@ -192,7 +189,7 @@ export default function AgencyDashboardPage() {
       value: `${overallHealthPct}%`,
       icon: ShieldCheck,
       color: overallHealthPct >= 90 ? "#16A34A" : overallHealthPct >= 70 ? "#D97706" : "#DC2626",
-      sub: healthLabel(overallHealthPct),
+      sub: portfolioHealthLabel(overallHealthPct),
     },
   ];
 
@@ -342,7 +339,9 @@ export default function AgencyDashboardPage() {
                     title="No clients yet"
                     description="Add your first client to start monitoring their infrastructure from this centralized view."
                     actionLabel="Add Client"
-                    onAction={() => {}}
+                    onAction={() => {
+                      window.location.href = "/clients";
+                    }}
                   />
                 </ConsoleCardBody>
               ) : (

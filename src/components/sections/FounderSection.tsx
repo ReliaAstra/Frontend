@@ -1,6 +1,5 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Linkedin } from 'lucide-react';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
@@ -42,18 +41,10 @@ export function FounderSection() {
             Founder &amp; CEO
           </p>
           <p className="text-[#52525B] mt-4 text-sm leading-relaxed max-w-md mx-auto">
-            Previously infrastructure lead at a Series B SaaS. Spent 3 years
-            watching vendors take down production with no way to prove it.
-            Reliastra is the tool I wish I had.
+            Built Reliastra after too many production incidents that started
+            in a vendor API and ended in an unprovable status-page debate.
+            The product is the independent evidence layer I wanted at the time.
           </p>
-
-          <a
-            href="https://linkedin.com/in/emmanuel-osei"
-            className="inline-flex items-center justify-center gap-2 mt-6 text-[#52525B] hover:text-[#0891B2] transition-colors min-h-[44px]"
-            aria-label="Emmanuel Osei's LinkedIn profile"
-          >
-            <Linkedin className="w-5 h-5" aria-hidden="true" />
-          </a>
         </motion.div>
       </div>
     </section>

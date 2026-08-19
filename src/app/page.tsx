@@ -1,6 +1,5 @@
 import { Navbar } from '@/components/sections/Navbar';
 import { HeroSection } from '@/components/sections/HeroSection';
-import { SocialProofBar } from '@/components/sections/SocialProofBar';
 import { ProblemSection } from '@/components/sections/ProblemSection';
 import { SolutionSection } from '@/components/sections/SolutionSection';
 import { EvidenceSection } from '@/components/sections/EvidenceSection';
@@ -18,7 +17,6 @@ export default function Home() {
     <main className="min-h-screen">
       <Navbar />
       <HeroSection />
-      <SocialProofBar />
       <ProblemSection />
       <SolutionSection />
       <EvidenceSection />

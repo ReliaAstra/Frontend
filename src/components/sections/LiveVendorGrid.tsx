@@ -1,29 +1,14 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { VendorSparkline } from '@/components/VendorSparkline';
 import { cn } from '@/lib/utils';
-import { vendorService, type VendorResponse, type VendorDetailResponse } from '@/services/vendorService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
+import { usePublicVendorLive } from '@/hooks/usePublicVendorLive';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
-interface VendorLive {
-  id: string;
-  vendor_name: string;
-  display_name: string;
-  category: string;
-  color: string;
-  recent_status: string;
-  latency: number | null;
-  uptime: number | null;
-  last_check_at: string | null;
-  history: number[];
-}
-
-// Map vendor categories to accent colors
 const CATEGORY_COLORS: Record<string, string> = {
   payments: '#635BFF',
   identity: '#EB5424',
@@ -48,105 +33,21 @@ const statusConfig: Record<string, { dotColor: string; label: string }> = {
   unknown: { dotColor: 'bg-[#71717A]', label: 'Unknown' },
 };
 
-function deriveColor(vendor: VendorResponse): string {
-  return CATEGORY_COLORS[vendor.category?.toLowerCase()] || FALLBACK_COLOR;
-}
-
-function buildLiveVendor(vendor: VendorResponse, detail?: VendorDetailResponse): VendorLive {
-  const color = deriveColor(vendor);
-  const recentStatus = detail?.recent_status || 'unknown';
-
-  // Build a synthetic history from the vendor's category baseline
-  // Real metrics will be populated from the detail endpoint
-  const baseLatency = detail
-    ? 100 // placeholder until metrics endpoint is called
-    : 80;
-
-  return {
-    id: vendor.id,
-    vendor_name: vendor.vendor_name,
-    display_name: vendor.display_name,
-    category: vendor.category,
-    color,
-    recent_status: recentStatus,
-    latency: null,
-    uptime: null,
-    last_check_at: vendor.last_check_at,
-    history: Array.from({ length: 20 }, () =>
-      Math.round(baseLatency + (Math.random() - 0.5) * baseLatency * 0.2)
-    ),
-  };
-}
-
 export function LiveVendorGrid() {
-  const [vendors, setVendors] = useState<VendorLive[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-
-  const fetchVendors = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Fetch vendor list
-      const vendorList = await vendorService.listPublicVendors();
-
-      // Fetch details for each vendor in parallel to get recent_status
-      const detailPromises = vendorList.slice(0, 6).map(async (v) => {
-        try {
-          const detail = await vendorService.getVendorDetail(v.vendor_name);
-          // Also try to fetch metrics for latency data
-          try {
-            const metrics = await vendorService.getVendorMetrics(v.vendor_name);
-            const latestWindow = Object.values(metrics.metrics)[0];
-            return { vendor: v, detail, latency: latestWindow?.avg_latency_ms ?? null, uptime: latestWindow?.uptime_percentage ?? null };
-          } catch {
-            return { vendor: v, detail, latency: null, uptime: null };
-          }
-        } catch {
-          return { vendor: v, detail: undefined, latency: null, uptime: null };
-        }
-      });
-
-      const details = await Promise.allSettled(detailPromises);
-
-      const liveVendors = details.map((result) => {
-        if (result.status === 'fulfilled') {
-          const { vendor, detail, latency, uptime } = result.value;
-          const live = buildLiveVendor(vendor, detail);
-          if (latency !== null) {
-            live.latency = Math.round(latency);
-            // Build history from a single data point + small variations
-            live.history = Array.from({ length: 20 }, () =>
-              Math.round(latency + (Math.random() - 0.5) * latency * 0.15)
-            );
-          }
-          if (uptime !== null) {
-            live.uptime = uptime;
-          }
-          return live;
-        }
-        return buildLiveVendor(vendorList[0], undefined);
-      });
-
-      setVendors(liveVendors);
-      setLastUpdated(new Date().toISOString());
-    } catch {
-      setError('Unable to load vendor data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchVendors();
-  }, [fetchVendors]);
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const id = setInterval(fetchVendors, 30000);
-    return () => clearInterval(id);
-  }, [fetchVendors]);
+  const { data: snapshots = [], isLoading: loading, isError, refetch, dataUpdatedAt } = usePublicVendorLive(6);
+  const error = isError ? 'Unable to load vendor data' : null;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null;
+  const vendors = snapshots.map((v) => ({
+    id: v.vendor_name,
+    vendor_name: v.vendor_name,
+    display_name: v.display_name,
+    color: CATEGORY_COLORS[v.category?.toLowerCase()] || FALLBACK_COLOR,
+    recent_status: v.status,
+    latency: v.latency_ms,
+    uptime: v.uptime_24h,
+    last_check_at: v.last_check_at,
+    history: v.points.map((p) => p.latency_ms),
+  }));
 
   const formatLastCheck = (dateStr: string | null): string => {
     if (!dateStr) return 'Pending';
@@ -193,7 +94,7 @@ export function LiveVendorGrid() {
           <div className="text-center py-16">
             <p className="text-sm text-white/50">{error}</p>
             <button
-              onClick={fetchVendors}
+              onClick={() => refetch()}
               className="mt-4 text-xs font-medium text-[#0891B2] hover:text-[#22D3EE] transition-colors"
             >
               Retry
@@ -313,7 +214,7 @@ export function LiveVendorGrid() {
         >
           {lastUpdated && (
             <span className="font-mono text-xs text-white/30">
-              Last updated: {formatLastCheck(lastUpdated)} &middot; Refreshes every 30s
+              Last updated: {formatLastCheck(lastUpdated)} &middot; Refreshes every 15s
             </span>
           )}
           <a

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Providers } from "@/components/Providers";
 
 // Self-hosted fonts via Fontsource (no network access required at build time).
 import "@fontsource/inter/400.css";

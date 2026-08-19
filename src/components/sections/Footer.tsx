@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Github, Twitter, Linkedin, MessageCircle } from 'lucide-react';
+import { Github } from 'lucide-react';
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
@@ -11,8 +11,7 @@ const FOOTER_LINKS = [
       { label: 'Features', href: '/#solution' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Vendor Intelligence', href: '/track' },
-      { label: 'Public Tracking', href: '/track' },
-      { label: 'API Docs', href: '/blog' },
+      { label: 'Status', href: '/status' },
       { label: 'Changelog', href: '/changelog' },
     ],
   },
@@ -37,10 +36,7 @@ const FOOTER_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Github, href: 'https://github.com/reliastre', label: 'GitHub' },
-  { icon: Twitter, href: 'https://twitter.com/reliastre', label: 'Twitter' },
-  { icon: Linkedin, href: 'https://linkedin.com/company/reliastre', label: 'LinkedIn' },
-  { icon: MessageCircle, href: 'https://discord.gg/reliastre', label: 'Discord' },
+  { icon: Github, href: 'https://github.com/ReliaAstra', label: 'GitHub' },
 ];
 
 export function Footer() {
@@ -67,6 +63,8 @@ export function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white/30 hover:text-white hover:bg-white/5 transition-all duration-200"
                   aria-label={social.label}
                 >
@@ -105,15 +103,11 @@ export function Footer() {
         {/* Bottom Row */}
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/30">
-            © 2025 Reliastra, Inc. All rights reserved.
+            © {new Date().getFullYear()} Reliastra, Inc. All rights reserved.
           </p>
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]" />
-            </span>
-            <span className="text-xs text-[#16A34A]">All systems operational</span>
-          </div>
+          <a href="/status" className="text-xs text-white/40 hover:text-white transition-colors">
+            System status
+          </a>
         </div>
       </div>
     </footer>

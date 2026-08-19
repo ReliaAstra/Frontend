@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const NAV_LINKS = [
   { label: 'Features', href: '/#solution' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Docs', href: '/blog' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Vendor Intelligence', href: '/track' },
 ];
 
@@ -74,14 +74,15 @@ export function Navbar() {
 
         {/* Right Side */}
         <div className="hidden md:flex items-center gap-5">
-          {/* Status indicator */}
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]" />
-            </span>
-            <span className="text-xs font-medium text-[#16A34A]">All systems up</span>
-          </div>
+          <a
+            href="/status"
+            className={cn(
+              'text-sm font-medium transition-colors',
+              dark ? 'text-[#A1A1AA] hover:text-[#FAFAFA]' : 'text-[#52525B] hover:text-[#09090B]'
+            )}
+          >
+            Status
+          </a>
 
           <a
             href="/login"
@@ -144,13 +145,17 @@ export function Navbar() {
                 ))}
               </div>
               <div className={cn('mt-6 pt-6 space-y-3', dark ? 'border-t border-[rgba(255,255,255,0.08)]' : 'border-t border-[#E4E4E7]')}>
-                <div className="flex items-center gap-2 px-3">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]" />
-                  </span>
-                  <span className="text-xs font-medium text-[#16A34A]">All systems up</span>
-                </div>
+                <a
+                  href="/status"
+                  className={cn(
+                    'block px-3 py-3 text-sm font-medium rounded-lg transition-colors',
+                    dark
+                      ? 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)]'
+                      : 'text-[#52525B] hover:text-[#09090B] hover:bg-[#F8F9FA]'
+                  )}
+                >
+                  Status
+                </a>
                 <a
                   href="/login"
                   className={cn(

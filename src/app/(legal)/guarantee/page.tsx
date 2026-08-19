@@ -32,7 +32,7 @@ export default function GuaranteePage() {
               <ul className="list-disc list-inside space-y-2">
                 <li><strong className="text-[#09090B]">Independent Data Collection:</strong> All monitoring data is collected from our own infrastructure, independent of any vendor&apos;s systems. This ensures no conflict of interest.</li>
                 <li><strong className="text-[#09090B]">Timestamped Evidence:</strong> Every data point includes a precise UTC timestamp, making it suitable for SLA disputes and formal vendor communications.</li>
-                <li><strong className="text-[#09090B]">Consistent Monitoring Intervals:</strong> We maintain the check intervals specified in your plan (5 min for Starter, 30 sec for Pro, 15 sec for Business) with 99.9% reliability on our own infrastructure.</li>
+                <li><strong className="text-[#09090B]">Consistent Monitoring Intervals:</strong> We maintain the check intervals specified in your plan (standard interval on Free, Starter, and Standard; faster 15-second intervals on Professional and Agency) with 99.9% reliability on our own infrastructure.</li>
                 <li><strong className="text-[#09090B]">Multi-Region Probes:</strong> Monitoring is conducted from multiple geographic regions, providing a more complete picture than single-region checks.</li>
               </ul>
             </section>
@@ -55,8 +55,9 @@ export default function GuaranteePage() {
                 These reports are structured for use in vendor communications and dispute resolution.
               </p>
               <p className="mt-3">
-                Available on Pro and Business plans. Business plan subscribers also receive automated report
-                generation and custom branding options.
+                Full evidence generation is available on Standard, Professional, and Agency plans. Professional and
+                Agency subscribers also receive custom-branded reports; Agency subscribers receive client-facing
+                branded evidence.
               </p>
             </section>
 

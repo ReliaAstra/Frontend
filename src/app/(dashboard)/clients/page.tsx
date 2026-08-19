@@ -79,6 +79,29 @@ export default function ClientsPage() {
     );
   }
 
+  if (!clientAccess.allowed) {
+    return (
+      <div className="space-y-6">
+        <ConsoleCard>
+          <ConsoleCardBody className="py-16 text-center">
+            <Lock className="w-8 h-8 text-[#52525B] mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-[#FAFAFA]">Client management</h2>
+            <p className="text-sm text-[#A1A1AA] mt-2 max-w-md mx-auto">
+              Isolated client groups, dashboards, and reports are included on the{" "}
+              {getPlanConfig(clientAccess.requiredPlan).name} plan.
+            </p>
+            <Link
+              href="/settings?tab=billing"
+              className="mt-6 inline-flex items-center gap-2 bg-[#0891B2] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0E7490] transition-colors"
+            >
+              Upgrade to {getPlanConfig(clientAccess.requiredPlan).name}
+            </Link>
+          </ConsoleCardBody>
+        </ConsoleCard>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}

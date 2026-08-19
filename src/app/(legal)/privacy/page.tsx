@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-[#09090B] mb-3">5. Data Retention</h2>
-              <p>Monitoring data is retained according to your plan: Starter (7 days), Pro (90 days), Business (1 year). Account data is retained for the duration of your account plus 30 days. Upon account deletion, all personal data is permanently erased within 30 days, except where retention is required by law.</p>
+              <p>Monitoring data is retained according to your plan: Free (24 hours), Starter (7 days), Standard (30 days), Professional and Agency (90 days). Account data is retained for the duration of your account plus 30 days. Upon account deletion, all personal data is permanently erased within 30 days, except where retention is required by law.</p>
             </section>
 
             <section>
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-[#09090B] mb-3">7. Data Security</h2>
-              <p>We implement industry-standard security measures including encryption at rest (AES-256) and in transit (TLS 1.3), access controls, regular security audits, and SOC 2 Type II compliance. While we strive to protect your data, no method of transmission over the internet is 100% secure.</p>
+              <p>We implement industry-standard security measures including encryption at rest (AES-256) and in transit (TLS 1.3), access controls, and regular security audits. SOC 2 Type II certification is in progress. While we strive to protect your data, no method of transmission over the internet is 100% secure.</p>
             </section>
 
             <section>

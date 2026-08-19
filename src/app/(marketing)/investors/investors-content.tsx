@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Target, TrendingUp, DollarSign, ArrowRight } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,9 +73,8 @@ export function InvestorsContent() {
                 <h2 className="text-xl font-bold text-[#09090B]">Emmanuel Osei</h2>
                 <p className="text-sm text-[#0891B2] font-medium">Founder & CEO</p>
                 <p className="mt-2 text-sm text-[#52525B] leading-relaxed">
-                  Former SRE at Stripe. Spent 4 years building internal vendor reliability tooling after
-                  watching teams waste hundreds of hours on manual incident correlation and SLA disputes.
-                  Founded Reliastra to turn that internal tooling into a product every engineering team needs.
+                  Founded Reliastra to give engineering teams independent measurements of the
+                  vendors they depend on, plus evidence they can use when those vendors fail.
                 </p>
               </div>
             </motion.div>
@@ -124,6 +123,7 @@ export function InvestorsContent() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-[#09090B]">Market Opportunity</h2>
+            <p className="mt-2 text-sm text-[#A1A1AA]">Internal working estimates, not audited market research.</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {metrics.map((m, i) => {
@@ -171,7 +171,7 @@ export function InvestorsContent() {
                   <h3 className="text-sm font-medium text-[#52525B]">Customers</h3>
                 </div>
                 <p className="text-2xl font-bold text-[#09090B]">0 → Target: 100</p>
-                <p className="text-xs text-[#A1A1AA] mt-1">by Q4 2025</p>
+                <p className="text-xs text-[#A1A1AA] mt-1">by Q4 2026</p>
               </CardContent>
             </Card>
             <Card className="rounded-xl p-6">
@@ -181,20 +181,14 @@ export function InvestorsContent() {
                   <h3 className="text-sm font-medium text-[#52525B]">Endpoints Monitored</h3>
                 </div>
                 <p className="text-2xl font-bold text-[#09090B]">0 → Target: 10,000</p>
-                <p className="text-xs text-[#A1A1AA] mt-1">by Q4 2025</p>
+                <p className="text-xs text-[#A1A1AA] mt-1">by Q4 2026</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Pitch deck link */}
-          <div className="mt-8 text-center">
-            <Button variant="outline" className="rounded-lg gap-2" asChild>
-              <a href="#" onClick={(e) => { e.preventDefault(); toast.info('Pitch deck coming soon.'); }}>
-                <Download className="h-4 w-4" />
-                Download Pitch Deck (PDF)
-              </a>
-            </Button>
-          </div>
+          <p className="mt-8 text-center text-sm text-[#52525B]">
+            For investor materials, use the form below.
+          </p>
         </div>
       </section>
 

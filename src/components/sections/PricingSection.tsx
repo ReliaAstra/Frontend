@@ -50,8 +50,8 @@ const PLANS = [
     dependencies: "30 monitored dependencies",
     featured: true,
     features: [
+      "30-day data retention",
       "Incident correlation",
-      "Deterministic attribution",
       "Evidence generation",
       "Slack alerts & API access",
       "Historical analysis",

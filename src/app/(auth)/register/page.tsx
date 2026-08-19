@@ -35,7 +35,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
   useEffect(() => {
     if (password && !inputFocused.current) {
       inputFocused.current = true;
-      setExpanded(true);
+      queueMicrotask(() => setExpanded(true));
     }
   }, [password]);
 

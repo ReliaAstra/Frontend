@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { orgService, type OrgMemberResponse } from "@/services/orgService";
+import { orgService, type OrgMemberResponse, type OrgRole } from "@/services/orgService";
 import { useAuth } from "@/lib/auth-context";
 
 const roleColors: Record<string, string> = {
@@ -62,7 +62,7 @@ export function MemberTable({ members: initialMembers }: MemberTableProps) {
     if (!currentOrg) return;
     setUpdatingRoleId(memberId);
     try {
-      const updated = await orgService.updateMemberRole(currentOrg.id, memberId, role);
+      const updated = await orgService.updateMemberRole(currentOrg.id, memberId, role as OrgRole);
       setLocalMembers(localMembers.map((m) => (m.id === memberId ? updated : m)));
       toast.success(`Role updated to ${role}.`);
     } catch {

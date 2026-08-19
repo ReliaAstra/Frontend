@@ -18,13 +18,19 @@ import {
   useInviteMember,
   useInitializePayment,
   useVerifyPayment,
+  useApiKeys,
+  useNotificationConfigs,
 } from "@/hooks/useApi";
 import type { OrgMemberResponse } from "@/services/orgService";
+import { ApiKeyManager } from "@/components/dashboard/ApiKeyManager";
+import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
 
 const tabs = [
   { key: "profile", label: "Profile", icon: User },
   { key: "team", label: "Team", icon: Users },
   { key: "billing", label: "Billing", icon: CreditCard },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "api-keys", label: "API Keys", icon: Key },
 ] as const;
 
 // All features that can be checked across plans
@@ -82,6 +88,18 @@ export default function SettingsPage() {
   const inviteMutation = useInviteMember();
   const initializePayment = useInitializePayment();
   const verifyPayment = useVerifyPayment();
+  const {
+    data: apiKeys,
+    isLoading: apiKeysLoading,
+    isError: apiKeysError,
+    refetch: refetchApiKeys,
+  } = useApiKeys();
+  const {
+    data: alertConfigs,
+    isLoading: alertsLoading,
+    isError: alertsError,
+    refetch: refetchAlertConfigs,
+  } = useNotificationConfigs();
 
   // Profile state
   const [name, setName] = useState("");
@@ -123,7 +141,7 @@ export default function SettingsPage() {
           setVerifyingRef(false);
         });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleProfileUpdate = async () => {
     setSaving(true);
@@ -678,6 +696,60 @@ export default function SettingsPage() {
               <Skeleton className="h-[180px] rounded-xl bg-[#1C1C22]" />
               <Skeleton className="h-[200px] rounded-xl bg-[#1C1C22]" />
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Notifications Tab */}
+      {activeTab === "notifications" && (
+        <div className="max-w-3xl">
+          {alertsLoading ? (
+            <ConsoleCard>
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[48px] bg-[#1C1C22] rounded-lg" />
+                ))}
+              </div>
+            </ConsoleCard>
+          ) : alertsError ? (
+            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3 flex items-center gap-3">
+              <p className="text-sm text-[#DC2626] flex-1">Unable to load notification channels.</p>
+              <button
+                onClick={() => refetchAlertConfigs()}
+                className="text-xs font-medium text-[#0891B2] hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <NotificationSettings channels={alertConfigs ?? []} />
+          )}
+        </div>
+      )}
+
+      {/* API Keys Tab */}
+      {activeTab === "api-keys" && (
+        <div className="max-w-3xl">
+          {apiKeysLoading ? (
+            <ConsoleCard>
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[48px] bg-[#1C1C22] rounded-lg" />
+                ))}
+              </div>
+            </ConsoleCard>
+          ) : apiKeysError ? (
+            <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3 flex items-center gap-3">
+              <p className="text-sm text-[#DC2626] flex-1">Unable to load API keys.</p>
+              <button
+                onClick={() => refetchApiKeys()}
+                className="text-xs font-medium text-[#0891B2] hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <ApiKeyManager keys={apiKeys ?? []} />
           )}
         </div>
       )}

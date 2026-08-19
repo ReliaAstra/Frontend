@@ -1,22 +1,52 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { Users, Plus, ChevronRight } from "lucide-react";
+import { Users, Plus, ChevronRight, X } from "lucide-react";
 import { ConsoleCard } from "@/components/dashboard/ConsoleLayout";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-import { useClients } from "@/hooks/useApi";
+import { useClients, useCreateClient } from "@/hooks/useApi";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { BackendError } from "@/lib/api";
 
 export default function ClientsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: clientsData, isLoading: loading, isError: error, refetch } = useClients();
+  const { isLoading: authLoading } = useAuth();
+  const { data: clients = [], isLoading: loading, isError: error, refetch } = useClients();
+  const createClient = useCreateClient();
 
-  // Normalize response
-  const clients = Array.isArray(clientsData)
-    ? clientsData
-    : (clientsData as any)?.items ?? [];
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formError, setFormError] = useState("");
+
+  const openModal = () => {
+    setFormName("");
+    setFormDescription("");
+    setFormError("");
+    setModalOpen(true);
+  };
+
+  const handleCreate = async () => {
+    if (!formName.trim()) {
+      setFormError("Client name is required.");
+      return;
+    }
+    try {
+      await createClient.mutateAsync({
+        name: formName.trim(),
+        description: formDescription.trim() || null,
+      });
+      toast.success("Client created.");
+      setModalOpen(false);
+    } catch (err) {
+      setFormError(
+        err instanceof BackendError ? err.message : "Failed to create client. Please try again."
+      );
+    }
+  };
 
   if (authLoading || loading) {
     return (
@@ -30,8 +60,8 @@ export default function ClientsPage() {
         </div>
         <ConsoleCard>
           <div className="px-5 py-3 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)]">
-            <div className="grid grid-cols-[1fr_80px_120px_120px_100px_40px] gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
+            <div className="grid grid-cols-[1fr_2fr_140px_40px] gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-3 w-16 bg-[#1A1A20]" />
               ))}
             </div>
@@ -59,7 +89,10 @@ export default function ClientsPage() {
             Manage and monitor your client infrastructure
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white hover:shadow-lg transition-all">
+        <button
+          onClick={openModal}
+          className="inline-flex items-center gap-2 bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-white hover:shadow-lg transition-all"
+        >
           <Plus className="h-3.5 w-3.5" />
           Add client
         </button>
@@ -84,9 +117,9 @@ export default function ClientsPage() {
         <EmptyState
           icon={Users}
           title="No clients yet"
-          description="Add your first client to start monitoring their infrastructure reliability and track dependencies across sites."
+          description="Add your first client to start monitoring their infrastructure reliability and group their applications."
           actionLabel="Add client"
-          onAction={() => {}}
+          onAction={openModal}
         />
       )}
 
@@ -94,81 +127,117 @@ export default function ClientsPage() {
       {!error && clients.length > 0 && (
         <ConsoleCard>
           {/* Table Header */}
-          <div className="px-5 py-3 grid grid-cols-[1fr_80px_120px_120px_100px_40px] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]">
+          <div className="px-5 py-3 grid grid-cols-[1fr_2fr_140px_40px] gap-4 text-[11px] font-semibold uppercase tracking-wider text-[#52525B] bg-[rgba(255,255,255,0.02)]">
             <span>Client</span>
-            <span className="text-right">Sites</span>
-            <span className="text-right">Dependencies</span>
-            <span className="text-right">Active incidents</span>
-            <span className="text-right">Reliability</span>
+            <span>Description</span>
+            <span className="text-right">Added</span>
             <span></span>
           </div>
 
           {/* Rows */}
-          {clients.map((client: any) => {
-            const hasIncidents = client.open_incidents_count > 0;
-            return (
-              <Link
-                key={client.id}
-                href={`/clients/${client.id}`}
-                className="px-5 py-3.5 grid grid-cols-[1fr_80px_120px_120px_100px_40px] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center group"
-              >
-                {/* Client Name */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="flex h-8 w-8 items-center justify-center rounded-md border border-[rgba(255,255,255,0.08)] text-xs font-medium shrink-0"
-                    style={{ backgroundColor: "#1A1A20", color: "#A1A1AA" }}
-                  >
-                    {client.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-[#FAFAFA] group-hover:text-[#0891B2] transition-colors truncate">
-                      {client.name}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          client.status === "active" ? "bg-[#16A34A]" : "bg-[#52525B]"
-                        )}
-                      />
-                      <span className="text-[11px] text-[#A1A1AA] capitalize">
-                        {client.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sites */}
-                <span className="text-[13px] font-medium font-mono text-[#FAFAFA] text-right tabular-nums">
-                  {client.sites_count}
-                </span>
-
-                {/* Dependencies */}
-                <span className="text-[13px] font-medium font-mono text-[#FAFAFA] text-right tabular-nums">
-                  {client.dependencies_count}
-                </span>
-
-                {/* Active Incidents */}
-                <span
-                  className={cn(
-                    "text-[13px] font-medium font-mono text-right tabular-nums",
-                    hasIncidents ? "text-[#D97706]" : "text-[#A1A1AA]"
-                  )}
+          {clients.map((client) => (
+            <Link
+              key={client.id}
+              href={`/clients/${client.id}`}
+              className="px-5 py-3.5 grid grid-cols-[1fr_2fr_140px_40px] gap-4 border-t border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors items-center group"
+            >
+              {/* Client Name */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-[rgba(255,255,255,0.08)] text-xs font-medium shrink-0"
+                  style={{ backgroundColor: "#1A1A20", color: "#A1A1AA" }}
                 >
-                  {client.open_incidents_count}
-                </span>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <p className="text-[13px] font-medium text-[#FAFAFA] group-hover:text-[#0891B2] transition-colors truncate">
+                  {client.name}
+                </p>
+              </div>
 
-                {/* Reliability */}
-                <span className="text-[13px] font-mono text-[#A1A1AA] text-right tabular-nums">
-                  --
-                </span>
+              {/* Description */}
+              <span className="text-[12px] text-[#A1A1AA] truncate">
+                {client.description || "—"}
+              </span>
 
-                {/* Chevron */}
-                <ChevronRight className="h-3.5 w-3.5 text-[#52525B] group-hover:text-[#0891B2] shrink-0 ml-auto transition-colors" />
-              </Link>
-            );
-          })}
+              {/* Added */}
+              <span className="text-[12px] font-mono text-[#A1A1AA] text-right tabular-nums">
+                {formatDistanceToNow(new Date(client.created_at), { addSuffix: true })}
+              </span>
+
+              {/* Chevron */}
+              <ChevronRight className="h-3.5 w-3.5 text-[#52525B] group-hover:text-[#0891B2] shrink-0 ml-auto transition-colors" />
+            </Link>
+          ))}
         </ConsoleCard>
+      )}
+
+      {/* ── Add Client Modal ─────────────────────────────────────────────── */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalOpen(false);
+          }}
+        >
+          <div className="bg-[#1A1A20] rounded-2xl border border-[rgba(255,255,255,0.08)] max-w-md w-full p-6 animate-[fadeIn_200ms_ease-out]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-[#FAFAFA]">Add client</h2>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[#52525B] hover:text-[#A1A1AA]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">Name</label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => {
+                    setFormName(e.target.value);
+                    setFormError("");
+                  }}
+                  placeholder="Acme Corp"
+                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-[#A1A1AA] mb-1.5 block">
+                  Description <span className="text-[#52525B] font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="Production infrastructure for Acme Corp"
+                  rows={3}
+                  maxLength={500}
+                  className="w-full bg-[#1C1C22] border border-[rgba(255,255,255,0.08)] text-[#FAFAFA] text-sm rounded-lg px-3.5 py-2.5 placeholder:text-[#52525B] focus:outline-none focus:border-[rgba(8,145,178,0.5)] transition-colors resize-none"
+                />
+              </div>
+
+              {formError && <p className="text-xs text-[#DC2626]">{formError}</p>}
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={createClient.isPending}
+                  className="bg-[#FAFAFA] text-[#0A0A0F] px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-white transition-colors inline-flex items-center gap-2 disabled:opacity-40"
+                >
+                  {createClient.isPending ? "Adding…" : "Add client"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -27,7 +27,9 @@ function ResetPasswordForm() {
   // Redirect if no token
   useEffect(() => {
     if (!token) {
-      setError("No reset token found in URL. Please request a new password reset link.");
+      queueMicrotask(() =>
+        setError("No reset token found in URL. Please request a new password reset link.")
+      );
     }
   }, [token]);
 

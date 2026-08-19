@@ -1,104 +1,69 @@
-import { apiClient, getOrgContext } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
+/** Matches live schema ClientResponse */
 export interface Client {
   id: string;
   org_id: string;
   name: string;
-  slug: string;
-  sites_count: number;
-  dependencies_count: number;
-  open_incidents_count: number;
-  status: "active" | "inactive";
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface Site {
+/** Matches live schema ApplicationResponse (an application grouped under a client) */
+export interface Application {
   id: string;
-  client_id: string;
   org_id: string;
+  client_id: string | null;
   name: string;
-  url: string | null;
-  dependencies_count: number;
-  status: "up" | "degraded" | "down" | "unknown";
-  uptime_percentage_24h: number;
-  avg_latency_ms_24h: number;
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface SiteDependency {
-  id: string;
-  site_id: string;
-  org_id: string;
+/** Matches live schema ClientCreateRequest */
+export interface CreateClientRequest {
   name: string;
-  endpoint_url: string;
-  status: "up" | "down" | "degraded" | "unknown";
-  uptime_percentage_24h: number;
-  avg_latency_ms_24h: number;
-  last_check_at: string | null;
-  is_active: boolean;
+  description?: string | null;
 }
 
-export interface ClientListParams {
-  status?: "active" | "inactive";
-  search?: string;
-  sort_by?: "name" | "sites_count" | "dependencies_count" | "open_incidents_count" | "created_at";
-  sort_dir?: "asc" | "desc";
-  page?: number;
-  per_page?: number;
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  per_page: number;
-  total_pages: number;
+/** Matches live schema ApplicationCreateRequest */
+export interface CreateApplicationRequest {
+  name: string;
+  description?: string | null;
 }
 
 export const clientService = {
-  async list(params?: ClientListParams): Promise<PaginatedResponse<Client>> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<PaginatedResponse<Client>>(`/orgs/${orgId}/clients`, { params });
+  /** GET /v1/clients — plain array of the org's agency clients. */
+  async list(): Promise<Client[]> {
+    const res = await apiClient.get<Client[]>("/clients");
+    return Array.isArray(res.data) ? res.data : [];
+  },
+
+  /** POST /v1/clients */
+  async create(data: CreateClientRequest): Promise<Client> {
+    const res = await apiClient.post<Client>("/clients", data);
     return res.data;
   },
 
-  async getById(clientId: string): Promise<Client> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<Client>(`/orgs/${orgId}/clients/${clientId}`);
-    return res.data;
+  /**
+   * The live API has no GET /v1/clients/{id}; resolve a single client
+   * from the list endpoint instead.
+   */
+  async getById(clientId: string): Promise<Client | null> {
+    const clients = await clientService.list();
+    return clients.find((c) => c.id === clientId) ?? null;
   },
 
-  async listSites(clientId: string): Promise<Site[]> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<Site[]>(`/orgs/${orgId}/clients/${clientId}/sites`);
-    return res.data;
+  /** GET /v1/clients/{client_id}/applications */
+  async listApplications(clientId: string): Promise<Application[]> {
+    const res = await apiClient.get<Application[]>(`/clients/${clientId}/applications`);
+    return Array.isArray(res.data) ? res.data : [];
   },
 
-  async getSiteById(clientId: string, siteId: string): Promise<Site> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<Site>(`/orgs/${orgId}/clients/${clientId}/sites/${siteId}`);
-    return res.data;
-  },
-
-  async getSiteDependencies(clientId: string, siteId: string): Promise<SiteDependency[]> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<SiteDependency[]>(
-      `/orgs/${orgId}/clients/${clientId}/sites/${siteId}/dependencies`
-    );
-    return res.data;
-  },
-
-  async create(data: { name: string }): Promise<Client> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<Client>(`/orgs/${orgId}/clients`, data);
+  /** POST /v1/clients/{client_id}/applications */
+  async createApplication(clientId: string, data: CreateApplicationRequest): Promise<Application> {
+    const res = await apiClient.post<Application>(`/clients/${clientId}/applications`, data);
     return res.data;
   },
 };

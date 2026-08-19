@@ -67,12 +67,12 @@ const AUTH_PATHS = ["/login", "/register"];
 export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <Suspense>
-      <_AuthProviderInner>{children}</_AuthProviderInner>
+      <AuthProviderInner>{children}</AuthProviderInner>
     </Suspense>
   );
 }
 
-function _AuthProviderInner({ children }: { children: ReactNode }) {
+function AuthProviderInner({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -107,15 +107,18 @@ function _AuthProviderInner({ children }: { children: ReactNode }) {
         setCurrentOrg(org);
         setOrgContext(org.id);
 
-        // 3. Get member role for this org
+        // 3. Get member role for this org (live API: GET /v1/orgs/members, cursor-paginated)
         try {
-          const { data: members } = await apiClient.get<OrgMember[]>(`/orgs/${org.id}/members`);
+          const { data: membersPage } = await apiClient.get<{ items: OrgMember[] } | OrgMember[]>(
+            `/orgs/members`
+          );
+          const members = Array.isArray(membersPage) ? membersPage : membersPage.items ?? [];
           const myMembership = members.find((m) => m.user_id === userData.id);
           if (myMembership) {
             setMemberRole(myMembership.role);
           }
         } catch {
-          // Role fetch failed :  continue without role
+          // Role fetch failed: continue without role
         }
       }
     } catch {

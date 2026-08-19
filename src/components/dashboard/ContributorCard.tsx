@@ -1,7 +1,25 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { EvidenceContributor } from "@/services/evidenceService";
+
+/**
+ * Contributor shape for rendering. Mirrors the incident-correlation model on
+ * the live API (previously sourced from the evidence service).
+ */
+export interface EvidenceContributor {
+  dependency_id: string;
+  dependency_name: string;
+  role: "primary" | "contributing" | "correlated";
+  evidence_strength: "strong" | "moderate" | "weak";
+  confidence: number;
+  observation_window: {
+    start: string;
+    end: string;
+    duration_seconds: number;
+    total_checks: number;
+    failed_checks: number;
+  };
+}
 
 interface ContributorCardProps {
   contributor: EvidenceContributor;

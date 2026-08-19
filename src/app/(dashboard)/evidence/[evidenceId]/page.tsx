@@ -1,143 +1,132 @@
 "use client";
-import { useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { formatDistanceToNow, format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   ArrowLeft,
-  ShieldCheck,
-  Clock,
-  Shield,
-  Copy,
   Download,
+  RefreshCw,
+  Copy,
+  Check,
+  ShieldCheck,
   FileText,
   ExternalLink,
-  Loader2,
-  Eye,
-  Lock,
-  ChevronRight,
+  Hash,
+  Clock,
+  Database,
 } from "lucide-react";
-import { evidenceService } from "@/services/evidenceService";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
 import { toast } from "sonner";
-import { useEvidenceDetail } from "@/hooks/useApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { evidenceService } from "@/services/evidenceService";
+import { useEvidenceDetail, useRegenerateEvidence } from "@/hooks/useApi";
+import { ConsoleCard, ConsoleCardBody, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
+import { LockedFeature } from "@/components/dashboard/LockedFeature";
+import { useBillingPlan } from "@/hooks/useApi";
 
-const strengthConfig: Record<string, { label: string; color: string; bg: string }> = {
-  strong: { label: "Strong", color: "text-[#16A34A]", bg: "bg-[rgba(22,163,74,0.12)]" },
-  moderate: { label: "Moderate", color: "text-[#D97706]", bg: "bg-[rgba(217,119,6,0.12)]" },
-  weak: { label: "Weak", color: "text-[#52525B]", bg: "bg-[rgba(255,255,255,0.05)]" },
-};
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof ShieldCheck }> = {
-  verified: { label: "Verified", color: "text-[#16A34A]", bg: "bg-[rgba(22,163,74,0.12)]", icon: ShieldCheck },
-  pending: { label: "Pending", color: "text-[#D97706]", bg: "bg-[rgba(217,119,6,0.12)]", icon: Clock },
-  failed: { label: "Failed", color: "text-[#DC2626]", bg: "bg-[rgba(220,38,38,0.12)]", icon: Shield },
-};
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return `${h}h ${m}m`;
+function formatBytes(bytes: number | null | undefined): string {
+  if (bytes == null || Number.isNaN(bytes)) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
+
+function safeDate(value: string | null | undefined, fmt = "MMM d, yyyy HH:mm:ss"): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "—" : format(d, fmt);
+}
+
+function MetaRow({
+  label,
+  value,
+  mono,
+  copyable,
+}: {
+  label: string;
+  value?: string | null;
+  mono?: boolean;
+  copyable?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  const display = value ?? "—";
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-[rgba(255,255,255,0.05)] last:border-0">
+      <span className="text-xs text-[#52525B] shrink-0 pt-0.5">{label}</span>
+      <span
+        className={cn(
+          "text-xs text-right text-[#FAFAFA] break-all",
+          mono && "font-mono"
+        )}
+      >
+        {display}
+        {copyable && value && (
+          <button
+            className="ml-2 inline-flex align-middle text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+            onClick={() => {
+              navigator.clipboard.writeText(value);
+              setCopied(true);
+              toast.success("Copied to clipboard");
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            title="Copy"
+          >
+            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+/* ── Page ─────────────────────────────────────────────────────────────────── */
 
 export default function EvidenceDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const evidenceId = params.evidenceId as string;
 
   const { data: evidence, isLoading: loading, isError, refetch } = useEvidenceDetail(evidenceId);
-
-  const [verifying, setVerifying] = useState(false);
+  const regenerate = useRegenerateEvidence();
+  const { data: billingPlan } = useBillingPlan();
   const [downloading, setDownloading] = useState(false);
-  const [jsonView, setJsonView] = useState(false);
-  const [jsonData, setJsonData] = useState<Record<string, unknown> | null>(null);
-  const [jsonLoading, setJsonLoading] = useState(false);
-  const [generatingReport, setGeneratingReport] = useState(false);
 
-  const handleVerify = async () => {
-    setVerifying(true);
-    try {
-      const result = await evidenceService.verify(evidenceId);
-      await refetch();
-      toast.success("Evidence verified successfully.");
-    } catch {
-      toast.error("Verification failed. Try again later.");
-    } finally {
-      setVerifying(false);
-    }
-  };
+  const currentPlan = billingPlan?.plan || "free";
 
-  const handleDownloadPdf = async () => {
+  async function handleDownload() {
+    if (!evidence) return;
     setDownloading(true);
     try {
-      const blob = await evidenceService.downloadPdf(evidenceId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `evidence-${evidenceId.slice(0, 8)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success("PDF downloaded.");
+      const url = evidence.download_url || (await evidenceService.getDownloadUrl(evidence.id));
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Failed to download PDF.");
+      toast.error("Could not download this report.");
     } finally {
       setDownloading(false);
     }
-  };
+  }
 
-  const handleViewJson = async () => {
-    if (jsonView && jsonData) {
-      setJsonView(false);
-      return;
-    }
-    setJsonLoading(true);
+  async function handleRegenerate() {
+    if (!evidence) return;
     try {
-      const data = await evidenceService.getJson(evidenceId);
-      setJsonData(data);
-      setJsonView(true);
+      await regenerate.mutateAsync(evidence.id);
+      toast.success("Evidence report regenerated.");
     } catch {
-      toast.error("Failed to load JSON data.");
-    } finally {
-      setJsonLoading(false);
+      toast.error("Failed to regenerate the report.");
     }
-  };
-
-  const handleCopyHash = () => {
-    if (evidence?.data_hash) {
-      navigator.clipboard.writeText(evidence.data_hash);
-      toast.success("Hash copied to clipboard.");
-    }
-  };
-
-  const handleGenerateReport = async () => {
-    setGeneratingReport(true);
-    try {
-      const result = await evidenceService.generateClientReport(evidenceId);
-      toast.success("Client report generated.");
-      if (result.report_url) {
-        window.open(result.report_url, "_blank");
-      }
-    } catch {
-      toast.error("Failed to generate client report.");
-    } finally {
-      setGeneratingReport(false);
-    }
-  };
+  }
 
   if (loading) {
     return (
       <div className="space-y-5">
-        <Skeleton className="h-5 w-48 bg-[#1C1C22]" />
-        <Skeleton className="h-[120px] rounded-xl bg-[#1C1C22]" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <Skeleton className="h-[320px] rounded-xl bg-[#1C1C22]" />
-          <Skeleton className="h-[320px] rounded-xl bg-[#1C1C22]" />
+        <Skeleton className="h-4 w-40 bg-[#1C1C22]" />
+        <Skeleton className="h-8 w-72 bg-[#1C1C22]" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <Skeleton className="h-64 rounded-xl bg-[#1C1C22] lg:col-span-2" />
+          <Skeleton className="h-64 rounded-xl bg-[#1C1C22]" />
         </div>
       </div>
     );
@@ -145,485 +134,179 @@ export default function EvidenceDetailPage() {
 
   if (isError || !evidence) {
     return (
-      <div className="text-center py-20">
-        <p className="text-[#A1A1AA]">Evidence not found.</p>
-        <button
-          onClick={() => router.push("/evidence")}
-          className="mt-4 text-xs text-[#0891B2] hover:underline"
+      <div className="space-y-5">
+        <Link
+          href="/evidence"
+          className="inline-flex items-center gap-1.5 text-[13px] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
         >
+          <ArrowLeft className="w-3.5 h-3.5" />
           Back to Evidence
-        </button>
+        </Link>
+        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-5 py-4 flex items-center gap-3">
+          <p className="text-sm text-[#FAFAFA] flex-1">
+            Unable to load this evidence report. It may have expired or been removed.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="text-xs font-medium text-[#0891B2] hover:underline"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
-  const strength = strengthConfig[evidence.evidence_strength] || strengthConfig.moderate;
-  const status = statusConfig[evidence.status] || statusConfig.pending;
-  const StatusIcon = status.icon;
-
-  const failureRate =
-    evidence.observation_window.total_checks > 0
-      ? (evidence.observation_window.failed_checks / evidence.observation_window.total_checks) * 100
-      : 0;
+  const isExpired = evidence.expires_at ? new Date(evidence.expires_at) < new Date() : false;
 
   return (
-    <div className="space-y-6">
-      {/* Back link */}
-      <button
-        onClick={() => router.push("/evidence")}
-        className="flex items-center gap-2 text-[13px] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Evidence
-      </button>
-
-      {/* Header Card */}
-      <ConsoleCard>
-        <div className="px-5 py-4">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
-              Evidence Snapshot
-            </span>
-            <span className="text-[13px] font-mono text-[#A1A1AA] ml-1">
-              {evidence.id}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium",
-                status.bg,
-                status.color
-              )}
-            >
-              <StatusIcon className="w-3 h-3" />
-              {status.label}
-            </span>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium",
-                strength.bg,
-                strength.color
-              )}
-            >
-              <Shield className="w-3 h-3" />
-              {strength.label}
-            </span>
-
-            <button
-              onClick={handleVerify}
-              disabled={verifying || evidence.status === "verified"}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-medium px-3.5 py-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {verifying ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <ShieldCheck className="h-3 w-3" />
-              )}
-              {evidence.status === "verified" ? "Verified" : "Verify"}
-            </button>
-          </div>
-        </div>
-      </ConsoleCard>
-
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
-        {/* Left: Details */}
-        <div className="space-y-5">
-          {/* Incident Link */}
-          <ConsoleCard>
-            <ConsoleCardHeader>
-              <span className="text-[13px] font-semibold text-[#FAFAFA]">
-                Details
-              </span>
-            </ConsoleCardHeader>
-            <div className="p-5 space-y-4">
-              {/* Incident */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[#A1A1AA]">Incident</span>
-                {evidence.incident_id ? (
-                  <Link
-                    href={`/incidents/${evidence.incident_id}`}
-                    className="text-[13px] font-mono text-[#0891B2] hover:underline flex items-center gap-1"
-                  >
-                    INC-{evidence.incident_id.slice(0, 12)}
-                    <ChevronRight className="w-3 h-3" />
-                  </Link>
-                ) : (
-                  <span className="text-[13px] text-[#52525B]">--</span>
-                )}
+    <LockedFeature
+      currentPlan={currentPlan as "free" | "starter" | "standard" | "professional" | "agency"}
+      feature="evidence"
+      onUpgrade={() => {}}
+    >
+      <div className="space-y-6">
+        {/* Breadcrumb + header */}
+        <div>
+          <Link
+            href="/evidence"
+            className="inline-flex items-center gap-1.5 text-[13px] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Evidence
+          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[rgba(139,92,246,0.12)] flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-[#8B5CF6]" />
               </div>
-
-              {/* Observation Window */}
-              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
               <div>
-                <span className="text-xs text-[#A1A1AA] block mb-3">
-                  Observation Window
-                </span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                      Start
-                    </span>
-                    <span className="text-[12px] font-mono text-[#FAFAFA]">
-                      {format(new Date(evidence.observation_window.start), "MMM d, HH:mm:ss")}
-                    </span>
-                  </div>
-                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                      End
-                    </span>
-                    <span className="text-[12px] font-mono text-[#FAFAFA]">
-                      {format(new Date(evidence.observation_window.end), "MMM d, HH:mm:ss")}
-                    </span>
-                  </div>
-                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                      Duration
-                    </span>
-                    <span className="text-[12px] font-mono font-medium text-[#FAFAFA]">
-                      {formatDuration(evidence.observation_window.duration_seconds)}
-                    </span>
-                  </div>
-                  <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                      Failure Rate
-                    </span>
-                    <span
-                      className={cn(
-                        "text-[12px] font-mono font-medium",
-                        failureRate > 50 ? "text-[#DC2626]" : failureRate > 20 ? "text-[#D97706]" : "text-[#16A34A]"
-                      )}
-                    >
-                      {failureRate.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-4 mt-3 text-[11px] text-[#A1A1AA]">
-                  <span>
-                    <span className="text-[#FAFAFA] font-mono">
-                      {evidence.observation_window.total_checks}
-                    </span>{" "}
-                    total checks
-                  </span>
-                  <span>
-                    <span
-                      className={cn(
-                        "font-mono",
-                        evidence.observation_window.failed_checks > 0
-                          ? "text-[#DC2626]"
-                          : "text-[#16A34A]"
-                      )}
-                    >
-                      {evidence.observation_window.failed_checks}
-                    </span>{" "}
-                    failed
-                  </span>
-                </div>
-              </div>
-
-              {/* Strength */}
-              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[#A1A1AA]">Evidence Strength</span>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] font-medium",
-                    strength.bg,
-                    strength.color
-                  )}
-                >
-                  {strength.label}
-                </span>
-              </div>
-
-              {/* Data Hash */}
-              <div className="h-px bg-[rgba(255,255,255,0.05)]" />
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-[#A1A1AA]">Data Integrity Hash</span>
-                  <button
-                    onClick={handleCopyHash}
-                    className="text-[11px] text-[#0891B2] hover:underline flex items-center gap-1"
-                  >
-                    <Copy className="w-3 h-3" />
-                    Copy
-                  </button>
-                </div>
-                <p className="text-[11px] font-mono text-[#52525B] break-all leading-relaxed bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                  {evidence.data_hash}
+                <h1 className="text-lg font-semibold text-[#FAFAFA] font-mono">
+                  {evidence.id}
+                </h1>
+                <p className="text-[11px] text-[#52525B]">
+                  Report generated {formatDistanceToNow(new Date(evidence.generated_at), { addSuffix: true })}
+                  {isExpired && <span className="text-[#D97706]"> · expired</span>}
                 </p>
               </div>
             </div>
-          </ConsoleCard>
-        </div>
-
-        {/* Right: Actions */}
-        <div className="space-y-5">
-          <ConsoleCard>
-            <ConsoleCardHeader>
-              <span className="text-[13px] font-semibold text-[#FAFAFA]">
-                Actions
-              </span>
-            </ConsoleCardHeader>
-            <div className="p-5 space-y-3">
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleViewJson}
-                disabled={jsonLoading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors text-left disabled:opacity-50"
+                onClick={handleRegenerate}
+                disabled={regenerate.isPending}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[rgba(255,255,255,0.1)] bg-[#131318] text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors disabled:opacity-50"
               >
-                {jsonLoading ? (
-                  <Loader2 className="w-4 h-4 text-[#A1A1AA] animate-spin" />
-                ) : (
-                  <Eye className="w-4 h-4 text-[#A1A1AA]" />
-                )}
-                <div>
-                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
-                    {jsonView ? "Hide JSON" : "View JSON"}
-                  </span>
-                  <span className="text-[11px] text-[#52525B]">
-                    Raw evidence data
-                  </span>
-                </div>
+                <RefreshCw className={cn("w-3.5 h-3.5", regenerate.isPending && "animate-spin")} />
+                Regenerate
               </button>
-
               <button
-                onClick={handleDownloadPdf}
+                onClick={handleDownload}
                 disabled={downloading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors text-left disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#FAFAFA] text-[#0A0A0F] text-xs font-semibold hover:bg-white transition-colors disabled:opacity-50"
               >
-                {downloading ? (
-                  <Loader2 className="w-4 h-4 text-[#A1A1AA] animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4 text-[#A1A1AA]" />
-                )}
-                <div>
-                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
-                    Download PDF
-                  </span>
-                  <span className="text-[11px] text-[#52525B]">
-                    Formatted evidence report
-                  </span>
-                </div>
+                <Download className="w-3.5 h-3.5" />
+                {downloading ? "Preparing…" : "Download"}
               </button>
-
-              <button
-                onClick={handleGenerateReport}
-                disabled={generatingReport}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(8,145,178,0.08)] border border-[rgba(8,145,178,0.2)] hover:bg-[rgba(8,145,178,0.12)] hover:border-[rgba(8,145,178,0.3)] transition-colors text-left disabled:opacity-50"
-              >
-                {generatingReport ? (
-                  <Loader2 className="w-4 h-4 text-[#0891B2] animate-spin" />
-                ) : (
-                  <FileText className="w-4 h-4 text-[#0891B2]" />
-                )}
-                <div>
-                  <span className="text-[13px] font-medium text-[#FAFAFA] block">
-                    Generate Report
-                  </span>
-                  <span className="text-[11px] text-[#0891B2]/70">
-                    Client-facing evidence report
-                  </span>
-                </div>
-              </button>
-            </div>
-          </ConsoleCard>
-
-          {/* Timestamps */}
-          <ConsoleCard>
-            <div className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[#A1A1AA]">Created</span>
-                <span className="text-[12px] font-mono text-[#FAFAFA]">
-                  {formatDistanceToNow(new Date(evidence.created_at), { addSuffix: true })}
-                </span>
-              </div>
-              {evidence.verified_at && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#A1A1AA]">Verified</span>
-                  <span className="text-[12px] font-mono text-[#16A34A]">
-                    {formatDistanceToNow(new Date(evidence.verified_at), { addSuffix: true })}
-                  </span>
-                </div>
-              )}
-            </div>
-          </ConsoleCard>
-        </div>
-      </div>
-
-      {/* JSON Viewer */}
-      {jsonView && jsonData && (
-        <ConsoleCard>
-          <ConsoleCardHeader className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-[#52525B] uppercase tracking-wider">
-              Raw JSON
-            </span>
-            <button
-              onClick={() => setJsonView(false)}
-              className="text-[11px] text-[#A1A1AA] hover:text-[#FAFAFA]"
-            >
-              Close
-            </button>
-          </ConsoleCardHeader>
-          <pre className="px-5 pb-5 overflow-x-auto text-xs font-mono text-[#A1A1AA] leading-relaxed max-h-[400px] overflow-y-auto">
-            {JSON.stringify(jsonData, null, 2)}
-          </pre>
-        </ConsoleCard>
-      )}
-
-      {/* Evidence Preview Card */}
-      <ConsoleCard>
-        <ConsoleCardHeader>
-          <span className="text-[13px] font-semibold text-[#FAFAFA]">
-            Evidence Preview
-          </span>
-        </ConsoleCardHeader>
-        <div className="p-5">
-          {/* Snapshot */}
-          <div className="mb-5">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B] block mb-3">
-              Snapshot
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                  Status Code
-                </span>
-                <span
-                  className={cn(
-                    "text-lg font-mono font-semibold",
-                    evidence.snapshot.status_code >= 200 &&
-                      evidence.snapshot.status_code < 400
-                      ? "text-[#16A34A]"
-                      : "text-[#DC2626]"
-                  )}
-                >
-                  {evidence.snapshot.status_code}
-                </span>
-              </div>
-              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                  Response Time
-                </span>
-                <span className="text-lg font-mono font-semibold text-[#FAFAFA]">
-                  {evidence.snapshot.response_time_ms}
-                  <span className="text-xs text-[#A1A1AA] ml-1">ms</span>
-                </span>
-              </div>
-              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                  Checks
-                </span>
-                <span className="text-lg font-mono font-semibold text-[#FAFAFA]">
-                  {evidence.observation_window.total_checks}
-                </span>
-              </div>
-              <div className="bg-[rgba(255,255,255,0.03)] rounded-lg p-3">
-                <span className="text-[10px] uppercase tracking-wider text-[#52525B] block mb-1">
-                  Failed
-                </span>
-                <span
-                  className={cn(
-                    "text-lg font-mono font-semibold",
-                    evidence.observation_window.failed_checks > 0
-                      ? "text-[#DC2626]"
-                      : "text-[#16A34A]"
-                  )}
-                >
-                  {evidence.observation_window.failed_checks}
-                </span>
-              </div>
             </div>
           </div>
-
-          {/* Error Message */}
-          {evidence.snapshot.error_message && (
-            <div className="mb-5 rounded-lg bg-[rgba(220,38,38,0.08)] border border-[rgba(220,38,38,0.2)] p-3">
-              <span className="text-[10px] text-[#DC2626] uppercase tracking-wider block mb-1">
-                Error
-              </span>
-              <p className="text-[12px] font-mono text-[#DC2626]">
-                {evidence.snapshot.error_message}
-              </p>
-            </div>
-          )}
-
-          {/* Body Preview */}
-          {evidence.snapshot.body_preview && (
-            <div className="mb-5">
-              <span className="text-[10px] text-[#52525B] uppercase tracking-wider block mb-2">
-                Body Preview
-              </span>
-              <pre className="text-[11px] font-mono text-[#A1A1AA] overflow-x-auto max-h-[150px] overflow-y-auto whitespace-pre-wrap bg-[rgba(255,255,255,0.03)] rounded-lg p-3 border border-[rgba(255,255,255,0.05)]">
-                {evidence.snapshot.body_preview.slice(0, 500)}
-                {evidence.snapshot.body_preview.length > 500 ? "..." : ""}
-              </pre>
-            </div>
-          )}
-
-          {/* Contributors */}
-          {evidence.contributors && evidence.contributors.length > 0 && (
-            <div>
-              <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B] block mb-3">
-                Likely Contributors ({evidence.contributors.length})
-              </span>
-              <div className="space-y-2">
-                {evidence.contributors.map((c) => {
-                  const cStrength = strengthConfig[c.evidence_strength] || strengthConfig.moderate;
-                  return (
-                    <div
-                      key={c.dependency_id}
-                      className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg p-3 border border-[rgba(255,255,255,0.05)]"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.role === "primary" ? "#DC2626" : c.role === "contributing" ? "#D97706" : "#52525B" }} />
-                        <div className="min-w-0">
-                          <span className="text-[13px] font-medium text-[#FAFAFA] block truncate">
-                            {c.dependency_name}
-                          </span>
-                          <span className="text-[11px] text-[#52525B] capitalize">
-                            {c.role} · {c.confidence}% confidence
-                          </span>
-                        </div>
-                      </div>
-                      <span
-                        className={cn(
-                          "rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0",
-                          cStrength.bg,
-                          cStrength.color
-                        )}
-                      >
-                        {cStrength.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* AI Assessment */}
-          {evidence.ai_assessment && (
-            <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.05)]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-[#52525B]">
-                  AI Assessment
-                </span>
-                <span className="text-[10px] rounded bg-[rgba(255,255,255,0.05)] px-1.5 py-0.5 text-[#52525B]">
-                  Evidence-first
-                </span>
-              </div>
-              <p className="text-[13px] text-[#A1A1AA] leading-relaxed">
-                {evidence.ai_assessment}
-              </p>
-              <p className="text-[10px] text-[#52525B] mt-2">
-                This assessment is AI-assisted and based on evidence data. Always verify with raw evidence before making decisions.
-              </p>
-            </div>
-          )}
         </div>
-      </ConsoleCard>
-    </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Report metadata */}
+          <ConsoleCard className="lg:col-span-2">
+            <ConsoleCardHeader className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#0891B2]" />
+              <h2 className="text-sm font-semibold text-[#FAFAFA]">Report Metadata</h2>
+            </ConsoleCardHeader>
+            <ConsoleCardBody>
+              <MetaRow label="Report ID" value={evidence.id} mono copyable />
+              <MetaRow
+                label="Incident"
+                value={evidence.incident_id}
+                mono
+                copyable
+              />
+              <MetaRow label="Organization" value={evidence.org_id} mono />
+              <MetaRow label="Generated at" value={safeDate(evidence.generated_at)} />
+              <MetaRow
+                label="Expires at"
+                value={evidence.expires_at ? safeDate(evidence.expires_at) : "Never"}
+              />
+              <MetaRow label="Created" value={safeDate(evidence.created_at)} />
+              <MetaRow label="Last updated" value={safeDate(evidence.updated_at)} />
+            </ConsoleCardBody>
+          </ConsoleCard>
+
+          {/* Integrity + actions */}
+          <div className="space-y-5">
+            <ConsoleCard>
+              <ConsoleCardHeader className="flex items-center gap-2">
+                <Hash className="w-4 h-4 text-[#16A34A]" />
+                <h2 className="text-sm font-semibold text-[#FAFAFA]">Integrity</h2>
+              </ConsoleCardHeader>
+              <ConsoleCardBody className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#52525B] mb-1.5">
+                    SHA-256 Checksum
+                  </p>
+                  <p className="text-[11px] font-mono text-[#A1A1AA] break-all leading-relaxed bg-[#0F0F14] rounded-lg px-3 py-2.5 border border-[rgba(255,255,255,0.05)]">
+                    {evidence.checksum || "—"}
+                  </p>
+                  {evidence.checksum && (
+                    <button
+                      className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#0891B2] hover:underline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(evidence.checksum);
+                        toast.success("Checksum copied");
+                      }}
+                    >
+                      <Copy className="w-3 h-3" />
+                      Copy checksum
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#52525B] flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5" />
+                    File size
+                  </span>
+                  <span className="font-mono text-[#FAFAFA]">{formatBytes(evidence.file_size_bytes)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#52525B] flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    Age
+                  </span>
+                  <span className="text-[#FAFAFA]">
+                    {formatDistanceToNow(new Date(evidence.generated_at), { addSuffix: true })}
+                  </span>
+                </div>
+              </ConsoleCardBody>
+            </ConsoleCard>
+
+            {/* Linked incident */}
+            {evidence.incident_id && (
+              <ConsoleCard>
+                <ConsoleCardHeader>
+                  <h2 className="text-sm font-semibold text-[#FAFAFA]">Linked Incident</h2>
+                </ConsoleCardHeader>
+                <ConsoleCardBody>
+                  <p className="text-xs text-[#52525B] mb-3">
+                    This report captures the observation window and check snapshots for the incident below.
+                  </p>
+                  <Link
+                    href={`/incidents/${evidence.incident_id}`}
+                    className="inline-flex items-center gap-2 text-xs font-medium text-[#0891B2] hover:underline"
+                  >
+                    View incident INC-{evidence.incident_id.slice(0, 8)}
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </ConsoleCardBody>
+              </ConsoleCard>
+            )}
+          </div>
+        </div>
+      </div>
+    </LockedFeature>
   );
 }

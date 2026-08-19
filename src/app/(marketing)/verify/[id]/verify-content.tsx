@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Shield, CheckCircle2, XCircle, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Shield, CheckCircle2, XCircle, AlertTriangle, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient } from '@/lib/api';
 import { format } from 'date-fns';

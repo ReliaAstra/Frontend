@@ -1,8 +1,11 @@
-import { apiClient, getOrgContext } from "@/lib/api";
+import { apiClient, unwrapItems, type PaginatedResponse } from "@/lib/api";
+import type { EvidenceReport } from "@/services/evidenceService";
 
 export type IncidentSeverity = "critical" | "major" | "minor";
 export type IncidentStatus = "open" | "resolved" | "false_positive";
+export type RootCause = "vendor_failure" | "network_issue" | "config_error" | "unknown";
 
+/** Matches live schema IncidentResponse */
 export interface Incident {
   id: string;
   org_id: string;
@@ -11,29 +14,47 @@ export interface Incident {
   resolved_at: string | null;
   severity: IncidentSeverity;
   status: IncidentStatus;
-  root_cause: "vendor_failure" | "network_issue" | "config_error" | "unknown";
+  root_cause: RootCause;
   description: string | null;
   evidence_report_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
+/** Matches live schema IncidentCorrelationResponse */
 export interface IncidentCorrelation {
   id: string;
   incident_id: string;
   correlated_dependency_id: string;
   correlation_confidence: number;
   time_window_seconds: number;
-  correlation_method: "temporal" | "manual" | "ml";
+  correlation_method: "temporal" | "manual" | "ml" | string;
   created_at: string;
 }
 
+/** Matches live schema IncidentDetailResponse */
 export interface IncidentDetail extends Incident {
   correlations: IncidentCorrelation[];
 }
 
+/** Matches live schema IncidentUpdateRequest */
+export interface UpdateIncidentRequest {
+  status?: IncidentStatus;
+  severity?: IncidentSeverity;
+  root_cause?: RootCause;
+  description?: string | null;
+}
+
+/** Matches live schema IncidentCorrelateRequest */
+export interface CorrelateIncidentRequest {
+  correlated_dependency_id: string;
+  correlation_confidence?: number;
+  correlation_method?: "temporal" | "manual" | "ml";
+  time_window_seconds?: number;
+}
+
 // Timeline events derived from incident data + correlations
-// (no dedicated backend timeline endpoint :  built from incident fields)
+// (no dedicated backend timeline endpoint — built from incident fields)
 export interface TimelineEvent {
   id: string;
   type: "status_change" | "correlation" | "evidence_generated" | "resolved" | "acknowledged" | "note";
@@ -52,21 +73,6 @@ export interface CorrelatedSignal {
   values: number[];
 }
 
-export interface VendorIncident {
-  incident_id: string;
-  dependency_name: string;
-  started_at: string;
-  resolved_at: string | null;
-  severity: string;
-  status: string;
-  duration_seconds: number | null;
-}
-
-export interface VendorIncidentsResponse {
-  vendor_name: string;
-  incidents: VendorIncident[];
-}
-
 // Build timeline events from incident data
 export function buildTimeline(incident: IncidentDetail): TimelineEvent[] {
   const events: TimelineEvent[] = [];
@@ -82,7 +88,7 @@ export function buildTimeline(incident: IncidentDetail): TimelineEvent[] {
   });
 
   // Correlations
-  for (const c of incident.correlations) {
+  for (const c of incident.correlations ?? []) {
     events.push({
       id: c.id,
       type: "correlation",
@@ -124,7 +130,7 @@ export function buildTimeline(incident: IncidentDetail): TimelineEvent[] {
 
 // Build correlated signals from incident correlations
 export function buildCorrelatedSignals(incident: IncidentDetail): CorrelatedSignal[] {
-  return incident.correlations.map((c) => ({
+  return (incident.correlations ?? []).map((c) => ({
     id: c.id,
     name: `Dependency ${c.correlated_dependency_id.slice(0, 8)}`,
     correlation: c.correlation_confidence,
@@ -135,56 +141,30 @@ export function buildCorrelatedSignals(incident: IncidentDetail): CorrelatedSign
 
 export const incidentService = {
   async list(status?: IncidentStatus, severity?: IncidentSeverity, limit = 50): Promise<Incident[]> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
     const params: Record<string, unknown> = { limit };
     if (status) params.status = status;
     if (severity) params.severity = severity;
-    const res = await apiClient.get<Incident[]>(`/orgs/${orgId}/incidents`, { params });
-    return res.data;
+    const res = await apiClient.get<PaginatedResponse<Incident>>("/incidents", { params });
+    return unwrapItems(res.data);
   },
 
   async getById(id: string): Promise<IncidentDetail> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<IncidentDetail>(`/orgs/${orgId}/incidents/${id}`);
+    const res = await apiClient.get<IncidentDetail>(`/incidents/${id}`);
     return res.data;
   },
 
-  async update(
-    id: string,
-    data: {
-      status?: IncidentStatus;
-      severity?: IncidentSeverity;
-      root_cause?: string;
-      description?: string | null;
-    }
-  ): Promise<Incident> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.patch<Incident>(`/orgs/${orgId}/incidents/${id}`, data);
+  async update(id: string, data: UpdateIncidentRequest): Promise<Incident> {
+    const res = await apiClient.patch<Incident>(`/incidents/${id}`, data);
     return res.data;
   },
 
-  async correlate(
-    id: string,
-    data: {
-      correlated_dependency_id: string;
-      correlation_confidence?: number;
-      correlation_method?: "temporal" | "manual" | "ml";
-      time_window_seconds?: number;
-    }
-  ): Promise<IncidentCorrelation> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<IncidentCorrelation>(`/orgs/${orgId}/incidents/${id}/correlate`, data);
+  async correlate(id: string, data: CorrelateIncidentRequest): Promise<IncidentCorrelation> {
+    const res = await apiClient.post<IncidentCorrelation>(`/incidents/${id}/correlate`, data);
     return res.data;
   },
 
-  async getEvidence(id: string) {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get(`/orgs/${orgId}/incidents/${id}/evidence`);
+  async getEvidence(id: string): Promise<EvidenceReport> {
+    const res = await apiClient.get<EvidenceReport>(`/incidents/${id}/evidence`);
     return res.data;
   },
 };

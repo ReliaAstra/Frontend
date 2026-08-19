@@ -144,7 +144,7 @@ export default function DependenciesPage() {
         });
       }
     });
-  }, [dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dependencies]);
 
   // Close dropdown menu when clicking outside
   useEffect(() => {

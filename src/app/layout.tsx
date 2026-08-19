@@ -36,12 +36,21 @@ export const metadata: Metadata = {
       "Your site went down. Was it you, or your vendors? Independent monitoring, correlation, and evidence for external dependencies.",
     type: "website",
     siteName: "Reliastra",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1344,
+        height: 768,
+        alt: "Reliastra — External Dependency Intelligence",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Reliastra — External Dependency Intelligence",
     description:
       "Your site went down. Was it you, or your vendors? Independent monitoring, correlation, and evidence.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

@@ -109,14 +109,12 @@ function useCountUp(target: number | null | undefined, decimals = 0, duration = 
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (target == null) {
-      setValue(0);
-      return;
+    // Defer past the effect body so we do not trigger a cascading render.
+    if (target == null || reduce) {
+      const settle = requestAnimationFrame(() => setValue(target ?? 0));
+      return () => cancelAnimationFrame(settle);
     }
-    if (reduce) {
-      setValue(target);
-      return;
-    }
+
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {

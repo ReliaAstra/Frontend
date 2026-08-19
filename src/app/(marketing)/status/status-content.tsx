@@ -234,17 +234,13 @@ function ComponentCard({ row, index }: { row: ComponentRow; index: number }) {
       <UptimeTimeline
         days={row.days}
         height={36}
-        showAxis={false}
+        showAxis
         label={`90-day observed availability for ${row.name}`}
       />
 
-      <div className="mt-3 flex items-center justify-between text-[11px] font-medium text-[#A1A1AA]">
-        <span>90 days ago</span>
-        <span className="font-mono tabular-nums">
-          {row.uptime24h !== null ? `${row.uptime24h.toFixed(2)}% (24h)` : 'No 24h data'}
-        </span>
-        <span>Today</span>
-      </div>
+      <p className="mt-2 text-center font-mono text-[11px] tabular-nums text-[#A1A1AA]">
+        {row.uptime24h !== null ? `${row.uptime24h.toFixed(2)}% observed in the last 24h` : 'No 24h data'}
+      </p>
     </motion.div>
   );
 }

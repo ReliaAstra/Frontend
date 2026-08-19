@@ -132,7 +132,7 @@ export function CodeBlock({
         <button
           type="button"
           onClick={onCopy}
-          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-[#71717A] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[#FAFAFA]"
+          className="-mr-1 inline-flex h-9 min-w-[72px] items-center justify-center gap-1.5 rounded-md px-3 text-[11px] font-medium text-[#71717A] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[#FAFAFA]"
           aria-label="Copy code to clipboard"
         >
           {copied ? (

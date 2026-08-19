@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useId } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -77,6 +77,32 @@ interface Props {
  * Each segment is one observation day. Segments animate in on scroll with a
  * short stagger, and reveal an on-hover tooltip with the day's figure.
  */
+/**
+ * Number of day-segments to render at the current viewport width.
+ *
+ * 90 two-pixel bars do not fit inside a 375px screen, so narrow viewports
+ * show a shorter, still-legible window rather than overflowing or rendering
+ * sub-pixel slivers. The full series is always described to screen readers.
+ */
+function useVisibleDayCount(total: number): number {
+  const [count, setCount] = useState(total);
+
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth;
+      if (w < 480) return Math.min(total, 30);
+      if (w < 768) return Math.min(total, 60);
+      return total;
+    };
+    const apply = () => setCount(compute());
+    apply();
+    window.addEventListener('resize', apply, { passive: true });
+    return () => window.removeEventListener('resize', apply);
+  }, [total]);
+
+  return count;
+}
+
 export function UptimeTimeline({
   days,
   theme = 'light',
@@ -89,6 +115,13 @@ export function UptimeTimeline({
   const reduce = useReducedMotion();
   const tooltipId = useId();
 
+  const visibleCount = useVisibleDayCount(days.length);
+  // Always keep the most recent days when the window is truncated.
+  const visibleDays = useMemo(
+    () => (visibleCount >= days.length ? days : days.slice(days.length - visibleCount)),
+    [days, visibleCount],
+  );
+
   const summary = useMemo(() => {
     const observed = days.filter((d) => d.uptime !== null);
     if (observed.length === 0) return null;
@@ -97,7 +130,7 @@ export function UptimeTimeline({
     return { avg, observedDays: observed.length, incidentDays };
   }, [days]);
 
-  const activeDay = active !== null ? days[active] : null;
+  const activeDay = active !== null ? visibleDays[active] : null;
 
   return (
     <div className={cn('w-full', className)}>
@@ -113,7 +146,7 @@ export function UptimeTimeline({
       >
         {/* Bars */}
         <div className="flex items-end gap-[2px] sm:gap-[3px]" style={{ height }}>
-          {days.map((day, i) => {
+          {visibleDays.map((day, i) => {
             const tone = TONE[day.status];
             const isActive = active === i;
             return (
@@ -194,7 +227,7 @@ export function UptimeTimeline({
             theme === 'dark' ? 'text-[#52525B]' : 'text-[#A1A1AA]',
           )}
         >
-          <span>{days.length} days ago</span>
+          <span>{visibleDays.length} days ago</span>
           <span className="hidden sm:inline">
             {summary
               ? `${summary.observedDays} days observed`

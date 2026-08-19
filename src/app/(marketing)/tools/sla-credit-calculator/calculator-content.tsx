@@ -41,12 +41,15 @@ function useSpringNumber(target: number, duration = 420): number {
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (reduce) {
-      setValue(target);
-      return;
-    }
     const from = fromRef.current;
     if (from === target) return;
+
+    if (reduce) {
+      // Defer past the effect body so we do not trigger a cascading render.
+      const raf = requestAnimationFrame(() => setValue(target));
+      return () => cancelAnimationFrame(raf);
+    }
+
     const start = performance.now();
     let raf = 0;
 

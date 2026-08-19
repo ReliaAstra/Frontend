@@ -14,14 +14,11 @@ export function VendorMark({
   color: string;
   size?: number;
 }) {
-  const initials = name
-    .replace(/[^A-Za-z0-9 ]/g, '')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+  const words = name.replace(/[^A-Za-z0-9 ]/g, '').split(' ').filter(Boolean);
+  // Multi-word names use one letter per word; single words use their first two.
+  const initials = (
+    words.length > 1 ? words.slice(0, 2).map((w) => w[0]).join('') : (words[0] ?? '').slice(0, 2)
+  ).toUpperCase();
 
   return (
     <span

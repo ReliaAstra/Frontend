@@ -72,43 +72,44 @@ export function useRealtime(options: UseRealtimeOptions = {}): UseRealtimeReturn
   const [lastPollAt, setLastPollAt] = useState<Date | null>(null);
   const prevDataRef = useRef<Map<string, unknown>>(new Map());
 
-  // Set up polling for incident and check data
+  // Set up polling for incident and check data.
+  // Note: org context resolves asynchronously after login, so the interval is
+  // always created and simply no-ops until a session exists — invalidated
+  // queries are disabled without a token, so this is safe.
   useEffect(() => {
-    if (!enabled || !getOrgContext()) {
-      setStatus("disconnected");
-      return;
-    }
+    const hasSession = () => !!getOrgContext() || !!localStorage.getItem("reliastra_access_token");
 
-    setStatus("polling");
+    const pollInterval = enabled
+      ? setInterval(() => {
+          if (!hasSession()) return;
+          // Invalidate queries to trigger refetch
+          const invalidationKeys: string[][] = [];
 
-    const pollInterval = setInterval(() => {
-      // Invalidate queries to trigger refetch
-      const invalidationKeys: string[][] = [];
+          if (!eventFilter || eventFilter.some((e) => e.startsWith("incident"))) {
+            invalidationKeys.push(["incidents"]);
+            invalidationKeys.push(["dashboard", "summary"]);
+          }
+          if (!eventFilter || eventFilter.some((e) => e.startsWith("check") || e.startsWith("dependency"))) {
+            invalidationKeys.push(["dashboard", "recent-checks"]);
+            invalidationKeys.push(["dashboard", "dependency-health"]);
+          }
+          if (!eventFilter || eventFilter.some((e) => e.startsWith("evidence"))) {
+            invalidationKeys.push(["evidence"]);
+          }
 
-      if (!eventFilter || eventFilter.some((e) => e.startsWith("incident"))) {
-        invalidationKeys.push(["incidents"]);
-        invalidationKeys.push(["dashboard", "summary"]);
-      }
-      if (!eventFilter || eventFilter.some((e) => e.startsWith("check") || e.startsWith("dependency"))) {
-        invalidationKeys.push(["dashboard", "recent-checks"]);
-        invalidationKeys.push(["dashboard", "dependency-health"]);
-      }
-      if (!eventFilter || eventFilter.some((e) => e.startsWith("evidence"))) {
-        invalidationKeys.push(["evidence"]);
-      }
+          for (const key of invalidationKeys) {
+            queryClient.invalidateQueries({ queryKey: key });
+          }
 
-      for (const key of invalidationKeys) {
-        queryClient.invalidateQueries({ queryKey: key });
-      }
+          setLastPollAt(new Date());
+        }, interval)
+      : null;
 
-      setLastPollAt(new Date());
-    }, interval);
-
-    setStatus("connected");
+    // Defer status transitions to avoid synchronous setState in the effect body
+    queueMicrotask(() => setStatus(enabled ? "polling" : "disconnected"));
 
     return () => {
-      clearInterval(pollInterval);
-      setStatus("disconnected");
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [enabled, interval, eventFilter, queryClient]);
 
@@ -134,15 +135,13 @@ export function useRealtime(options: UseRealtimeOptions = {}): UseRealtimeReturn
               const newItems = newData.slice(0, newLen - prevLen);
               for (const item of newItems) {
                 const incident = item as { id: string; severity: string; status: string };
-                setEvents((prev) => [
-                  {
-                    type: "incident.new",
-                    org_id: getOrgContext() || "",
-                    timestamp: new Date().toISOString(),
-                    payload: incident,
-                  },
-                  ...prev,
-                ].slice(0, 50)); // Keep max 50 events
+                const event: RealtimeEvent = {
+                  type: "incident.new",
+                  org_id: getOrgContext() || "",
+                  timestamp: new Date().toISOString(),
+                  payload: incident,
+                };
+                setEvents((prev) => [event, ...prev].slice(0, 50)); // Keep max 50 events
               }
             }
 
@@ -151,15 +150,13 @@ export function useRealtime(options: UseRealtimeOptions = {}): UseRealtimeReturn
               const newItems = newData.slice(0, newLen - prevLen);
               for (const item of newItems) {
                 const check = item as { id: string; is_up: boolean; dependency_id: string };
-                setEvents((prev) => [
-                  {
-                    type: check.is_up ? "check.completed" : "dependency.down",
-                    org_id: getOrgContext() || "",
-                    timestamp: new Date().toISOString(),
-                    payload: check,
-                  },
-                  ...prev,
-                ].slice(0, 50));
+                const event: RealtimeEvent = {
+                  type: check.is_up ? "check.completed" : "dependency.down",
+                  org_id: getOrgContext() || "",
+                  timestamp: new Date().toISOString(),
+                  payload: check,
+                };
+                setEvents((prev) => [event, ...prev].slice(0, 50));
               }
             }
           }
@@ -226,14 +223,12 @@ export function useWebSocket(
   options: { enabled?: boolean; onEvent?: (event: RealtimeEvent) => void } = {}
 ) {
   const { enabled = true, onEvent } = options;
-  const [connected, setConnected] = useState(false);
-
-  useEffect(() => {
-    // WebSocket not yet supported by the API — using polling fallback.
-    // When API adds WS support, replace this with native WebSocket connection.
-    // For now, setConnected(false) indicates polling mode.
-    setConnected(false);
-  }, [channel, enabled, onEvent]);
+  // WebSocket is not yet supported by the API — polling is used instead,
+  // so the socket is always reported as disconnected for now.
+  const connected = false;
+  void channel;
+  void enabled;
+  void onEvent;
 
   return { connected, reconnect: () => {} };
 }

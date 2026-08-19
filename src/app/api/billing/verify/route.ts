@@ -4,10 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
  * POST /api/billing/verify
  *
  * Client-side proxy for verifying Paystack transactions.
- * The frontend calls this after Paystack redirect to avoid CORS issues
- * and to keep the API key server-side if needed in the future.
- *
- * Currently just proxies to the backend's public verify endpoint.
+ * The live backend endpoint (POST /v1/billing/verify?reference=...) requires
+ * authentication, so the user's Bearer token is forwarded from the
+ * Authorization header.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -21,14 +20,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zevcloud.app/v1";
-    const res = await fetch(`${apiUrl}/billing/verify?reference=${encodeURIComponent(reference)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "https://reliastra-backend.zevcloud.app/v1";
 
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) headers["Authorization"] = authHeader;
+
+    const res = await fetch(
+      `${apiUrl}/billing/verify?reference=${encodeURIComponent(reference)}`,
+      { method: "POST", headers }
+    );
+
+    const data = await res.json().catch(() => null);
+    return NextResponse.json(data ?? {}, { status: res.status });
   } catch {
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "Failed to verify payment" } },

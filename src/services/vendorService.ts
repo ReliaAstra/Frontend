@@ -1,7 +1,8 @@
-import { apiClient, getOrgContext } from "@/lib/api";
+import { apiClient, unwrapItems, type PaginatedResponse } from "@/lib/api";
 
-// --- Types matching backend OpenAPI spec ---
+// --- Types matching the live OpenAPI spec ---
 
+/** Matches live schema VendorResponse */
 export interface VendorResponse {
   id: string;
   vendor_name: string;
@@ -13,6 +14,7 @@ export interface VendorResponse {
   updated_at: string;
 }
 
+/** Matches live schema VendorEndpointResponse */
 export interface VendorEndpoint {
   id: string;
   endpoint_url: string;
@@ -22,6 +24,7 @@ export interface VendorEndpoint {
   last_check_at: string | null;
 }
 
+/** Matches live schema VendorDetailResponse */
 export interface VendorDetailResponse {
   id: string;
   vendor_name: string;
@@ -35,6 +38,7 @@ export interface VendorDetailResponse {
   endpoints: VendorEndpoint[];
 }
 
+/** Matches live schema VendorHistoryResponse */
 export interface VendorHistoryResponse {
   vendor_name: string;
   uptime_percentage_24h: number;
@@ -42,19 +46,22 @@ export interface VendorHistoryResponse {
   recent_checks_count: number;
 }
 
+/** Matches live schema VendorWindowMetrics */
 export interface VendorWindowMetrics {
   window: string;
   total_observations: number;
   uptime_percentage: number;
   avg_latency_ms: number;
-  p95_latency_ms: number;
+  p95_latency_ms: number | null;
 }
 
+/** Matches live schema VendorMetricsResponse */
 export interface VendorMetricsResponse {
   vendor_name: string;
   metrics: Record<string, VendorWindowMetrics>;
 }
 
+/** Matches live schema VendorIncidentResponse */
 export interface VendorIncident {
   incident_id: string;
   dependency_name: string;
@@ -65,12 +72,13 @@ export interface VendorIncident {
   duration_seconds: number | null;
 }
 
+/** Matches live schema VendorIncidentsResponse */
 export interface VendorIncidentsResponse {
   vendor_name: string;
   incidents: VendorIncident[];
 }
 
-// ── Timeline Types (from OpenAPI) ──────────────────────────────────────────────
+// ── Timeline types (live schema VendorTimelineResponse) ──────────────────────
 
 export interface TimelineBucket {
   timestamp: string;
@@ -102,50 +110,63 @@ export interface VendorTimelineResponse {
 // --- Service: PUBLIC endpoints (no auth required) ---
 
 export const vendorService = {
-  async listPublicVendors(): Promise<VendorResponse[]> {
-    const res = await apiClient.get<VendorResponse[]>("/public/vendors");
-    return res.data;
+  /** GET /v1/vendors — cursor-paginated public vendor catalogue (unwrapped). */
+  async listPublicVendors(limit = 100): Promise<VendorResponse[]> {
+    const res = await apiClient.get<PaginatedResponse<VendorResponse>>("/vendors", {
+      params: { limit, public: true },
+    });
+    return unwrapItems(res.data);
   },
 
+  /** GET /v1/vendors/{vendor_name} */
   async getVendorDetail(vendorName: string): Promise<VendorDetailResponse> {
-    const res = await apiClient.get<VendorDetailResponse>(`/public/vendors/${vendorName}`);
+    const res = await apiClient.get<VendorDetailResponse>(`/vendors/${encodeURIComponent(vendorName)}`);
     return res.data;
   },
 
+  /** GET /v1/vendors/{vendor_name}/history */
   async getVendorHistory(vendorName: string): Promise<VendorHistoryResponse> {
-    const res = await apiClient.get<VendorHistoryResponse>(`/public/vendors/${vendorName}/history`);
+    const res = await apiClient.get<VendorHistoryResponse>(
+      `/vendors/${encodeURIComponent(vendorName)}/history`
+    );
     return res.data;
   },
 
+  /** GET /v1/vendors/{vendor_name}/metrics?window= */
   async getVendorMetrics(vendorName: string, window?: string): Promise<VendorMetricsResponse> {
     const params = window ? { window } : {};
-    const res = await apiClient.get<VendorMetricsResponse>(`/public/vendors/${vendorName}/metrics`, { params });
+    const res = await apiClient.get<VendorMetricsResponse>(
+      `/vendors/${encodeURIComponent(vendorName)}/metrics`,
+      { params }
+    );
     return res.data;
   },
 
+  /** GET /v1/vendors/{vendor_name}/incidents?limit= */
   async getVendorIncidents(vendorName: string, limit = 50): Promise<VendorIncidentsResponse> {
-    const res = await apiClient.get<VendorIncidentsResponse>(`/public/vendors/${vendorName}/incidents`, {
-      params: { limit },
-    });
+    const res = await apiClient.get<VendorIncidentsResponse>(
+      `/vendors/${encodeURIComponent(vendorName)}/incidents`,
+      { params: { limit } }
+    );
     return res.data;
   },
 
   /**
-   * Get vendor timeline data for chart rendering.
+   * GET /v1/vendors/{vendor_name}/timeline
    * Public endpoint. Poll every 15-30s for live data.
    */
   async getVendorTimeline(
     vendorName: string,
     window: "1h" | "6h" | "24h" | "7d" | "30d" | "90d" = "24h",
     resolution?: "auto" | "1m" | "5m" | "15m" | "1h" | "6h",
-    region?: string,
+    region?: string
   ): Promise<VendorTimelineResponse> {
     const params: Record<string, string> = { window };
     if (resolution && resolution !== "auto") params.resolution = resolution;
     if (region) params.region = region;
     const res = await apiClient.get<VendorTimelineResponse>(
-      `/public/vendors/${vendorName}/timeline`,
-      { params },
+      `/vendors/${encodeURIComponent(vendorName)}/timeline`,
+      { params }
     );
     return res.data;
   },

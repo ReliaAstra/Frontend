@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
-import { getOrgContext } from "@/lib/api";
+import { getAccessToken, getOrgContext } from "@/lib/api";
 import { BackendError } from "@/lib/api";
 
 import { dashboardService } from "@/services/dashboardService";
-import { dependencyService, type Dependency, type DependencyHistory, type CheckResult, type CreateDependencyRequest } from "@/services/dependencyService";
-import { incidentService, type Incident, type IncidentDetail, type IncidentCorrelation, type IncidentStatus, type IncidentSeverity } from "@/services/incidentService";
-import { evidenceService, type EvidenceDetail } from "@/services/evidenceService";
-import { clientService, type Client, type PaginatedResponse, type ClientListParams } from "@/services/clientService";
-import { billingService, type PricingPlansResponse, type CheckoutResponse, type VerifyTransactionResponse } from "@/services/billingService";
+import { dependencyService, type Dependency, type DependencyHistory, type CheckResult, type CreateDependencyRequest, type UpdateDependencyRequest } from "@/services/dependencyService";
+import { incidentService, type Incident, type IncidentDetail, type IncidentCorrelation, type IncidentStatus, type IncidentSeverity, type UpdateIncidentRequest, type CorrelateIncidentRequest } from "@/services/incidentService";
+import { evidenceService, type EvidenceReport, type EvidenceReportDownload } from "@/services/evidenceService";
+import { clientService, type Client, type Application, type CreateClientRequest, type CreateApplicationRequest } from "@/services/clientService";
+import { billingService, type PricingPlansResponse, type CheckoutResponse, type VerifyTransactionResponse, type FoundingSpotsResponse, type ClaimFoundingSpotResponse } from "@/services/billingService";
 import { vendorService, type VendorResponse, type VendorDetailResponse, type VendorMetricsResponse, type VendorHistoryResponse, type VendorIncidentsResponse, type VendorTimelineResponse } from "@/services/vendorService";
 import { orgService, type OrgMemberResponse } from "@/services/orgService";
 import { apiKeyService, type ApiKeyResponse, type ApiKeyCreateResponse } from "@/services/apiKeyService";
@@ -20,17 +20,21 @@ const STALE_30S = 30 * 1000;
 const STALE_5MIN = 5 * 60 * 1000;
 const STALE_1HR = 60 * 60 * 1000;
 
-/** Whether the org context is available (used as query `enabled` guard) */
-function orgReady(): boolean {
-  return !!getOrgContext();
+/**
+ * Whether an authenticated session is available (used as the query `enabled` guard).
+ * The live API resolves the org from the bearer token, so a stored access token
+ * is all that's required.
+ */
+function sessionReady(): boolean {
+  return !!getAccessToken();
 }
 
-/** Query options with org guard */
-function orgQuery<T>(key: unknown[], queryFn: () => Promise<T>, opts?: Omit<UseQueryOptions<T, BackendError>, "queryKey" | "queryFn">) {
+/** Query options guarded by an active session */
+function useSessionQuery<T>(key: unknown[], queryFn: () => Promise<T>, opts?: Omit<UseQueryOptions<T, BackendError>, "queryKey" | "queryFn">) {
   return useQuery<T, BackendError>({
     queryKey: key,
     queryFn,
-    enabled: orgReady(),
+    enabled: sessionReady(),
     ...opts,
   });
 }
@@ -40,7 +44,7 @@ function orgQuery<T>(key: unknown[], queryFn: () => Promise<T>, opts?: Omit<UseQ
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useDashboardSummary() {
-  return orgQuery(
+  return useSessionQuery(
     ["dashboard", "summary"],
     () => dashboardService.getSummary(),
     { staleTime: STALE_30S, refetchInterval: STALE_30S },
@@ -48,7 +52,7 @@ export function useDashboardSummary() {
 }
 
 export function useLatencyData(hours?: number) {
-  return orgQuery(
+  return useSessionQuery(
     ["dashboard", "latency", { hours }],
     () => dashboardService.getLatency(hours),
     { staleTime: STALE_5MIN },
@@ -56,7 +60,7 @@ export function useLatencyData(hours?: number) {
 }
 
 export function useSlaDegradation(periodDays?: number) {
-  return orgQuery(
+  return useSessionQuery(
     ["dashboard", "sla-degradation", { periodDays }],
     () => dashboardService.getSlaDegradation(periodDays),
     { staleTime: STALE_5MIN },
@@ -64,7 +68,7 @@ export function useSlaDegradation(periodDays?: number) {
 }
 
 export function useDependencyHealth() {
-  return orgQuery(
+  return useSessionQuery(
     ["dashboard", "dependency-health"],
     () => dashboardService.getDependencyHealth(),
     { staleTime: STALE_30S },
@@ -72,25 +76,26 @@ export function useDependencyHealth() {
 }
 
 export function useRecentChecks(limit?: number) {
-  return orgQuery(
+  return useSessionQuery(
     ["dashboard", "recent-checks", { limit }],
     () => dashboardService.getRecentChecks(limit),
     { staleTime: STALE_30S, refetchInterval: 10_000 }, // Auto-refetch every 10s for live check results
   );
 }
 
-export function useIncidentTimeline() {
-  return orgQuery(
-    ["dashboard", "incident-timeline"],
-    () => incidentService.list(undefined, undefined, 20),
+export function useIncidentTimeline(limit?: number) {
+  return useSessionQuery(
+    ["dashboard", "incident-timeline", { limit }],
+    () => dashboardService.getIncidentTimeline(limit),
     { staleTime: STALE_30S },
   );
 }
 
 export function useVendorStatus() {
-  return useQuery<VendorResponse[], BackendError>({
+  return useQuery<VendorDetailResponse[], BackendError>({
     queryKey: ["dashboard", "vendor-status"],
-    queryFn: () => vendorService.listPublicVendors(),
+    queryFn: () => dashboardService.getVendorStatus(),
+    enabled: sessionReady(),
     staleTime: STALE_5MIN,
   });
 }
@@ -100,38 +105,34 @@ export function useVendorStatus() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useDependencies(limit?: number) {
-  const orgId = getOrgContext();
   return useQuery<Dependency[], BackendError>({
-    queryKey: ["dependencies", { orgId, limit }],
+    queryKey: ["dependencies", { limit }],
     queryFn: () => dependencyService.list(limit),
-    enabled: orgReady(),
+    enabled: sessionReady(),
   });
 }
 
 export function useDependency(id: string) {
-  const orgId = getOrgContext();
   return useQuery<Dependency, BackendError>({
-    queryKey: ["dependencies", { orgId, id }],
+    queryKey: ["dependencies", { id }],
     queryFn: () => dependencyService.getById(id),
-    enabled: orgReady() && !!id,
+    enabled: sessionReady() && !!id,
   });
 }
 
 export function useDependencyHistory(id: string) {
-  const orgId = getOrgContext();
   return useQuery<DependencyHistory, BackendError>({
-    queryKey: ["dependencies", { orgId, id }, "history"],
+    queryKey: ["dependencies", { id }, "history"],
     queryFn: () => dependencyService.getHistory(id),
-    enabled: orgReady() && !!id,
+    enabled: sessionReady() && !!id,
   });
 }
 
 export function useDependencyResults(id: string, limit?: number) {
-  const orgId = getOrgContext();
   return useQuery<CheckResult[], BackendError>({
-    queryKey: ["dependencies", { orgId, id }, "results", { limit }],
+    queryKey: ["dependencies", { id }, "results", { limit }],
     queryFn: () => dependencyService.getResults(id, limit),
-    enabled: orgReady() && !!id,
+    enabled: sessionReady() && !!id,
   });
 }
 
@@ -140,8 +141,7 @@ export function useCreateDependency() {
   return useMutation<Dependency, BackendError, CreateDependencyRequest>({
     mutationFn: (data) => dependencyService.create(data),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["dependencies", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["dependencies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "dependency-health"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
@@ -150,12 +150,10 @@ export function useCreateDependency() {
 
 export function useUpdateDependency() {
   const queryClient = useQueryClient();
-  return useMutation<Dependency, BackendError, { id: string; data: Partial<CreateDependencyRequest> }>({
+  return useMutation<Dependency, BackendError, { id: string; data: UpdateDependencyRequest }>({
     mutationFn: ({ id, data }) => dependencyService.update(id, data),
     onSuccess: (_data, variables) => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["dependencies", { orgId }] });
-      queryClient.invalidateQueries({ queryKey: ["dependencies", { orgId, id: variables.id }] });
+      queryClient.invalidateQueries({ queryKey: ["dependencies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "dependency-health"] });
     },
   });
@@ -166,8 +164,7 @@ export function useDeleteDependency() {
   return useMutation<void, BackendError, string>({
     mutationFn: (id) => dependencyService.delete(id),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["dependencies", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["dependencies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "dependency-health"] });
     },
@@ -179,41 +176,33 @@ export function useDeleteDependency() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useIncidents(params?: { status?: string; severity?: string; limit?: number }) {
-  const orgId = getOrgContext();
   return useQuery<Incident[], BackendError>({
-    queryKey: ["incidents", { orgId, ...params }],
+    queryKey: ["incidents", { ...params }],
     queryFn: () =>
       incidentService.list(
         params?.status as IncidentStatus | undefined,
         params?.severity as IncidentSeverity | undefined,
         params?.limit,
       ),
-    enabled: orgReady(),
+    enabled: sessionReady(),
     refetchInterval: 15_000, // Auto-refetch every 15s for live incident notifications
   });
 }
 
 export function useIncident(id: string) {
-  const orgId = getOrgContext();
   return useQuery<IncidentDetail, BackendError>({
-    queryKey: ["incidents", { orgId, id }],
+    queryKey: ["incidents", { id }],
     queryFn: () => incidentService.getById(id),
-    enabled: orgReady() && !!id,
+    enabled: sessionReady() && !!id,
   });
 }
 
 export function useUpdateIncident() {
   const queryClient = useQueryClient();
-  return useMutation<
-    Incident,
-    BackendError,
-    { id: string; data: { status?: IncidentStatus; severity?: IncidentSeverity; root_cause?: string; description?: string | null } }
-  >({
+  return useMutation<Incident, BackendError, { id: string; data: UpdateIncidentRequest }>({
     mutationFn: ({ id, data }) => incidentService.update(id, data),
     onSuccess: (_data, variables) => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["incidents", { orgId }] });
-      queryClient.invalidateQueries({ queryKey: ["incidents", { orgId, id: variables.id }] });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
@@ -221,25 +210,20 @@ export function useUpdateIncident() {
 
 export function useCorrelateIncident() {
   const queryClient = useQueryClient();
-  return useMutation<
-    IncidentCorrelation,
-    BackendError,
-    { id: string; data: { correlated_dependency_id: string; correlation_confidence?: number; correlation_method?: "temporal" | "manual" | "ml"; time_window_seconds?: number } }
-  >({
+  return useMutation<IncidentCorrelation, BackendError, { id: string; data: CorrelateIncidentRequest }>({
     mutationFn: ({ id, data }) => incidentService.correlate(id, data),
     onSuccess: (_data, variables) => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["incidents", { orgId, id: variables.id }] });
+      queryClient.invalidateQueries({ queryKey: ["incidents", { id: variables.id }] });
     },
   });
 }
 
 export function useIncidentEvidence(incidentId: string) {
-  const orgId = getOrgContext();
-  return useQuery<EvidenceDetail, BackendError>({
-    queryKey: ["incidents", { orgId, id: incidentId }, "evidence"],
+  return useQuery<EvidenceReport, BackendError>({
+    queryKey: ["incidents", { id: incidentId }, "evidence"],
     queryFn: () => incidentService.getEvidence(incidentId),
-    enabled: orgReady() && !!incidentId,
+    enabled: sessionReady() && !!incidentId,
+    retry: false, // 404 simply means "no evidence yet"
   });
 }
 
@@ -248,31 +232,28 @@ export function useIncidentEvidence(incidentId: string) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useEvidence(limit?: number) {
-  const orgId = getOrgContext();
-  return useQuery<EvidenceDetail[], BackendError>({
-    queryKey: ["evidence", { orgId, limit }],
-    queryFn: () => evidenceService.list(),
-    enabled: orgReady(),
+  return useQuery<EvidenceReport[], BackendError>({
+    queryKey: ["evidence", { limit }],
+    queryFn: () => evidenceService.list(limit),
+    enabled: sessionReady(),
   });
 }
 
 export function useEvidenceDetail(reportId: string) {
-  const orgId = getOrgContext();
-  return useQuery<EvidenceDetail, BackendError>({
-    queryKey: ["evidence", { orgId, id: reportId }],
+  return useQuery<EvidenceReportDownload, BackendError>({
+    queryKey: ["evidence", { id: reportId }],
     queryFn: () => evidenceService.getById(reportId),
-    enabled: orgReady() && !!reportId,
+    enabled: sessionReady() && !!reportId,
   });
 }
 
 export function useRegenerateEvidence() {
   const queryClient = useQueryClient();
-  return useMutation<EvidenceDetail, BackendError, string>({
+  return useMutation<EvidenceReport, BackendError, string>({
     mutationFn: (reportId) => evidenceService.regenerate(reportId),
     onSuccess: (_data, reportId) => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["evidence", { orgId, id: reportId }] });
-      queryClient.invalidateQueries({ queryKey: ["evidence", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["evidence", { id: reportId }] });
+      queryClient.invalidateQueries({ queryKey: ["evidence"] });
     },
   });
 }
@@ -281,22 +262,39 @@ export function useRegenerateEvidence() {
 // CLIENT HOOKS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function useClients(params?: ClientListParams) {
-  const orgId = getOrgContext();
-  return useQuery<PaginatedResponse<Client>, BackendError>({
-    queryKey: ["clients", { orgId, ...params }],
-    queryFn: () => clientService.list(params),
-    enabled: orgReady(),
+export function useClients() {
+  return useQuery<Client[], BackendError>({
+    queryKey: ["clients"],
+    queryFn: () => clientService.list(),
+    enabled: sessionReady(),
+  });
+}
+
+export function useClientApplications(clientId: string) {
+  return useQuery<Application[], BackendError>({
+    queryKey: ["clients", { clientId }, "applications"],
+    queryFn: () => clientService.listApplications(clientId),
+    enabled: sessionReady() && !!clientId,
   });
 }
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
-  return useMutation<Client, BackendError, { name: string }>({
+  return useMutation<Client, BackendError, CreateClientRequest>({
     mutationFn: (data) => clientService.create(data),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["clients", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+  });
+}
+
+export function useCreateApplication(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<Application, BackendError, CreateApplicationRequest>({
+    mutationFn: (data) => clientService.createApplication(clientId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients", { clientId }, "applications"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
   });
 }
@@ -306,7 +304,7 @@ export function useCreateClient() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useBillingPlan() {
-  return orgQuery(
+  return useSessionQuery(
     ["billing", "plan"],
     () => billingService.getPlan(),
     { staleTime: STALE_5MIN },
@@ -318,6 +316,25 @@ export function usePricingPlans() {
     queryKey: ["billing", "pricing-plans"],
     queryFn: () => billingService.getPricingPlans(),
     staleTime: STALE_1HR,
+  });
+}
+
+export function useFoundingSpots() {
+  return useSessionQuery(
+    ["billing", "founding-spots"],
+    () => billingService.getFoundingSpots(),
+    { staleTime: STALE_5MIN },
+  );
+}
+
+export function useClaimFoundingSpot() {
+  const queryClient = useQueryClient();
+  return useMutation<ClaimFoundingSpotResponse, BackendError, string | undefined>({
+    mutationFn: (email) => billingService.claimFoundingSpot(email),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["billing", "founding-spots"] });
+      queryClient.invalidateQueries({ queryKey: ["billing", "plan"] });
+    },
   });
 }
 
@@ -346,11 +363,10 @@ export function useVerifyPayment() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useNotificationConfigs() {
-  const orgId = getOrgContext();
   return useQuery<AlertConfig[], BackendError>({
-    queryKey: ["notifications", { orgId }],
+    queryKey: ["notifications"],
     queryFn: () => notificationService.list(),
-    enabled: orgReady(),
+    enabled: sessionReady(),
   });
 }
 
@@ -359,8 +375,7 @@ export function useCreateNotificationConfig() {
   return useMutation<AlertConfig, BackendError, CreateAlertConfigRequest>({
     mutationFn: (data) => notificationService.create(data),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["notifications", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -370,8 +385,7 @@ export function useUpdateNotificationConfig() {
   return useMutation<AlertConfig, BackendError, { id: string; data: Partial<CreateAlertConfigRequest> }>({
     mutationFn: ({ id, data }) => notificationService.update(id, data),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["notifications", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -381,8 +395,7 @@ export function useDeleteNotificationConfig() {
   return useMutation<void, BackendError, string>({
     mutationFn: (id) => notificationService.delete(id),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["notifications", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -392,11 +405,10 @@ export function useDeleteNotificationConfig() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useApiKeys() {
-  const orgId = getOrgContext();
   return useQuery<ApiKeyResponse[], BackendError>({
-    queryKey: ["api-keys", { orgId }],
+    queryKey: ["api-keys"],
     queryFn: () => apiKeyService.list(),
-    enabled: orgReady(),
+    enabled: sessionReady(),
   });
 }
 
@@ -405,8 +417,7 @@ export function useCreateApiKey() {
   return useMutation<ApiKeyCreateResponse, BackendError, { name: string; scopes?: string[]; expires_at?: string | null }>({
     mutationFn: (data) => apiKeyService.create(data.name, data.scopes, data.expires_at),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["api-keys", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
     },
   });
 }
@@ -416,8 +427,7 @@ export function useDeleteApiKey() {
   return useMutation<void, BackendError, string>({
     mutationFn: (keyId) => apiKeyService.revoke(keyId),
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["api-keys", { orgId }] });
+      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
     },
   });
 }
@@ -489,11 +499,10 @@ export function useVendorTimeline(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useOrgMembers() {
-  const orgId = getOrgContext();
   return useQuery<OrgMemberResponse[], BackendError>({
-    queryKey: ["org", { orgId }, "members"],
+    queryKey: ["org", "members"],
     queryFn: () => orgService.listMembers(),
-    enabled: orgReady(),
+    enabled: sessionReady(),
   });
 }
 
@@ -501,13 +510,11 @@ export function useInviteMember() {
   const queryClient = useQueryClient();
   return useMutation<OrgMemberResponse, BackendError, { email: string; role?: string }>({
     mutationFn: ({ email, role }) => {
-      const orgId = getOrgContext();
-      if (!orgId) throw new Error("No organization context");
-      return orgService.inviteMember(orgId, email, role);
+      const orgId = getOrgContext() ?? "current";
+      return orgService.inviteMember(orgId, email, role as Parameters<typeof orgService.inviteMember>[2]);
     },
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["org", { orgId }, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["org", "members"] });
     },
   });
 }
@@ -516,13 +523,11 @@ export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
   return useMutation<OrgMemberResponse, BackendError, { memberId: string; role: string }>({
     mutationFn: ({ memberId, role }) => {
-      const orgId = getOrgContext();
-      if (!orgId) throw new Error("No organization context");
-      return orgService.updateMemberRole(orgId, memberId, role);
+      const orgId = getOrgContext() ?? "current";
+      return orgService.updateMemberRole(orgId, memberId, role as Parameters<typeof orgService.updateMemberRole>[2]);
     },
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["org", { orgId }, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["org", "members"] });
     },
   });
 }
@@ -531,13 +536,11 @@ export function useRemoveMember() {
   const queryClient = useQueryClient();
   return useMutation<void, BackendError, string>({
     mutationFn: (memberId) => {
-      const orgId = getOrgContext();
-      if (!orgId) throw new Error("No organization context");
+      const orgId = getOrgContext() ?? "current";
       return orgService.removeMember(orgId, memberId);
     },
     onSuccess: () => {
-      const orgId = getOrgContext();
-      queryClient.invalidateQueries({ queryKey: ["org", { orgId }, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["org", "members"] });
     },
   });
 }

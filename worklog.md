@@ -1,4 +1,29 @@
 ---
+Task ID: 3
+Agent: main
+Task: Connect frontend to live backend at reliastra-backend.zevcloud.app + full bugfix pass
+
+Work Log:
+- Pulled the FULL live OpenAPI spec (36 chunks) from https://reliastra-backend.zevcloud.app/openapi.json and mapped every endpoint/schema
+- Found the backend API had migrated from org-scoped paths (/v1/orgs/{org_id}/...) to flat token-scoped paths (/v1/dependencies, /v1/incidents, /v1/evidence, /v1/dashboard/*, /v1/billing/*, /v1/api-keys, /v1/clients, /v1/orgs/members, /v1/vendors, /v1/pricing); list endpoints are cursor-paginated (PaginatedResponse with items/next_cursor/has_more)
+- Rewrote all 10 service modules against the live contract; added unwrapItems<T>() pagination normalizer
+- lib/api.ts: new default base URL https://reliastra-backend.zevcloud.app/v1, robust BackendError mapping (error envelope, FastAPI detail string, 422 validation arrays, network/CORS), single-flight silent token refresh with redirect-on-failure
+- billing/verify is POST + ?reference= + auth on the live API (was GET public) — fixed service, hook, callback page, and the /api/billing/verify proxy now forwards Authorization
+- Evidence model is file-metadata based on live API — rewrote evidence list + detail pages (checksum, size, generated/expires, download_url, regenerate); removed dead snapshot/contributor UI calls; ContributorCard self-contained type
+- Clients API has no sites and no per-client counters — rebuilt clients list/detail around {name, description} + applications; repurposed sites/[siteId] URL as application detail with dependencies linked via application_id
+- Agency page: removed phantom fields (sites_count, open_incidents_count), fixed Plan typing, replaced invalid LockedFeature gate with a proper plan-gate panel
+- Settings page: wired live "Notifications" and "API Keys" tabs (existing components were not reachable)
+- Fixed React 19 useRef() missing-initial-arg errors, framer-motion Variants ease typing, missing AlertCircle import, AnimatedCounter illegal `key` prop access, MemberTable/OrgRole typing, IncidentList optional correlations, CheckFeedTable nullable status_code, dashboard "Alerts Today" KPI label, useRealtime stale org context + setState-in-effect warnings
+- Replaced next/font/google with self-hosted @fontsource Inter + IBM Plex Mono (build-time network to Google Fonts is unavailable)
+- next.config.ts: turbopack root pinned, allowedDevOrigins for *.e2b.app preview
+- Verified: tsc clean, ESLint clean, production build clean (38 routes), all 24 routes return correct status codes
+- Ran a 62-assertion integration test of the REAL service layer (via jiti) against a mock implementing the live contract: ALL PASS including 401→refresh→retry single-flight flow
+
+Stage Summary:
+- Frontend fully rewired to the live backend contract; 62/62 contract tests pass; build/lint/typecheck clean; all routes healthy
+- NOTE: browser calls the backend directly (bearer tokens). Backend CORS must allow the frontend origin
+
+---
 Task ID: 1
 Agent: main
 Task: Read API docs, test real credentials, add realtime updates, optimize latency chart, wire billing

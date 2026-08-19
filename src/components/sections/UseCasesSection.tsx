@@ -8,7 +8,7 @@ const ease = [0.25, 0.1, 0.25, 1] as const;
 const TABS = ['SaaS Teams', 'Agencies', 'DevOps'] as const;
 type TabKey = (typeof TABS)[number];
 
-function AnimatedCounter({ target, key: counterKey }: { target: number; key: string }) {
+function AnimatedCounter({ target }: { target: number }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (v) => `$${Math.round(v).toLocaleString()}`);
   const [display, setDisplay] = useState('$0');
@@ -20,7 +20,7 @@ function AnimatedCounter({ target, key: counterKey }: { target: number; key: str
 
   useEffect(() => {
     animate(count, target, { duration: 1.2, ease: 'easeOut' });
-  }, [counterKey, count, target]);
+  }, [count, target]);
 
   return <span>{display}</span>;
 }

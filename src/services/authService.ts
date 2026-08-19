@@ -73,8 +73,11 @@ export const authService = {
     return res.data;
   },
 
-  async exchangeGoogleCode(code: string): Promise<OAuthCallbackResponse> {
-    const res = await apiClient.post<OAuthCallbackResponse>("/auth/google", { code });
+  async exchangeGoogleCode(code: string, state?: string | null): Promise<OAuthCallbackResponse> {
+    const res = await apiClient.post<OAuthCallbackResponse>("/auth/google", {
+      code,
+      state: state ?? null,
+    });
     return res.data;
   },
 
@@ -93,10 +96,10 @@ export const authService = {
     const savedState = sessionStorage.getItem("google_oauth_state");
 
     if (!code) throw new Error("No authorization code received from Google");
-    if (returnedState !== savedState) throw new Error("OAuth state mismatch :  possible CSRF");
+    if (savedState && returnedState !== savedState) throw new Error("OAuth state mismatch: possible CSRF");
 
     sessionStorage.removeItem("google_oauth_state");
-    return await authService.exchangeGoogleCode(code);
+    return await authService.exchangeGoogleCode(code, returnedState);
   },
 
   // GitHub OAuth
@@ -105,8 +108,11 @@ export const authService = {
     return res.data;
   },
 
-  async exchangeGitHubCode(code: string): Promise<OAuthCallbackResponse> {
-    const res = await apiClient.post<OAuthCallbackResponse>("/auth/github", { code });
+  async exchangeGitHubCode(code: string, state?: string | null): Promise<OAuthCallbackResponse> {
+    const res = await apiClient.post<OAuthCallbackResponse>("/auth/github", {
+      code,
+      state: state ?? null,
+    });
     return res.data;
   },
 
@@ -125,10 +131,10 @@ export const authService = {
     const savedState = sessionStorage.getItem("github_oauth_state");
 
     if (!code) throw new Error("No authorization code received from GitHub");
-    if (returnedState !== savedState) throw new Error("OAuth state mismatch :  possible CSRF");
+    if (savedState && returnedState !== savedState) throw new Error("OAuth state mismatch: possible CSRF");
 
     sessionStorage.removeItem("github_oauth_state");
-    return await authService.exchangeGitHubCode(code);
+    return await authService.exchangeGitHubCode(code, returnedState);
   },
 
   // ── Email Verification ──────────────────────────────────────────────

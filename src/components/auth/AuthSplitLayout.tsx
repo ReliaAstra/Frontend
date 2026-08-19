@@ -118,8 +118,10 @@ function LiveLeftPanel() {
   // Tick latencies every 3s
   useEffect(() => {
     const v = initVendors();
-    setVendors(v);
-    setMounted(true);
+    queueMicrotask(() => {
+      setVendors(v);
+      setMounted(true);
+    });
 
     const tickInterval = setInterval(() => {
       setVendors((prev) =>
@@ -402,13 +404,15 @@ function MobileHeaderStrip() {
   const [vendors, setVendors] = useState<LiveVendor[]>([]);
 
   useEffect(() => {
-    setVendors([
-      { vendor: "auth0", slug: "auth0", status: "operational", latency_ms: 128, status_code: 200 },
-      { vendor: "cloudflare", slug: "cloudflare", status: "operational", latency_ms: 244, status_code: 200 },
-      { vendor: "stripe", slug: "stripe", status: "operational", latency_ms: 186, status_code: 200 },
-      { vendor: "openai", slug: "openai", status: "operational", latency_ms: 312, status_code: 200 },
-      { vendor: "twilio", slug: "twilio", status: "operational", latency_ms: 209, status_code: 200 },
-    ]);
+    queueMicrotask(() =>
+      setVendors([
+        { vendor: "auth0", slug: "auth0", status: "operational", latency_ms: 128, status_code: 200 },
+        { vendor: "cloudflare", slug: "cloudflare", status: "operational", latency_ms: 244, status_code: 200 },
+        { vendor: "stripe", slug: "stripe", status: "operational", latency_ms: 186, status_code: 200 },
+        { vendor: "openai", slug: "openai", status: "operational", latency_ms: 312, status_code: 200 },
+        { vendor: "twilio", slug: "twilio", status: "operational", latency_ms: 209, status_code: 200 },
+      ])
+    );
 
     const tick = setInterval(() => {
       setVendors((prev) =>

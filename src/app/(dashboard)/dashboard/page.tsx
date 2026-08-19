@@ -218,7 +218,7 @@ export default function DashboardPage() {
       href: null,
     },
     {
-      label: "Evidence Reports",
+      label: "Alerts Today",
       value: summary.data?.alerts_today_count ?? 0,
       icon: FileText,
       color: "#8B5CF6",

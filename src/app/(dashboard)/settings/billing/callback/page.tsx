@@ -16,7 +16,7 @@ export default function BillingCallbackPage() {
 
   useEffect(() => {
     if (!reference) {
-      setStatus("error");
+      queueMicrotask(() => setStatus("error"));
       return;
     }
 
@@ -33,7 +33,6 @@ export default function BillingCallbackPage() {
       .catch(() => {
         setStatus("error");
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reference]);
 
   return (

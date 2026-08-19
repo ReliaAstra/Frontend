@@ -15,7 +15,7 @@ export function CorrelationTimeline() {
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const clearAll = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);

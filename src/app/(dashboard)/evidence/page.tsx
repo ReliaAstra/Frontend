@@ -1,58 +1,27 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { type EvidenceDetail } from "@/services/evidenceService";
 import { evidenceService } from "@/services/evidenceService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { ShieldCheck, Download, Eye, Lock, ChevronRight } from "lucide-react";
+import { ShieldCheck, Download, Eye } from "lucide-react";
 import { ConsoleCard, ConsoleCardHeader } from "@/components/dashboard/ConsoleLayout";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { LockedFeature } from "@/components/dashboard/LockedFeature";
-import { getPlanConfig } from "@/lib/tierLimits";
 import { useEvidence, useBillingPlan } from "@/hooks/useApi";
+import { toast } from "sonner";
 
-const statusStyles: Record<string, { label: string; color: string; bg: string }> = {
-  verified: {
-    label: "Verified",
-    color: "text-[#16A34A]",
-    bg: "bg-[rgba(22,163,74,0.12)]",
-  },
-  pending: {
-    label: "Pending",
-    color: "text-[#D97706]",
-    bg: "bg-[rgba(217,119,6,0.12)]",
-  },
-  failed: {
-    label: "Failed",
-    color: "text-[#DC2626]",
-    bg: "bg-[rgba(220,38,38,0.12)]",
-  },
-};
-
-const strengthStyles: Record<string, { label: string; color: string; bg: string }> = {
-  strong: {
-    label: "Strong",
-    color: "text-[#16A34A]",
-    bg: "bg-[rgba(22,163,74,0.12)]",
-  },
-  moderate: {
-    label: "Moderate",
-    color: "text-[#D97706]",
-    bg: "bg-[rgba(217,119,6,0.12)]",
-  },
-  weak: {
-    label: "Weak",
-    color: "text-[#52525B]",
-    bg: "bg-[rgba(255,255,255,0.05)]",
-  },
-};
+function formatBytes(bytes: number | null | undefined): string {
+  if (bytes == null || Number.isNaN(bytes)) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 export default function EvidencePage() {
-  const { isLoading: authLoading, currentOrg } = useAuth();
+  const { isLoading: authLoading } = useAuth();
 
-  const { data: evidence = [], isLoading: loading, isError: error } = useEvidence();
+  const { data: evidence = [], isLoading: loading, isError: error, refetch } = useEvidence();
   const { data: billingPlan } = useBillingPlan();
 
   const currentPlan = billingPlan?.plan || "free";
@@ -66,8 +35,14 @@ export default function EvidencePage() {
     );
   }
 
-  const planConfig = getPlanConfig(currentPlan as "free" | "starter" | "standard" | "professional" | "agency");
-  const isFreePlan = currentPlan === "free";
+  const handleDownload = async (reportId: string) => {
+    try {
+      const url = await evidenceService.getDownloadUrl(reportId);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Could not get a download link for this report.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -83,8 +58,14 @@ export default function EvidencePage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3">
-          <p className="text-sm text-[#DC2626]">Unable to load evidence records.</p>
+        <div className="rounded-xl border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3 flex items-center gap-3">
+          <p className="text-sm text-[#DC2626] flex-1">Unable to load evidence records.</p>
+          <button
+            onClick={() => refetch()}
+            className="text-xs font-medium text-[#0891B2] hover:underline"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -108,121 +89,91 @@ export default function EvidencePage() {
           </ConsoleCard>
         ) : evidence.length > 0 ? (
           <ConsoleCard>
-            <ConsoleCardHeader className="grid grid-cols-[1fr_1fr_100px_100px_120px_80px] gap-4 items-center">
+            <ConsoleCardHeader className="grid grid-cols-[110px_1fr_110px_1fr_130px_90px] gap-4 items-center">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                ID
+                Report
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                 Incident
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Status
+                Size
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Strength
+                Checksum
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
-                Created
+                Generated
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] text-right">
                 Actions
               </span>
             </ConsoleCardHeader>
             <div className="divide-y divide-[rgba(255,255,255,0.05)]">
-              {evidence.map((ev, idx) => {
-                const status = statusStyles[ev.status] || statusStyles.pending;
-                const strength = strengthStyles[ev.evidence_strength] || strengthStyles.moderate;
-
-                return (
-                  <div
-                    key={ev.id}
-                    className="px-5 py-3.5 grid grid-cols-[1fr_1fr_100px_100px_120px_80px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
-                    style={{ animationDelay: `${idx * 60}ms` }}
+              {evidence.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="px-5 py-3.5 grid grid-cols-[110px_1fr_110px_1fr_130px_90px] gap-4 items-center hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                >
+                  {/* Report ID */}
+                  <Link
+                    href={`/evidence/${ev.id}`}
+                    className="text-[13px] font-mono font-medium text-[#FAFAFA] hover:text-[#0891B2] transition-colors truncate"
                   >
-                    {/* ID */}
+                    {ev.id.slice(0, 8)}
+                  </Link>
+
+                  {/* Incident */}
+                  {ev.incident_id ? (
+                    <Link
+                      href={`/incidents/${ev.incident_id}`}
+                      className="text-[13px] font-mono text-[#A1A1AA] hover:text-[#0891B2] transition-colors truncate"
+                    >
+                      INC-{ev.incident_id.slice(0, 8)}
+                    </Link>
+                  ) : (
+                    <span className="text-[13px] text-[#52525B]">--</span>
+                  )}
+
+                  {/* Size */}
+                  <span className="text-[12px] font-mono text-[#A1A1AA]">
+                    {formatBytes(ev.file_size_bytes)}
+                  </span>
+
+                  {/* Checksum */}
+                  <span
+                    className="text-[12px] font-mono text-[#52525B] truncate"
+                    title={ev.checksum}
+                  >
+                    {ev.checksum ? `${ev.checksum.slice(0, 12)}…` : "—"}
+                  </span>
+
+                  {/* Generated */}
+                  <span className="text-[12px] text-[#A1A1AA]">
+                    {formatDistanceToNow(new Date(ev.generated_at || ev.created_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-1">
                     <Link
                       href={`/evidence/${ev.id}`}
-                      className="text-[13px] font-mono font-medium text-[#FAFAFA] hover:text-[#0891B2] transition-colors truncate"
+                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                      title="View"
                     >
-                      {ev.id.slice(0, 8)}
+                      <Eye className="w-3.5 h-3.5" />
                     </Link>
-
-                    {/* Incident */}
-                    {ev.incident_id ? (
-                      <Link
-                        href={`/incidents/${ev.incident_id}`}
-                        className="text-[13px] font-mono text-[#A1A1AA] hover:text-[#0891B2] transition-colors truncate"
-                      >
-                        INC-{ev.incident_id.slice(0, 8)}
-                      </Link>
-                    ) : (
-                      <span className="text-[13px] text-[#52525B]">--</span>
-                    )}
-
-                    {/* Status */}
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] font-medium w-fit",
-                        status.bg,
-                        status.color
-                      )}
+                    <button
+                      onClick={() => handleDownload(ev.id)}
+                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                      title="Download report"
                     >
-                      {ev.status === "verified" && <ShieldCheck className="w-3 h-3" />}
-                      {status.label}
-                    </span>
-
-                    {/* Strength */}
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-medium w-fit",
-                        strength.bg,
-                        strength.color
-                      )}
-                    >
-                      {strength.label}
-                    </span>
-
-                    {/* Created */}
-                    <span className="text-[12px] text-[#A1A1AA]">
-                      {formatDistanceToNow(new Date(ev.created_at), {
-                        addSuffix: true,
-                      })}
-                    </span>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-1">
-                      <Link
-                        href={`/evidence/${ev.id}`}
-                        className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-                        title="View"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Link>
-                      <button
-                        onClick={async () => {
-                          try {
-                            const blob = await evidenceService.downloadPdf(ev.id);
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = `evidence-${ev.id.slice(0, 8)}.pdf`;
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                          } catch {
-                            // silent fail
-                          }
-                        }}
-                        className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
-                        title="Download PDF"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </ConsoleCard>
         ) : (

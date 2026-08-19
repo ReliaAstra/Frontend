@@ -52,7 +52,7 @@ function phaseIndex(ph: Phase) {
 export function IncidentCorrelationCard() {
   const [phase, setPhase] = useState<Phase>('init');
   const [cycle, setCycle] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [skipAnimation] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );

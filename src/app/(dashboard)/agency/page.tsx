@@ -6,26 +6,21 @@ import { useAuth } from "@/lib/auth-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClients, useDashboardSummary, useIncidents, useBillingPlan } from "@/hooks/useApi";
 import { getPlanConfig, canAccessFeature } from "@/lib/tierLimits";
+import type { Plan } from "@/services/billingService";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
   Building2,
   Users,
-  Globe,
   Layers,
   AlertTriangle,
   ShieldCheck,
   FileText,
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
   Lock,
   RefreshCw,
   Plus,
   ChevronRight,
   BarChart3,
-  Clock,
   Zap,
   Eye,
 } from "lucide-react";
@@ -33,21 +28,14 @@ import {
   ConsoleCard,
   ConsoleCardBody,
   ConsoleCardHeader,
-  ConsoleTableRow,
   StatusDot,
 } from "@/components/dashboard/ConsoleLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-import { LockedFeature } from "@/components/dashboard/LockedFeature";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
 
-function healthColor(uptime: number): string {
-  if (uptime >= 99.95) return "#16A34A";
-  if (uptime >= 99.0) return "#D97706";
-  return "#DC2626";
-}
 
 function healthLabel(uptime: number): string {
   if (uptime >= 99.95) return "Excellent";
@@ -55,16 +43,10 @@ function healthLabel(uptime: number): string {
   return "Critical";
 }
 
-function deriveClientHealth(client: {
-  status: string;
-  sites_count: number;
-  dependencies_count: number;
-  open_incidents_count: number;
-}): { score: number; label: string; color: string } {
-  if (client.status === "inactive") return { score: 0, label: "Inactive", color: "#52525B" };
-  if (client.open_incidents_count === 0 && client.sites_count > 0) return { score: 100, label: "Healthy", color: "#16A34A" };
-  if (client.open_incidents_count <= 1) return { score: 75, label: "Minor Issues", color: "#D97706" };
-  return { score: 50, label: "At Risk", color: "#DC2626" };
+function deriveClientHealth(): { score: number; label: string; color: string } {
+  // The live API returns client records without per-client incident/site counts,
+  // so clients are always shown as active once created.
+  return { score: 100, label: "Active", color: "#16A34A" };
 }
 
 /* ── Skeletons ─────────────────────────────────────────────────────────────── */
@@ -108,7 +90,7 @@ export default function AgencyDashboardPage() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const plan = currentOrg?.plan || "free";
+  const plan = (currentOrg?.plan || "free") as Plan;
   const planConfig = getPlanConfig(plan);
   const isAgency = plan === "agency";
   const canAccessClients = canAccessFeature(plan, "clients");
@@ -119,26 +101,20 @@ export default function AgencyDashboardPage() {
   const { data: incidentsData, isLoading: incidentsLoading } = useIncidents({ status: "open", limit: 50 });
   const { data: billingData } = useBillingPlan();
 
-  // Normalize responses
+  // Normalize responses (live API returns plain arrays)
   const summary = summaryData;
-  const clients = Array.isArray(clientsData) ? clientsData : (clientsData as any)?.items ?? [];
+  const clients = clientsData ?? [];
   const incidents = incidentsData ?? [];
 
-  // Derived agency metrics
+  // Derived agency metrics (org-wide; per-client counters are not exposed by the API)
   const totalClients = clients.length;
-  const totalSites = clients.reduce((sum, c) => sum + (c.sites_count || 0), 0);
-  const totalDeps = clients.reduce((sum, c) => sum + (c.dependencies_count || 0), 0);
-  const totalIncidents = clients.reduce((sum, c) => sum + (c.open_incidents_count || 0), 0);
-  const healthyClients = clients.filter((c) => c.status === "active" && c.open_incidents_count === 0).length;
-  const atRiskClients = clients.filter((c) => c.open_incidents_count > 0).length;
-  const overallHealthPct = totalClients > 0 ? Math.round((healthyClients / totalClients) * 100) : 0;
+  const totalDeps = summary?.active_dependencies_count ?? 0;
+  const totalIncidents = incidents.length;
+  const overallHealthPct =
+    totalIncidents === 0 ? 100 : Math.max(0, 100 - Math.min(totalIncidents * 10, 100));
 
-  // Sort clients: at-risk first, then by name
-  const sortedClients = [...clients].sort((a, b) => {
-    if (a.open_incidents_count !== b.open_incidents_count) return b.open_incidents_count - a.open_incidents_count;
-    if (a.status !== b.status) return a.status === "active" ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
+  // Sort clients alphabetically
+  const sortedClients = [...clients].sort((a, b) => a.name.localeCompare(b.name));
 
   function handleRefresh() {
     setIsRefreshing(true);
@@ -156,11 +132,26 @@ export default function AgencyDashboardPage() {
     return (
       <div className="min-h-screen bg-[#0A0A0F]">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <LockedFeature
-            feature="Agency Dashboard"
-            description="Monitor all your clients, sites, and dependencies from a single view. The Agency Dashboard is available on the Standard plan and above."
-            requiredPlan={canAccessClients.requiredPlan}
-          />
+          <ConsoleCard>
+            <ConsoleCardBody className="py-16 text-center">
+              <Lock className="w-8 h-8 text-[#52525B] mx-auto mb-4" />
+              <h2 className="text-lg font-semibold text-[#FAFAFA]">Agency Dashboard</h2>
+              <p className="text-sm text-[#A1A1AA] mt-2 max-w-md mx-auto">
+                Monitor all your clients and dependencies from a single view. The Agency
+                Dashboard is available on the{" "}
+                <span className="font-medium text-[#FAFAFA]">
+                  {getPlanConfig(canAccessClients.requiredPlan).name}
+                </span>{" "}
+                plan and above.
+              </p>
+              <Link
+                href="/settings?tab=billing"
+                className="mt-6 inline-flex items-center gap-2 bg-[#0891B2] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0E7490] transition-colors"
+              >
+                Upgrade to {getPlanConfig(canAccessClients.requiredPlan).name}
+              </Link>
+            </ConsoleCardBody>
+          </ConsoleCard>
         </div>
       </div>
     );
@@ -173,28 +164,28 @@ export default function AgencyDashboardPage() {
       value: totalClients,
       icon: Users,
       color: "#0891B2",
-      sub: `${totalClients > 0 ? `${healthyClients} healthy` : "No clients yet"}`,
-    },
-    {
-      label: "Sites Monitored",
-      value: totalSites,
-      icon: Globe,
-      color: "#8B5CF6",
-      sub: `Across ${totalClients} client${totalClients !== 1 ? "s" : ""}`,
+      sub: totalClients > 0 ? `${totalClients} registered` : "No clients yet",
     },
     {
       label: "Dependencies",
       value: totalDeps,
       icon: Layers,
       color: "#16A34A",
-      sub: `${summary?.active_dependencies_count ?? 0} active checks`,
+      sub: "Active monitored checks",
     },
     {
       label: "Open Incidents",
       value: totalIncidents,
       icon: AlertTriangle,
       color: totalIncidents > 0 ? "#DC2626" : "#16A34A",
-      sub: totalIncidents > 0 ? `${atRiskClients} client${atRiskClients !== 1 ? "s" : ""} affected` : "All clear",
+      sub: totalIncidents > 0 ? "Needs attention" : "All clear",
+    },
+    {
+      label: "Alerts Today",
+      value: summary?.alerts_today_count ?? 0,
+      icon: Zap,
+      color: "#8B5CF6",
+      sub: "Across all channels",
     },
     {
       label: "Portfolio Health",
@@ -356,8 +347,8 @@ export default function AgencyDashboardPage() {
                 </ConsoleCardBody>
               ) : (
                 <div className="divide-y divide-[rgba(255,255,255,0.05)]">
-                  {sortedClients.map((client: any, idx: number) => {
-                    const health = deriveClientHealth(client);
+                  {sortedClients.map((client, idx: number) => {
+                    const health = deriveClientHealth();
                     return (
                       <Link
                         key={client.id}
@@ -381,49 +372,19 @@ export default function AgencyDashboardPage() {
                             <p className="text-[13px] font-medium text-[#FAFAFA] group-hover:text-[#0891B2] transition-colors truncate">
                               {client.name}
                             </p>
-                            <StatusDot
-                              status={health.label === "Healthy" ? "operational" : health.label === "Inactive" ? "unknown" : "degraded"}
-                              pulse={health.label === "At Risk"}
-                            />
+                            <StatusDot status="operational" />
                           </div>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[11px] text-[#52525B] font-mono">
-                              {client.sites_count} site{client.sites_count !== 1 ? "s" : ""}
-                            </span>
-                            <span className="text-[11px] text-[#52525B]">·</span>
-                            <span className="text-[11px] text-[#52525B] font-mono">
-                              {client.dependencies_count} dep{client.dependencies_count !== 1 ? "s" : ""}
+                            <span className="text-[11px] text-[#52525B] truncate">
+                              {client.description || "No description"}
                             </span>
                           </div>
                         </div>
 
-                        {/* Incidents */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          {client.open_incidents_count > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[rgba(220,38,38,0.12)] text-[#DC2626] text-[11px] font-medium">
-                              <AlertTriangle className="w-3 h-3" />
-                              {client.open_incidents_count}
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-[#16A34A] font-medium flex items-center gap-1">
-                              <ShieldCheck className="w-3 h-3" />
-                              OK
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Health bar */}
-                        <div className="hidden sm:flex items-center gap-2 w-24 shrink-0">
-                          <div className="flex-1 h-1.5 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${health.score}%`,
-                                backgroundColor: health.color,
-                              }}
-                            />
-                          </div>
-                        </div>
+                        {/* Added */}
+                        <span className="text-[11px] text-[#52525B] font-mono shrink-0 hidden sm:block">
+                          Added {formatDistanceToNow(new Date(client.created_at), { addSuffix: true })}
+                        </span>
 
                         {/* Chevron */}
                         <ChevronRight className="w-3.5 h-3.5 text-[#52525B] group-hover:text-[#0891B2] shrink-0 transition-colors" />
@@ -462,6 +423,7 @@ export default function AgencyDashboardPage() {
                   {Array.from({ length: 3 }).map((_, i) => <ClientRowSkeleton key={i} />)}
                 </div>
               ) : incidents.length === 0 ? (
+
                 <ConsoleCardBody>
                   <div className="py-8 text-center">
                     <ShieldCheck className="w-8 h-8 text-[#16A34A] mx-auto mb-2" />
@@ -471,7 +433,7 @@ export default function AgencyDashboardPage() {
                 </ConsoleCardBody>
               ) : (
                 <div className="divide-y divide-[rgba(255,255,255,0.05)]">
-                  {incidents.slice(0, 8).map((incident: any, idx: number) => (
+                  {incidents.slice(0, 8).map((incident, idx: number) => (
                     <Link
                       key={incident.id}
                       href={`/incidents/${incident.id}`}
@@ -521,14 +483,6 @@ export default function AgencyDashboardPage() {
                   max={planConfig.limits.clients === Infinity ? Math.max(totalClients + 5, 20) : planConfig.limits.clients}
                   color="#0891B2"
                   infinite={planConfig.limits.clients === Infinity}
-                />
-                {/* Sites */}
-                <UsageBar
-                  label="Sites"
-                  current={totalSites}
-                  max={planConfig.limits.sites === Infinity ? Math.max(totalSites + 10, 50) : planConfig.limits.sites}
-                  color="#8B5CF6"
-                  infinite={planConfig.limits.sites === Infinity}
                 />
                 {/* Dependencies */}
                 <UsageBar
@@ -591,15 +545,15 @@ export default function AgencyDashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#A1A1AA]">Healthy clients</span>
+                  <span className="text-[11px] text-[#A1A1AA]">Registered clients</span>
                   <span className="font-mono text-sm font-semibold text-[#FAFAFA]">
-                    {healthyClients} / {totalClients}
+                    {totalClients}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#A1A1AA]">At-risk clients</span>
-                  <span className="font-mono text-sm font-semibold" style={{ color: atRiskClients > 0 ? "#DC2626" : "#16A34A" }}>
-                    {atRiskClients}
+                  <span className="text-[11px] text-[#A1A1AA]">Open incidents</span>
+                  <span className="font-mono text-sm font-semibold" style={{ color: totalIncidents > 0 ? "#DC2626" : "#16A34A" }}>
+                    {totalIncidents}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

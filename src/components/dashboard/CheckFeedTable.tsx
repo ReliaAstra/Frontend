@@ -47,9 +47,15 @@ export function CheckFeedTable({ data }: CheckFeedTableProps) {
                 </td>
                 <td className="px-3 py-2.5 text-[13px] font-mono tabular-nums text-right">
                   <span className={cn(
-                    check.status_code >= 500 ? "text-red-600" : check.status_code >= 400 ? "text-amber-600" : "text-[#09090B]"
+                    check.status_code == null
+                      ? "text-[#A1A1AA]"
+                      : check.status_code >= 500
+                        ? "text-red-600"
+                        : check.status_code >= 400
+                          ? "text-amber-600"
+                          : "text-[#09090B]"
                   )}>
-                    {check.status_code}
+                    {check.status_code ?? "—"}
                   </span>
                 </td>
                 <td className="px-5 py-2.5 text-[12px] text-[#A1A1AA] font-mono text-right">

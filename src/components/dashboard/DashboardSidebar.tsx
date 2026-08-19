@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { canAccessFeature } from "@/lib/tierLimits";
+import type { Plan } from "@/services/billingService";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 import type { Org } from "@/lib/auth-context";
@@ -116,7 +117,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, currentOrg, logout } = useAuth();
-  const plan = currentOrg?.plan || "free";
+  const plan = (currentOrg?.plan || "free") as Plan;
   const showAgencyNav = canAccessFeature(plan, "clients").allowed;
 
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
@@ -133,7 +134,7 @@ export function DashboardSidebar({
   }, []);
 
   useEffect(() => {
-    updateBreakpoints();
+    queueMicrotask(updateBreakpoints);
     window.addEventListener("resize", updateBreakpoints);
     return () => window.removeEventListener("resize", updateBreakpoints);
   }, [updateBreakpoints]);
@@ -141,7 +142,6 @@ export function DashboardSidebar({
   /* ---------- close mobile sidebar on route change ---------- */
   useEffect(() => {
     setMobileOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   /* ---------- fetch orgs when dropdown opens ---------- */

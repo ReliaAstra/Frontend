@@ -49,12 +49,15 @@ export function IncidentList({ incidents }: IncidentListProps) {
                   <span className="text-[#A1A1AA]">Root cause:</span>
                   <span className="text-[#09090B] font-medium capitalize">{incident.root_cause?.replace(/_/g, " ") || "Unknown"}</span>
                 </span>
-                {incident.correlations && (
-                  <span className="flex items-center gap-1">
-                    <span className="text-[#A1A1AA]">Correlations:</span>
-                    <span className="text-[#09090B] font-medium">{incident.correlations.length}</span>
-                  </span>
-                )}
+                {(() => {
+                  const withCorr = incident as Incident & { correlations?: unknown[] };
+                  return withCorr.correlations ? (
+                    <span className="flex items-center gap-1">
+                      <span className="text-[#A1A1AA]">Correlations:</span>
+                      <span className="text-[#09090B] font-medium">{withCorr.correlations.length}</span>
+                    </span>
+                  ) : null;
+                })()}
                 <span>{formatDistanceToNow(new Date(incident.started_at), { addSuffix: true })}</span>
               </div>
             </div>

@@ -1,127 +1,139 @@
-import { apiClient, getOrgContext } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
-export interface EvidenceSnapshot {
-  status_code: number;
-  response_time_ms: number;
-  error_message: string | null;
-  body_preview: string | null;
-  headers: Record<string, string> | null;
-}
-
-export interface ObservationWindow {
-  start: string;
-  end: string;
-  duration_seconds: number;
-  total_checks: number;
-  failed_checks: number;
-}
-
-export interface EvidenceContributor {
-  dependency_id: string;
-  dependency_name: string;
-  role: "primary" | "contributing" | "correlated";
-  evidence_strength: "strong" | "moderate" | "weak";
-  confidence: number;
-  observation_window: ObservationWindow;
-}
-
-export interface EvidenceDetail {
+/**
+ * Matches live schema EvidenceReportResponse.
+ * Evidence reports are generated files (PDF/JSON bundles) referenced by metadata.
+ */
+export interface EvidenceReport {
   id: string;
-  incident_id: string;
   org_id: string;
-  snapshot: EvidenceSnapshot;
-  observation_window: ObservationWindow;
-  contributors: EvidenceContributor[];
-  evidence_strength: "strong" | "moderate" | "weak";
-  data_hash: string;
-  status: "verified" | "pending" | "failed";
-  ai_assessment: string | null;
+  incident_id: string;
+  file_size_bytes: number;
+  checksum: string;
+  generated_at: string;
+  expires_at: string | null;
   created_at: string;
-  verified_at: string | null;
-  report_url: string | null;
+  updated_at: string;
 }
 
-export interface EvidenceTimelineEvent {
-  id: string;
-  timestamp: string;
-  event_type: "check_started" | "check_completed" | "status_change" | "threshold_breach" | "evidence_captured" | "correlation_found";
-  description: string;
-  metadata: Record<string, unknown>;
-  actor: string;
+/** Matches live schema EvidenceReportDownloadResponse (adds a signed download URL) */
+export interface EvidenceReportDownload extends EvidenceReport {
+  download_url: string;
+}
+
+/** Matches live schema PublicIncidentResponse (public evidence gate listing) */
+export interface PublicIncident {
+  incident_id: string;
+  vendor_name: string;
+  title: string;
+  started_at: string;
+  resolved_at: string | null;
+  duration_minutes: number | null;
+  severity: string;
+  status: string;
+  max_latency_ms: number | null;
+  downtime_percentage: number | null;
+  has_evidence_report: boolean;
+  download_token: string | null;
+}
+
+/** Matches live schema EvidenceGateRequest */
+export interface EvidenceGateRequest {
+  email: string;
+  incident_id: string;
+  vendor_name: string;
+  full_name?: string | null;
+  org_name?: string | null;
+  ref_code?: string | null;
+}
+
+/** Matches live schema EvidenceGateResponse */
+export interface EvidenceGateResult {
+  download_url: string;
+  report_id: string;
+  report_token: string;
+  expires_at: string;
+  account_created: boolean;
+  login_url: string | null;
+  message: string;
+}
+
+/** Matches live schema PublicizeEvidenceRequest / PublicizeResponse */
+export interface PublicizeResult {
+  message: string;
+  report_id: string;
+}
+
+/** Matches live schema EvidenceGateStats */
+export interface EvidenceGateStats {
+  total_gated_downloads: number;
+  total_accounts_created: number;
+  conversion_rate: number;
+  top_vendors: Record<string, unknown>[];
+  recent_conversions: Record<string, unknown>[];
 }
 
 export const evidenceService = {
-  async list(): Promise<EvidenceDetail[]> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<EvidenceDetail[]>(`/orgs/${orgId}/evidence`);
+  /** GET /v1/evidence — list evidence reports for the current org. */
+  async list(limit = 50): Promise<EvidenceReport[]> {
+    const res = await apiClient.get<EvidenceReport[]>("/evidence", { params: { limit } });
+    return Array.isArray(res.data) ? res.data : [];
+  },
+
+  /** GET /v1/evidence/{report_id} — report metadata incl. a signed download URL. */
+  async getById(reportId: string): Promise<EvidenceReportDownload> {
+    const res = await apiClient.get<EvidenceReportDownload>(`/evidence/${reportId}`);
     return res.data;
   },
 
-  async getById(evidenceId: string): Promise<EvidenceDetail> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<EvidenceDetail>(`/orgs/${orgId}/evidence/${evidenceId}`);
+  /** POST /v1/evidence/{report_id}/regenerate — regenerate the report file. */
+  async regenerate(reportId: string): Promise<EvidenceReport> {
+    const res = await apiClient.post<EvidenceReport>(`/evidence/${reportId}/regenerate`);
     return res.data;
   },
 
-  async getByIncident(incidentId: string): Promise<EvidenceDetail> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<EvidenceDetail>(`/orgs/${orgId}/incidents/${incidentId}/evidence`);
-    return res.data;
+  /**
+   * Download the report file. Fetches the signed `download_url` from the API first,
+   * then triggers a browser navigation to it.
+   */
+  async getDownloadUrl(reportId: string): Promise<string> {
+    const detail = await evidenceService.getById(reportId);
+    return detail.download_url;
   },
 
-  async getTimeline(evidenceId: string): Promise<EvidenceTimelineEvent[]> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<EvidenceTimelineEvent[]>(
-      `/orgs/${orgId}/evidence/${evidenceId}/timeline`
-    );
-    return res.data;
-  },
-
-  async verify(evidenceId: string): Promise<{ verified: boolean; verified_at: string }> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<{ verified: boolean; verified_at: string }>(
-      `/orgs/${orgId}/evidence/${evidenceId}/verify`
-    );
-    return res.data;
-  },
-
-  async downloadPdf(evidenceId: string): Promise<Blob> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get(`/orgs/${orgId}/evidence/${evidenceId}/pdf`, {
-      responseType: "blob",
+  /** POST /v1/evidence/publicize — make an incident's evidence report public/private. */
+  async publicize(
+    incidentId: string,
+    makePublic = true,
+    customTitle?: string,
+    customSummary?: string
+  ): Promise<PublicizeResult> {
+    const res = await apiClient.post<PublicizeResult>("/evidence/publicize", {
+      incident_id: incidentId,
+      make_public: makePublic,
+      custom_title: customTitle ?? null,
+      custom_summary: customSummary ?? null,
     });
     return res.data;
   },
 
-  async getJson(evidenceId: string): Promise<Record<string, unknown>> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.get<Record<string, unknown>>(
-      `/orgs/${orgId}/evidence/${evidenceId}/json`
-    );
+  /** GET /v1/evidence/stats — evidence gate conversion stats (auth). */
+  async getGateStats(): Promise<EvidenceGateStats> {
+    const res = await apiClient.get<EvidenceGateStats>("/evidence/stats");
     return res.data;
   },
 
-  async generateClientReport(evidenceId: string, clientName?: string): Promise<{ report_url: string }> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<{ report_url: string }>(
-      `/orgs/${orgId}/evidence/${evidenceId}/client-report`,
-      { client_name: clientName || null }
+  /** GET /v1/vendors/{vendor}/incidents/public — public incidents w/ evidence (no auth). */
+  async listPublicIncidents(vendorName: string): Promise<PublicIncident[]> {
+    const res = await apiClient.get<PublicIncident[]>(
+      `/vendors/${encodeURIComponent(vendorName)}/incidents/public`
     );
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
-  async regenerate(reportId: string): Promise<EvidenceDetail> {
-    const orgId = getOrgContext();
-    if (!orgId) throw new Error("No organization context");
-    const res = await apiClient.post<EvidenceDetail>(`/orgs/${orgId}/evidence/${reportId}/regenerate`);
+  /** POST /v1/evidence/gate — email-gated public evidence download (lead capture). */
+  async gate(data: EvidenceGateRequest): Promise<EvidenceGateResult> {
+    const res = await apiClient.post<EvidenceGateResult>("/evidence/gate", data);
     return res.data;
   },
 };

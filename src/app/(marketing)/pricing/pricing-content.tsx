@@ -16,8 +16,7 @@ import { cn } from "@/lib/utils";
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
 // ── Tier Data ───────────────────────────────────────────────────────────
-// Aligned with backend Paystack billing: GET /v1/orgs/{org_id}/billing/plan
-// Backend plan values: "free", "starter", "standard", "professional", "agency"
+// Canonical public pricing. Keep in lockstep with src/lib/tierLimits.ts.
 
 const tiers = [
   {

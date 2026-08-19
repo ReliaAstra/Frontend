@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Check, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { billingService } from "@/services/billingService";
-import type { PlanDetailsResponse } from "@/services/billingService";
+import type { Plan, PlanDetailsResponse } from "@/services/billingService";
+import { getPlanConfig } from "@/lib/tierLimits";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -26,7 +27,7 @@ export function BillingCard({ plan }: BillingCardProps) {
 
   const handleUpgrade = async () => {
     if (plan.plan === "agency") {
-      toast.info("Contact Reliastra for Agency pricing.");
+      toast.info("You are on the highest available plan. Contact us if you need more than 500 dependencies.");
       return;
     }
     const planOrder: Record<string, string> = { free: "starter", starter: "standard", standard: "professional", professional: "agency" };
@@ -106,14 +107,7 @@ export function BillingCard({ plan }: BillingCardProps) {
 
       <div className="border-t border-[#E4E4E7] pt-4 space-y-2">
         <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#A1A1AA] mb-3">Plan Features</p>
-        {[
-          `Up to ${plan.max_dependencies === 10000 ? "unlimited" : plan.max_dependencies} dependencies`,
-          `${plan.min_check_interval_seconds}s minimum check interval`,
-          "SLA evidence reports",
-          "Multi-region monitoring",
-          "Email, Slack, PagerDuty, and webhook notifications",
-          "API key access",
-        ].map((f) => (
+        {getPlanConfig((plan.plan as Plan) || "free").features.map((f) => (
           <div key={f} className="flex items-center gap-2 text-sm text-[#52525B]">
             <Check className="h-4 w-4 text-emerald-600 shrink-0" />
             {f}

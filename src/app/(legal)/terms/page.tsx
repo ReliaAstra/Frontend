@@ -70,7 +70,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-[#09090B] mb-3">12. Termination</h2>
-              <p>You may terminate your account at any time. We may suspend or terminate your account for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately. Sections 6, 9, 10, and 15 survive termination.</p>
+              <p>You may terminate your account at any time. We may suspend or terminate your account for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately. Sections 5, 6, 9, 10, and 11 survive termination.</p>
             </section>
 
             <section>

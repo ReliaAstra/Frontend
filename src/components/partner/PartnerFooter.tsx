@@ -1,37 +1,31 @@
 'use client';
-import { motion } from 'framer-motion';
+
 import { Github } from 'lucide-react';
 
-const ease = [0.25, 0.1, 0.25, 1] as const;
-
-const FOOTER_LINKS = [
+const LINKS = [
   {
-    title: 'Product',
+    title: 'Program',
     links: [
-      { label: 'Features', href: '/#solution' },
-      { label: 'Pricing', href: '/pricing' },
-      { label: 'Vendor Intelligence', href: '/track' },
-      { label: 'Partners', href: '/partner' },
-      { label: 'Status', href: '/status' },
-      { label: 'Changelog', href: '/changelog' },
+      { label: 'How It Works', href: '#how-it-works' },
+      { label: 'Commission', href: '#commission' },
+      { label: 'FAQ', href: '#faq' },
+      { label: 'Dashboard', href: '/dashboard' },
     ],
   },
   {
-    title: 'Company',
+    title: 'Reliastra',
     links: [
-      { label: 'About', href: '/about' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'Community', href: '/community' },
-      { label: 'Investors', href: '/investors' },
-      { label: 'Contact', href: '/contact' },
+      { label: 'Features', href: 'https://frontend.zevcloud.app/#solution' },
+      { label: 'Pricing', href: 'https://frontend.zevcloud.app/pricing' },
+      { label: 'Status', href: 'https://frontend.zevcloud.app/status' },
+      { label: 'Blog', href: 'https://frontend.zevcloud.app/blog' },
     ],
   },
   {
     title: 'Legal',
     links: [
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'Guarantee', href: '/guarantee' },
+      { label: 'Privacy Policy', href: 'https://frontend.zevcloud.app/privacy' },
+      { label: 'Terms of Service', href: 'https://frontend.zevcloud.app/terms' },
     ],
   },
 ];
@@ -40,24 +34,19 @@ const SOCIAL_LINKS = [
   { icon: Github, href: 'https://github.com/ReliaAstra', label: 'GitHub' },
 ];
 
-export function Footer() {
+export function PartnerFooter() {
   return (
     <footer className="bg-[#0A0A0F] border-t border-white/10 pt-20 pb-10">
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
           {/* Brand Column */}
-          <motion.div
-            className="col-span-2 md:col-span-1"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.6, ease }}
-          >
+          <div className="col-span-2 md:col-span-1">
             <span className="text-white font-bold text-lg">
               reliastra<span className="text-[#0891B2]">.</span>
             </span>
             <p className="text-white/40 text-sm mt-4 max-w-xs leading-relaxed">
-              External Dependency Intelligence. Monitor, correlate, and prove vendor SLA breaches.
+              Partner with RELIASTRA and earn recurring revenue by introducing
+              External Dependency Intelligence to your network.
             </p>
             <div className="flex items-center gap-3 mt-6">
               {SOCIAL_LINKS.map((social) => (
@@ -73,17 +62,11 @@ export function Footer() {
                 </a>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Link Columns */}
-          {FOOTER_LINKS.map((col, i) => (
-            <motion.div
-              key={col.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.6, delay: (i + 1) * 0.08, ease }}
-            >
+          {LINKS.map((col) => (
+            <div key={col.title}>
               <h4 className="text-sm font-semibold text-white mb-4">{col.title}</h4>
               <ul className="space-y-3">
                 {col.links.map((link) => (
@@ -97,16 +80,19 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Bottom Row */}
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/30">
-            © {new Date().getFullYear()} Reliastra, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Reliastra, Inc. All rights reserved.
           </p>
-          <a href="/status" className="text-xs text-white/40 hover:text-white transition-colors">
+          <a
+            href="https://frontend.zevcloud.app/status"
+            className="text-xs text-white/40 hover:text-white transition-colors"
+          >
             System status
           </a>
         </div>

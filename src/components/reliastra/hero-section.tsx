@@ -1,9 +1,130 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Info, ArrowUpRight } from 'lucide-react'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 import { cn } from '@/lib/utils'
+
+/* ------------------------------------------------------------------ */
+/*  Animated Headline                                                  */
+/* ------------------------------------------------------------------ */
+type WordAccent = 'none' | 'incident' | 'accent'
+
+interface HeadlineWord {
+  text: string
+  accent: WordAccent
+  delay: number // ms after isVisible, when this word starts revealing
+}
+
+const HEADLINE_WORDS: HeadlineWord[][] = [
+  // Line 1: "Your site went down."
+  [
+    { text: 'Your', accent: 'none', delay: 0 },
+    { text: 'site', accent: 'none', delay: 60 },
+    { text: 'went', accent: 'none', delay: 110 },
+    { text: 'down.', accent: 'incident', delay: 180 },
+  ],
+  // Line 2: "Was it you, or your vendors?"
+  [
+    { text: 'Was', accent: 'none', delay: 380 },
+    { text: 'it', accent: 'none', delay: 430 },
+    { text: 'you,', accent: 'none', delay: 480 },
+    { text: 'or', accent: 'none', delay: 540 },
+    { text: 'your', accent: 'none', delay: 590 },
+    { text: 'vendors?', accent: 'accent', delay: 670 },
+  ],
+]
+
+function AnimatedHeadline({ visible, className }: { visible: boolean; className?: string }) {
+  const [revealedWords, setRevealedWords] = useState<Set<number>>(new Set())
+  const [cursorVisible, setCursorVisible] = useState(false)
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+
+  const flatWords = useMemo(
+    () => HEADLINE_WORDS.flat(),
+    []
+  )
+
+  // Total word count for cursor timing
+  const totalWords = flatWords.length
+
+  const scheduleReveal = useCallback((
+    wordIndex: number,
+    delay: number,
+  ) => {
+    const timer = setTimeout(() => {
+      setRevealedWords(prev => {
+        const next = new Set(prev)
+        next.add(wordIndex)
+        return next
+      })
+      // Show cursor after the last word
+      if (wordIndex === totalWords - 1) {
+        const existing = timersRef.current.get(-1)
+        if (existing) clearTimeout(existing)
+        const cursorTimer = setTimeout(() => setCursorVisible(true), 120)
+        timersRef.current.set(-1, cursorTimer)
+      }
+    }, delay)
+    timersRef.current.set(wordIndex, timer)
+  }, [totalWords])
+
+  useEffect(() => {
+    if (!visible) return
+
+    flatWords.forEach((word, i) => {
+      scheduleReveal(i, word.delay)
+    })
+
+    return () => {
+      timersRef.current.forEach(timer => clearTimeout(timer))
+      timersRef.current.clear()
+      setRevealedWords(new Set())
+      setCursorVisible(false)
+    }
+  }, [visible, flatWords, scheduleReveal])
+
+  const accentClass = (accent: WordAccent, isRevealed: boolean) => {
+    if (!isRevealed) return ''
+    if (accent === 'incident') return 'animate-glow-incident'
+    if (accent === 'accent') return 'animate-glow-accent'
+    return ''
+  }
+
+  return (
+    <h1 className={className}>
+      {HEADLINE_WORDS.map((line, lineIdx) => (
+        <span key={lineIdx}>
+          {lineIdx > 0 && <br />}
+          {line.map((word, wordIdx) => {
+            const flatIdx = HEADLINE_WORDS.slice(0, lineIdx).flat().length + wordIdx
+            const isRevealed = revealedWords.has(flatIdx)
+            return (
+              <span
+                key={`${lineIdx}-${wordIdx}`}
+                className={cn(
+                  'headline-word',
+                  isRevealed && 'revealed',
+                  accentClass(word.accent, isRevealed),
+                )}
+              >
+                {word.text}
+              </span>
+            )
+          })}
+        </span>
+      ))}
+      {/* Blinking terminal cursor */}
+      <span
+        className={cn(
+          'ml-0.5 inline-block w-[3px] h-[0.85em] align-middle rounded-sm bg-[#3B82F6] transition-opacity duration-300',
+          cursorVisible ? 'animate-cursor-blink opacity-100' : 'opacity-0'
+        )}
+        aria-hidden="true"
+      />
+    </h1>
+  )
+}
 
 /* ------------------------------------------------------------------ */
 /*  Tiny animated counter                                            */
@@ -294,33 +415,38 @@ export function HeroSection() {
       className="relative pt-32 pb-24 md:pt-40 md:pb-32 px-6"
     >
       <div className="mx-auto max-w-6xl">
-        {/* Text content */}
-        <div
+        {/* Eyebrow — fades in before headline */}
+        <p
           className={cn(
-            'max-w-3xl space-y-6 transition-all duration-700 ease-out',
-            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+            'max-w-3xl text-xs uppercase tracking-[0.2em] text-[#5A6577] transition-all duration-500 ease-out',
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
           )}
         >
-          {/* Eyebrow */}
-          <p className="text-xs uppercase tracking-[0.2em] text-[#5A6577]">
-            External Dependency Intelligence
-          </p>
+          External Dependency Intelligence
+        </p>
 
-          {/* Heading */}
-          <h1 className="text-3xl font-bold leading-tight text-[#F3F5F7] md:text-5xl lg:text-6xl">
-            Your site went down.
-            <br />
-            Was it you, or your vendors?
-          </h1>
+        {/* Headline — animated word-by-word reveal (own container, no parent opacity) */}
+        <div className="max-w-3xl pt-4">
+          <AnimatedHeadline
+            visible={isVisible}
+            className="text-3xl font-bold leading-tight text-[#F3F5F7] md:text-5xl lg:text-6xl"
+          />
+        </div>
 
-          {/* Supporting copy */}
+        {/* Supporting copy + CTAs — fade in after headline completes */}
+        <div
+          className={cn(
+            'max-w-3xl space-y-6 pt-6 transition-all duration-700 ease-out',
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          )}
+          style={{ transitionDelay: isVisible ? '900ms' : '0ms' }}
+        >
           <p className="max-w-2xl text-base leading-relaxed text-[#8D98A8] md:text-lg">
             Reliastra independently monitors the external services your
             infrastructure depends on, correlates their failures with your
             incidents, and produces structured evidence of what happened.
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:gap-4">
             <a
               href="#start"

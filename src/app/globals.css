@@ -258,4 +258,42 @@
   .animate-count-up {
     animation: ra-fade-in 0.3s ease-out forwards;
   }
+  /* Headline cursor blink */
+  @keyframes ra-cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .animate-cursor-blink {
+    animation: ra-cursor-blink 1s steps(1) infinite;
+  }
+  /* Incident word glow (for "down") */
+  @keyframes ra-glow-incident {
+    0%, 100% { text-shadow: 0 0 8px rgba(239, 68, 68, 0.0); color: #F3F5F7; }
+    50% { text-shadow: 0 0 20px rgba(239, 68, 68, 0.25); color: #FCA5A5; }
+  }
+  .animate-glow-incident {
+    animation: ra-glow-incident 4s ease-in-out infinite;
+    animation-delay: 1.4s;
+  }
+  /* Accent word glow (for "vendors?") */
+  @keyframes ra-glow-accent {
+    0%, 100% { text-shadow: 0 0 8px rgba(59, 130, 246, 0.0); color: #F3F5F7; }
+    50% { text-shadow: 0 0 24px rgba(59, 130, 246, 0.2); color: #93C5FD; }
+  }
+  .animate-glow-accent {
+    animation: ra-glow-accent 4s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+  /* Headline word reveal base (hidden state) */
+  .headline-word {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-block;
+  }
+  .headline-word.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

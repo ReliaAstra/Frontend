@@ -76,7 +76,7 @@ export function DependencySurfaceSection() {
 
   return (
     <section
-      className="bg-[#080B10] py-24 md:py-32"
+      className="bg-slate-50 py-24 md:py-32"
       aria-labelledby="dependency-surface-heading"
     >
       <div className="mx-auto max-w-5xl px-6">
@@ -90,26 +90,25 @@ export function DependencySurfaceSection() {
               : "translate-y-4 opacity-0"
           )}
         >
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5A6577]">
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
             DEPENDENCY SURFACE
           </p>
           <h2
             id="dependency-surface-heading"
-            className="text-2xl font-semibold text-[#F3F5F7] md:text-3xl"
+            className="text-2xl font-semibold text-slate-900 md:text-3xl"
           >
             Monitor the infrastructure you depend on.
           </h2>
-          <p className="max-w-2xl text-sm text-[#8D98A8]">
-            Common external services that Reliastra can independently monitor.
-            Vendors listed are examples of monitorable dependencies, not customers
-            or partners.
+          <p className="max-w-2xl text-sm text-slate-600">
+            Common external services that Reliastra can independently monitor. Vendors listed
+            are examples of monitorable dependencies, not customers or partners.
           </p>
         </div>
 
         {/* Dependency Matrix */}
         <div
           ref={matrixRef}
-          className="overflow-hidden rounded-[0.375rem] border border-[rgba(148,163,184,0.08)] bg-[#0E131B]"
+          className="overflow-hidden rounded-[0.375rem] border border-slate-200 bg-white"
         >
           {CATEGORIES.map((category, index) => {
             const Icon = category.icon
@@ -121,10 +120,8 @@ export function DependencySurfaceSection() {
                 key={category.name}
                 className={cn(
                   "transition-all duration-500 ease-out",
-                  isRevealed
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-2 opacity-0",
-                  !isLast && "border-b border-[rgba(148,163,184,0.05)]"
+                  isRevealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
+                  !isLast && "border-b border-slate-100"
                 )}
                 style={{
                   transitionDelay: isRevealed ? `${index * 80}ms` : "0ms",
@@ -134,16 +131,14 @@ export function DependencySurfaceSection() {
                 <div className="hidden items-center gap-4 px-5 py-3.5 md:flex md:px-6 md:py-4">
                   <Icon
                     size={16}
-                    className="flex-shrink-0 text-[#5A6577]"
+                    className="flex-shrink-0 text-slate-400"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
-                  <span className="w-28 flex-shrink-0 text-sm font-medium text-[#F3F5F7]">
+                  <span className="w-28 flex-shrink-0 text-sm font-medium text-slate-900">
                     {category.name}
                   </span>
-                  <span className="text-sm text-[#8D98A8]">
-                    {category.vendors}
-                  </span>
+                  <span className="text-sm text-slate-600">{category.vendors}</span>
                 </div>
 
                 {/* Mobile: stacked layout */}
@@ -151,17 +146,13 @@ export function DependencySurfaceSection() {
                   <div className="flex items-center gap-2.5">
                     <Icon
                       size={14}
-                      className="flex-shrink-0 text-[#5A6577]"
+                      className="flex-shrink-0 text-slate-400"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
-                    <span className="text-sm font-medium text-[#F3F5F7]">
-                      {category.name}
-                    </span>
+                    <span className="text-sm font-medium text-slate-900">{category.name}</span>
                   </div>
-                  <span className="pl-[38px] text-xs text-[#8D98A8]">
-                    {category.vendors}
-                  </span>
+                  <span className="pl-[38px] text-xs text-slate-600">{category.vendors}</span>
                 </div>
               </div>
             )

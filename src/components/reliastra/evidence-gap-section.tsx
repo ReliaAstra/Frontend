@@ -39,7 +39,7 @@ export function EvidenceGapSection() {
 
   return (
     <section
-      className="bg-[#0A0C12] py-24 md:py-32"
+      className="bg-white py-24 md:py-32"
       aria-labelledby="evidence-gap-heading"
     >
       <div className="mx-auto max-w-5xl px-6">
@@ -53,16 +53,14 @@ export function EvidenceGapSection() {
               : "translate-y-4 opacity-0"
           )}
         >
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5A6577]">
-            THE EVIDENCE GAP
-          </p>
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">THE EVIDENCE GAP</p>
           <h2
             id="evidence-gap-heading"
-            className="text-2xl font-semibold text-[#F3F5F7] md:text-3xl"
+            className="text-2xl font-semibold text-slate-900 md:text-3xl"
           >
             Existing monitoring tells you something is wrong.
           </h2>
-          <p className="text-sm text-[#8D98A8]">
+          <p className="text-sm text-slate-600">
             Reliastra helps establish what happened outside your infrastructure.
           </p>
         </div>
@@ -71,7 +69,7 @@ export function EvidenceGapSection() {
         <div
           ref={matrixRef}
           className={cn(
-            "overflow-x-auto rounded-[0.375rem] border border-[rgba(148,163,184,0.08)] bg-[#0E131B] transition-all duration-700 ease-out",
+            "overflow-x-auto rounded-[0.375rem] border border-slate-200 bg-white transition-all duration-700 ease-out",
             visibleItems.has(0)
               ? "translate-y-0 opacity-100"
               : "translate-y-4 opacity-0"
@@ -83,10 +81,10 @@ export function EvidenceGapSection() {
           <div className="min-w-[560px]">
             {/* Column Headers */}
             <div
-              className="grid grid-cols-[1fr_repeat(4,100px)] border-b border-[rgba(148,163,184,0.08)] px-5 py-3 md:grid-cols-[1fr_repeat(4,120px)] md:px-6"
+              className="grid grid-cols-[1fr_repeat(4,100px)] border-b border-slate-200 bg-slate-50/60 px-5 py-3 md:grid-cols-[1fr_repeat(4,120px)] md:px-6"
               role="row"
             >
-              <div role="columnheader" className="text-xs uppercase tracking-wide text-[#5A6577]">
+              <div role="columnheader" className="text-xs uppercase tracking-wide text-slate-400">
                 Capability
               </div>
               {COLUMNS.map((col) => (
@@ -95,7 +93,7 @@ export function EvidenceGapSection() {
                   role="columnheader"
                   className={cn(
                     "text-center text-xs uppercase tracking-wide",
-                    col.highlight ? "text-[#3B82F6]" : "text-[#5A6577]"
+                    col.highlight ? "text-blue-600" : "text-slate-400"
                   )}
                 >
                   {col.label}
@@ -116,7 +114,7 @@ export function EvidenceGapSection() {
                     isRevealed
                       ? "translate-y-0 opacity-100"
                       : "translate-y-1 opacity-0",
-                    !isLast && "border-b border-[rgba(148,163,184,0.05)]"
+                    !isLast && "border-b border-slate-100"
                   )}
                   style={{
                     transitionDelay: isRevealed ? `${(rowIndex + 1) * 80}ms` : "0ms",
@@ -125,7 +123,7 @@ export function EvidenceGapSection() {
                 >
                   <div
                     role="rowheader"
-                    className="px-5 py-3 text-sm text-[#8D98A8] md:px-6"
+                    className="px-5 py-3 text-sm text-slate-600 md:px-6"
                   >
                     {capability}
                   </div>
@@ -135,18 +133,18 @@ export function EvidenceGapSection() {
                       role="cell"
                       className={cn(
                         "flex items-center justify-center py-3",
-                        col.highlight && "bg-[rgba(59,130,246,0.04)]"
+                        col.highlight && "bg-blue-50/70"
                       )}
                     >
                       {col.highlight ? (
                         <Check
                           size={16}
-                          className="text-[#3B82F6]"
+                          className="text-blue-600"
                           strokeWidth={2}
                           aria-label="Supported"
                         />
                       ) : (
-                        <span className="text-[#5A6577]" aria-label="Not supported">
+                        <span className="text-slate-300" aria-label="Not supported">
                           —
                         </span>
                       )}

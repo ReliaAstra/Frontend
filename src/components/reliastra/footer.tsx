@@ -1,41 +1,49 @@
 export function Footer() {
   return (
-    <footer className="mt-auto bg-[#0A0C12] border-t border-[rgba(148,163,184,0.06)]">
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+    <footer id="resources" className="mt-auto border-t border-slate-200 bg-slate-50">
+      <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <p className="tracking-wide text-sm text-[#F3F5F7]">
-              RELIASTRA
-            </p>
-            <p className="mt-2 text-xs text-[#5A6577] max-w-[200px]">
+            <p className="text-sm tracking-wide text-slate-900">RELIASTRA</p>
+            <p className="mt-2 max-w-[200px] text-xs text-slate-500">
               Accountability infrastructure for digital systems.
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <p className="text-xs uppercase tracking-wide text-[#5A6577] mb-3">
-              Product
-            </p>
+            <p className="mb-3 text-xs uppercase tracking-wide text-slate-400">Product</p>
             <ul className="flex flex-col gap-2">
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#product"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Features
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#pricing"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Pricing
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#vendor-intelligence"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Vendor Intelligence
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#product"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Changelog
                 </a>
               </li>
@@ -44,22 +52,29 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <p className="text-xs uppercase tracking-wide text-[#5A6577] mb-3">
-              Company
-            </p>
+            <p className="mb-3 text-xs uppercase tracking-wide text-slate-400">Company</p>
             <ul className="flex flex-col gap-2">
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#top"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   About
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#resources"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#resources"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Contact
                 </a>
               </li>
@@ -68,17 +83,21 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="text-xs uppercase tracking-wide text-[#5A6577] mb-3">
-              Legal
-            </p>
+            <p className="mb-3 text-xs uppercase tracking-wide text-slate-400">Legal</p>
             <ul className="flex flex-col gap-2">
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#resources"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-[#8D98A8] hover:text-[#F3F5F7] transition-colors duration-150">
+                <a
+                  href="#resources"
+                  className="text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900"
+                >
                   Terms
                 </a>
               </li>
@@ -87,10 +106,8 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-[rgba(148,163,184,0.06)]">
-          <p className="text-xs text-[#5A6577]">
-            © 2025 Reliastra. All rights reserved.
-          </p>
+        <div className="mt-12 border-t border-slate-200 pt-6">
+          <p className="text-xs text-slate-400">© 2026 Reliastra. All rights reserved.</p>
         </div>
       </div>
     </footer>

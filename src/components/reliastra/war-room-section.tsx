@@ -33,7 +33,7 @@ export function WarRoomSection() {
   return (
     <section
       ref={sectionRef}
-      className="bg-[#080B10] py-24 md:py-32"
+      className="bg-white py-24 md:py-32"
       aria-labelledby="war-room-heading"
     >
       <div className="mx-auto max-w-5xl px-6">
@@ -46,16 +46,16 @@ export function WarRoomSection() {
               : "translate-y-4 opacity-0"
           )}
         >
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5A6577]">
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
             THE 2 AM WAR ROOM
           </p>
           <h2
             id="war-room-heading"
-            className="text-2xl font-semibold text-[#F3F5F7] md:text-3xl"
+            className="text-2xl font-semibold text-slate-900 md:text-3xl"
           >
             You know the conversation.
           </h2>
-          <p className="text-xl italic text-[#8D98A8] md:text-2xl">
+          <p className="text-xl italic text-slate-600 md:text-2xl">
             &ldquo;Is it us or them?&rdquo;
           </p>
         </div>
@@ -71,7 +71,7 @@ export function WarRoomSection() {
           <div
             className="absolute bottom-0 left-[3px] top-0 w-px transition-opacity duration-500"
             style={{
-              backgroundColor: "rgba(148, 163, 184, 0.12)",
+              backgroundColor: "#E2E8F0",
               opacity: sectionVisible ? 1 : 0,
             }}
             aria-hidden="true"
@@ -93,9 +93,7 @@ export function WarRoomSection() {
                     <div
                       className="absolute bottom-0 left-1/2 h-1/2 w-px -translate-x-1/2"
                       style={{
-                        backgroundColor: step.active
-                          ? "#3B82F6"
-                          : "rgba(148, 163, 184, 0.12)",
+                        backgroundColor: step.active ? "#2563EB" : "#E2E8F0",
                         transform: "translateX(-50%) scaleY(0)",
                         transformOrigin: "top",
                         transition: isRevealed
@@ -113,13 +111,13 @@ export function WarRoomSection() {
                     <div
                       className="relative z-10 h-2 w-2 flex-shrink-0 rounded-full"
                       style={{
-                        backgroundColor: step.active ? "#3B82F6" : "#5A6577",
+                        backgroundColor: step.active ? "#2563EB" : "#94A3B8",
                         transition: isRevealed
                           ? `background-color 0.4s ease-out ${index * 120}ms, opacity 0.4s ease-out ${index * 120}ms`
                           : "none",
                         opacity: isRevealed ? 1 : 0,
                         boxShadow: step.active
-                          ? "0 0 6px rgba(59, 130, 246, 0.4)"
+                          ? "0 0 0 3px rgba(37, 99, 235, 0.12)"
                           : "none",
                       }}
                       aria-hidden="true"
@@ -135,18 +133,16 @@ export function WarRoomSection() {
                         : "translate-y-2 opacity-0"
                     )}
                     style={{
-                      transitionDelay: isRevealed
-                        ? `${index * 120}ms`
-                        : "0ms",
+                      transitionDelay: isRevealed ? `${index * 120}ms` : "0ms",
                     }}
                   >
-                    <span className="font-mono-numeric text-xs text-[#5A6577]">
+                    <span className="font-mono-numeric text-xs text-slate-400">
                       STEP {step.number}
                     </span>
                     <p
                       className={cn(
                         "mt-0.5 text-sm",
-                        step.active ? "text-[#F3F5F7]" : "text-[#8D98A8]"
+                        step.active ? "text-slate-900" : "text-slate-600"
                       )}
                     >
                       {step.text}

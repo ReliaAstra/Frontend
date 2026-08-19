@@ -65,7 +65,7 @@ export function UseCasesSection() {
 
   return (
     <section
-      className="bg-[#080B10] py-24 md:py-32"
+      className="bg-slate-50 py-24 md:py-32"
       aria-labelledby="use-cases-heading"
     >
       <div className="mx-auto max-w-5xl px-6">
@@ -79,24 +79,17 @@ export function UseCasesSection() {
               : "translate-y-4 opacity-0"
           )}
         >
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5A6577]">
-            USE CASES
-          </p>
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">USE CASES</p>
           <h2
             id="use-cases-heading"
-            className="text-2xl font-semibold text-[#F3F5F7] md:text-3xl"
+            className="text-2xl font-semibold text-slate-900 md:text-3xl"
           >
-            Built for teams that can't afford to guess.
+            Built for teams that can&apos;t afford to guess.
           </h2>
         </div>
 
         {/* Use Case Scenarios */}
-        <div
-          ref={casesRef}
-          className="flex flex-col"
-          role="list"
-          aria-label="Use case scenarios"
-        >
+        <div ref={casesRef} className="flex flex-col" role="list" aria-label="Use case scenarios">
           {USE_CASES.map((useCase, index) => {
             const Icon = useCase.icon
             const isRevealed = visibleItems.has(index)
@@ -108,11 +101,8 @@ export function UseCasesSection() {
                 role="listitem"
                 className={cn(
                   "relative transition-all duration-700 ease-out",
-                  isRevealed
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-4 opacity-0",
-                  !isLast &&
-                    "border-b border-[rgba(148,163,184,0.05)]"
+                  isRevealed ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+                  !isLast && "border-b border-slate-200"
                 )}
                 style={{
                   transitionDelay: isRevealed ? `${index * 150}ms` : "0ms",
@@ -123,8 +113,7 @@ export function UseCasesSection() {
                   {/* Left: decorative number */}
                   <div className="relative flex w-24 flex-shrink-0 items-start">
                     <span
-                      className="select-none text-6xl font-semibold leading-none"
-                      style={{ color: "rgba(148, 163, 184, 0.06)" }}
+                      className="select-none text-6xl font-semibold leading-none text-slate-200/60"
                       aria-hidden="true"
                     >
                       {useCase.number}
@@ -133,7 +122,7 @@ export function UseCasesSection() {
                     <div className="absolute -right-1 top-0.5">
                       <Icon
                         size={16}
-                        className="text-[#5A6577]"
+                        className="text-slate-400"
                         strokeWidth={1.5}
                         aria-hidden="true"
                       />
@@ -142,16 +131,12 @@ export function UseCasesSection() {
 
                   {/* Right: content */}
                   <div className="flex-1 space-y-3">
-                    <h3 className="text-xl font-semibold text-[#F3F5F7]">
-                      {useCase.title}
-                    </h3>
-                    <p className="text-sm text-[#3B82F6]">
-                      {useCase.outcome}
-                    </p>
-                    <p className="max-w-xl text-sm leading-relaxed text-[#8D98A8]">
+                    <h3 className="text-xl font-semibold text-slate-900">{useCase.title}</h3>
+                    <p className="text-sm text-blue-600">{useCase.outcome}</p>
+                    <p className="max-w-xl text-sm leading-relaxed text-slate-600">
                       {useCase.problem}
                     </p>
-                    <p className="max-w-xl text-sm leading-relaxed text-[#8D98A8]">
+                    <p className="max-w-xl text-sm leading-relaxed text-slate-600">
                       {useCase.workflow}
                     </p>
                   </div>
@@ -161,31 +146,22 @@ export function UseCasesSection() {
                 <div className="flex flex-col gap-3 py-8 md:hidden">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className="select-none text-4xl font-semibold leading-none"
-                      style={{ color: "rgba(148, 163, 184, 0.06)" }}
+                      className="select-none text-4xl font-semibold leading-none text-slate-200/60"
                       aria-hidden="true"
                     >
                       {useCase.number}
                     </span>
                     <Icon
                       size={14}
-                      className="text-[#5A6577]"
+                      className="text-slate-400"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#F3F5F7]">
-                    {useCase.title}
-                  </h3>
-                  <p className="text-sm text-[#3B82F6]">
-                    {useCase.outcome}
-                  </p>
-                  <p className="text-sm leading-relaxed text-[#8D98A8]">
-                    {useCase.problem}
-                  </p>
-                  <p className="text-sm leading-relaxed text-[#8D98A8]">
-                    {useCase.workflow}
-                  </p>
+                  <h3 className="text-lg font-semibold text-slate-900">{useCase.title}</h3>
+                  <p className="text-sm text-blue-600">{useCase.outcome}</p>
+                  <p className="text-sm leading-relaxed text-slate-600">{useCase.problem}</p>
+                  <p className="text-sm leading-relaxed text-slate-600">{useCase.workflow}</p>
                 </div>
               </div>
             )

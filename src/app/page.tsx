@@ -17,7 +17,7 @@ import { Footer } from '@/components/reliastra/footer'
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#080B10]">
+    <div id="top" className="flex min-h-screen flex-col bg-white text-slate-900">
       <Navigation />
       <main className="flex-1">
         <HeroSection />

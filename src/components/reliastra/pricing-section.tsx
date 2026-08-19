@@ -2,6 +2,7 @@
 
 import { Check } from 'lucide-react'
 import { useScrollReveal, useStaggerReveal } from '@/hooks/use-scroll-reveal'
+import { cn } from '@/lib/utils'
 
 interface Plan {
   name: string
@@ -17,23 +18,14 @@ const plans: Plan[] = [
     name: 'FREE',
     price: '$0',
     outcome: 'Measure',
-    features: [
-      '3 dependencies',
-      '24h retention',
-      'Public vendor data',
-    ],
+    features: ['3 dependencies', '24h retention', 'Public vendor data'],
     cta: 'Get Started',
   },
   {
     name: 'STARTER',
     price: '$19',
     outcome: 'Track',
-    features: [
-      '25 dependencies',
-      '7-day retention',
-      'Email alerts',
-      'Evidence reports',
-    ],
+    features: ['25 dependencies', '7-day retention', 'Email alerts', 'Evidence reports'],
     cta: 'Start Free Trial',
   },
   {
@@ -86,39 +78,35 @@ export function PricingSection() {
   const { containerRef, visibleItems } = useStaggerReveal(plans.length, { threshold: 0.05 })
 
   return (
-    <section id="pricing" className="py-24 md:py-32 bg-[#080B10]">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="pricing" className="bg-white py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-6">
         <div
           ref={headerRef}
-          className="text-center mb-12 md:mb-16"
+          className="mb-12 text-center md:mb-16"
           style={{
             opacity: headerVisible ? 1 : 0,
             transform: headerVisible ? 'translateY(0)' : 'translateY(16px)',
             transition: 'opacity 0.5s ease, transform 0.5s ease',
           }}
         >
-          <p className="uppercase tracking-[0.15em] text-xs text-[#5A6577]">
-            Pricing
-          </p>
-          <h2 className="mt-3 text-2xl md:text-3xl lg:text-4xl font-semibold text-[#F3F5F7]">
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Pricing</p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-900 md:text-3xl lg:text-4xl">
             Start measuring. Scale when ready.
           </h2>
         </div>
 
-        <div
-          ref={containerRef}
-          className="grid grid-cols-1 md:grid-cols-5 gap-4"
-        >
+        <div ref={containerRef} className="grid grid-cols-1 gap-4 md:grid-cols-5">
           {plans.map((plan, i) => {
             const isVisible = visibleItems.has(i)
             return (
               <div
                 key={plan.name}
-                className={`rounded p-6 flex flex-col ${
+                className={cn(
+                  'flex flex-col rounded-lg border p-6',
                   plan.popular
-                    ? 'bg-[#0E131B] border border-[#3B82F6]/30'
-                    : 'bg-[#0E131B] border border-[rgba(148,163,184,0.08)]'
-                }`}
+                    ? 'border-blue-600/50 bg-white shadow-[0_12px_32px_-16px_rgba(37,99,235,0.35)]'
+                    : 'border-slate-200 bg-white'
+                )}
                 style={{
                   opacity: isVisible ? 1 : 0,
                   transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
@@ -126,30 +114,28 @@ export function PricingSection() {
                 }}
               >
                 {plan.popular && (
-                  <span className="inline-block self-start text-[10px] uppercase tracking-wide text-[#3B82F6] bg-[rgba(59,130,246,0.08)] px-2.5 py-1 rounded mb-4">
+                  <span className="mb-3 inline-block self-start rounded bg-blue-50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-blue-600">
                     Most Popular
                   </span>
                 )}
 
-                <p className={`uppercase tracking-[0.1em] text-xs text-[#5A6577] ${plan.popular ? 'mt-0' : 'mb-4'}`}>
+                <p className="mb-4 text-xs uppercase tracking-[0.1em] text-slate-500">
                   {plan.name}
                 </p>
 
                 <div className="mb-1">
-                  <span className="text-3xl font-semibold text-[#F3F5F7] font-mono-numeric">
+                  <span className="font-mono-numeric text-3xl font-semibold text-slate-900">
                     {plan.price}
                   </span>
-                  <span className="text-sm text-[#8D98A8]">/mo</span>
+                  <span className="text-sm text-slate-500">/mo</span>
                 </div>
 
-                <p className="text-sm text-[#8D98A8] mb-6">
-                  {plan.outcome}
-                </p>
+                <p className="mb-6 text-sm text-slate-600">{plan.outcome}</p>
 
-                <ul className="flex flex-col gap-2.5 mb-8 flex-1">
+                <ul className="mb-8 flex flex-1 flex-col gap-2.5">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm text-[#8D98A8]">
-                      <Check size={14} className="text-[#5A6577] mt-0.5 shrink-0" />
+                    <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <Check size={14} className="mt-0.5 shrink-0 text-slate-400" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -157,11 +143,12 @@ export function PricingSection() {
 
                 <a
                   href="#"
-                  className={`block text-center text-sm font-medium px-4 py-2.5 rounded transition-colors duration-200 ${
+                  className={cn(
+                    'block rounded px-4 py-2.5 text-center text-sm font-medium transition-colors duration-200',
                     plan.popular
-                      ? 'bg-[#3B82F6] text-white hover:bg-[#2563EB]'
-                      : 'border border-[rgba(148,163,184,0.15)] text-[#8D98A8] hover:text-white hover:border-[rgba(148,163,184,0.3)]'
-                  }`}
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-900'
+                  )}
                 >
                   {plan.cta}
                 </a>

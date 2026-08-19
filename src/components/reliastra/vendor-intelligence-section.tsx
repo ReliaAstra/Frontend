@@ -35,10 +35,10 @@ const VENDOR_DATA: VendorRow[] = [
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 function latencyColor(ms: number): string {
-  if (ms < 100) return 'text-[#22C55E]'
-  if (ms > 500) return 'text-[#EF4444]'
-  if (ms > 200) return 'text-[#F59E0B]'
-  return 'text-[#F3F5F7]'
+  if (ms < 100) return 'text-emerald-600'
+  if (ms > 500) return 'text-red-600'
+  if (ms > 200) return 'text-amber-600'
+  return 'text-slate-600'
 }
 
 function StatusBadge({ status }: { status: VendorStatus }) {
@@ -48,15 +48,10 @@ function StatusBadge({ status }: { status: VendorStatus }) {
       <span
         className={cn(
           'inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full',
-          isOk ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'
+          isOk ? 'bg-emerald-500' : 'bg-amber-500'
         )}
       />
-      <span
-        className={cn(
-          'text-sm',
-          isOk ? 'text-[#22C55E]' : 'text-[#F59E0B]'
-        )}
-      >
+      <span className={cn('text-sm', isOk ? 'text-emerald-600' : 'text-amber-600')}>
         {status}
       </span>
     </div>
@@ -89,7 +84,7 @@ export function VendorIntelligenceSection() {
   const demoTime = useDemoTime()
 
   return (
-    <section ref={ref} className="bg-[#080B10] py-24 md:py-32">
+    <section ref={ref} id="vendor-intelligence" className="bg-white py-24 md:py-32">
       <div className="mx-auto max-w-5xl px-6">
         {/* Header */}
         <div
@@ -98,16 +93,16 @@ export function VendorIntelligenceSection() {
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
           )}
         >
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5A6577]">
+          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
             Public Vendor Intelligence
           </p>
-          <h2 className="text-2xl font-semibold leading-tight text-[#F3F5F7] md:text-3xl lg:text-4xl">
+          <h2 className="text-2xl font-semibold leading-tight text-slate-900 md:text-3xl lg:text-4xl">
             What&rsquo;s actually happening right now.
           </h2>
-          <p className="text-sm text-[#8D98A8]">
+          <p className="text-sm text-slate-600">
             Live observations from our global monitoring network. Updated continuously.
           </p>
-          <p className="font-mono-numeric text-xs text-[#5A6577]">
+          <p className="font-mono-numeric text-xs text-slate-400" suppressHydrationWarning>
             Last updated: {demoTime}
           </p>
         </div>
@@ -115,7 +110,7 @@ export function VendorIntelligenceSection() {
         {/* Table */}
         <div
           className={cn(
-            'overflow-hidden rounded-lg border border-[rgba(148,163,184,0.08)] bg-[#0E131B] transition-all duration-700 ease-out delay-100',
+            'overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-700 ease-out delay-100',
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
           )}
         >
@@ -123,20 +118,20 @@ export function VendorIntelligenceSection() {
             <table className="w-full min-w-[560px]">
               {/* Header */}
               <thead>
-                <tr className="border-b border-[rgba(148,163,184,0.08)]">
-                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-[#5A6577] sm:px-5">
+                <tr className="border-b border-slate-200">
+                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:px-5">
                     Vendor
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-[#5A6577]">
+                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-slate-400">
                     Region
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-[#5A6577]">
+                  <th className="px-4 py-2.5 text-left text-[10px] font-medium uppercase tracking-wider text-slate-400">
                     Status
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-medium uppercase tracking-wider text-[#5A6577]">
+                  <th className="px-4 py-2.5 text-right text-[10px] font-medium uppercase tracking-wider text-slate-400">
                     Latency
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-medium uppercase tracking-wider text-[#5A6577]">
+                  <th className="px-4 py-2.5 text-right text-[10px] font-medium uppercase tracking-wider text-slate-400">
                     HTTP
                   </th>
                 </tr>
@@ -148,23 +143,26 @@ export function VendorIntelligenceSection() {
                   <tr
                     key={`${row.vendor}-${row.region}-${i}`}
                     className={cn(
-                      'border-b border-[rgba(148,163,184,0.05)] last:border-b-0',
-                      row.status === 'Degraded' && 'bg-[rgba(245,158,11,0.03)]'
+                      'border-b border-slate-100 last:border-b-0',
+                      row.status === 'Degraded' && 'bg-amber-50/50'
                     )}
                   >
-                    <td className="px-4 py-2.5 text-sm text-[#F3F5F7] sm:px-5">
-                      {row.vendor}
-                    </td>
-                    <td className="font-mono-numeric px-4 py-2.5 text-xs text-[#8D98A8]">
+                    <td className="px-4 py-2.5 text-sm text-slate-900 sm:px-5">{row.vendor}</td>
+                    <td className="font-mono-numeric px-4 py-2.5 text-xs text-slate-500">
                       {row.region}
                     </td>
                     <td className="px-4 py-2.5">
                       <StatusBadge status={row.status} />
                     </td>
-                    <td className={cn('px-4 py-2.5 text-right font-mono-numeric text-sm', latencyColor(row.latencyMs))}>
+                    <td
+                      className={cn(
+                        'px-4 py-2.5 text-right font-mono-numeric text-sm',
+                        latencyColor(row.latencyMs)
+                      )}
+                    >
                       {row.latencyMs}ms
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono-numeric text-xs text-[#5A6577]">
+                    <td className="px-4 py-2.5 text-right font-mono-numeric text-xs text-slate-400">
                       {row.http}
                     </td>
                   </tr>
@@ -174,8 +172,8 @@ export function VendorIntelligenceSection() {
           </div>
 
           {/* Illustrative data badge */}
-          <div className="flex items-center justify-end border-t border-[rgba(148,163,184,0.06)] px-4 py-2 sm:px-5">
-            <div className="flex items-center gap-1.5 text-[#5A6577]">
+          <div className="flex items-center justify-end border-t border-slate-100 px-4 py-2 sm:px-5">
+            <div className="flex items-center gap-1.5 text-slate-400">
               <Info className="h-3 w-3" />
               <span className="text-[10px] font-medium uppercase tracking-wider">
                 Illustrative Data
@@ -192,8 +190,8 @@ export function VendorIntelligenceSection() {
           )}
         >
           <a
-            href="#vendor-data"
-            className="inline-flex items-center gap-1.5 rounded border border-[rgba(59,130,246,0.4)] px-5 py-2.5 text-sm font-medium text-[#3B82F6] transition-colors duration-200 hover:border-[rgba(59,130,246,0.7)] hover:bg-[rgba(59,130,246,0.06)]"
+            href="#pricing"
+            className="inline-flex items-center gap-1.5 rounded border border-blue-600/40 px-5 py-2.5 text-sm font-medium text-blue-600 transition-colors duration-200 hover:border-blue-600/70 hover:bg-blue-50"
           >
             EXPLORE LIVE VENDOR DATA
             <ArrowUpRight className="h-3.5 w-3.5" />

@@ -275,7 +275,7 @@ export function PageHome() {
               {roles.map((role) => (
                 <div
                   key={role.name}
-                  className="bg-background p-6 transition-colors hover:bg-muted/30"
+                  className="bg-background p-6 transition-all duration-200 hover:bg-muted/30 hover:-translate-y-px"
                 >
                   <h3 className="mb-2 text-sm font-semibold text-foreground">
                     {role.name}
@@ -378,7 +378,7 @@ export function PageHome() {
                   desc: 'Produce the evidence. Actionable reports for stakeholders and audits.',
                 },
               ].map((item) => (
-                <div key={item.step} className="bg-background p-8">
+                <div key={item.step} className="bg-background p-8 transition-all duration-200 hover:bg-muted/20">
                   <span className="mb-4 block font-mono text-xs tracking-widest text-muted-foreground/60">
                     {item.step}
                   </span>

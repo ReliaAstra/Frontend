@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePartnerStore } from '@/stores/partner-store';
 import { useToast } from '@/hooks/use-toast';
+import { getStoredReferralCode } from './referral-banner';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -26,6 +27,13 @@ export function PageSignup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Check for referral cookie on mount
+  useEffect(() => {
+    const code = getStoredReferralCode();
+    if (code) setReferralCode(code);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +55,7 @@ export function PageSignup() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, referralCode }),
       });
 
       if (!res.ok) {
@@ -147,6 +155,18 @@ export function PageSignup() {
             <p className="mt-1 text-sm text-muted-foreground">
               Create your account to get started.
             </p>
+            {referralCode && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-50/40 px-3 py-2"
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                <span className="text-xs text-emerald-800">
+                  Referred by <span className="font-mono font-medium">{referralCode}</span>
+                </span>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Error */}

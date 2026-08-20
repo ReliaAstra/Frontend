@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -94,6 +95,209 @@ const projections = [
   { month: '18', newRefs: '2', total: '45', earn: '$1,620' },
   { month: '24', newRefs: '3', total: '63', earn: '$2,268' },
 ];
+
+// --- Interactive Earnings Calculator ---
+function EarningsCalculator() {
+  const [monthlyRefs, setMonthlyRefs] = useState(3);
+  const [months, setMonths] = useState(12);
+  const planPrice = 49;
+  const commissionRate = 0.3;
+  const perReferralMonthly = planPrice * commissionRate;
+
+  const projectionData = useMemo(() => {
+    const data: { month: number; totalActive: number; monthlyEarning: number; cumulativeEarning: number }[] = [];
+    let total = 0;
+    let cumulative = 0;
+    for (let m = 1; m <= months; m++) {
+      total += monthlyRefs;
+      const monthly = total * perReferralMonthly;
+      cumulative += monthly;
+      data.push({ month: m, totalActive: total, monthlyEarning: monthly, cumulativeEarning: cumulative });
+    }
+    return data;
+  }, [monthlyRefs, months, perReferralMonthly]);
+
+  const finalMonth = projectionData[projectionData.length - 1];
+  const annualEarning = finalMonth?.cumulativeEarning || 0;
+
+  // Determine which milestone rows to highlight (every quarter)
+  const milestoneMonths = [3, 6, 12, 18, 24].filter(m => m <= months);
+
+  return (
+    <section className="border-t border-border/40">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <motion.div variants={fadeUp} custom={0} className="mb-10 max-w-lg">
+            <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Calculator
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Model your earnings
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Adjust the inputs to see your projected earnings over time.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} custom={1} className="grid gap-6 lg:grid-cols-[1fr_380px]">
+            {/* Controls + Chart area */}
+            <div className="space-y-6">
+              {/* Sliders */}
+              <div className="rounded-lg border border-border/60 bg-background p-6 space-y-6">
+                {/* Monthly referrals slider */}
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      New referrals per month
+                    </label>
+                    <span className="font-mono text-lg font-semibold tabular-nums">
+                      {monthlyRefs}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={20}
+                    value={monthlyRefs}
+                    onChange={(e) => setMonthlyRefs(Number(e.target.value))}
+                    className="w-full h-1.5 appearance-none rounded-full bg-muted cursor-pointer accent-foreground [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-foreground [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-background"
+                  />
+                  <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground/60">
+                    <span>1</span>
+                    <span>20</span>
+                  </div>
+                </div>
+
+                {/* Time period slider */}
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      Time period
+                    </label>
+                    <span className="font-mono text-lg font-semibold tabular-nums">
+                      {months} mo
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={3}
+                    max={36}
+                    step={3}
+                    value={months}
+                    onChange={(e) => setMonths(Number(e.target.value))}
+                    className="w-full h-1.5 appearance-none rounded-full bg-muted cursor-pointer accent-foreground [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-foreground [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-background"
+                  />
+                  <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground/60">
+                    <span>3</span>
+                    <span>36</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mini chart - bar visualization */}
+              <div className="rounded-lg border border-border/60 bg-background p-5">
+                <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Monthly earnings projection
+                </p>
+                <div className="flex items-end gap-[2px] h-32">
+                  {projectionData.map((d) => {
+                    const maxEarning = finalMonth?.monthlyEarning || 1;
+                    const height = (d.monthlyEarning / maxEarning) * 100;
+                    const isMilestone = milestoneMonths.includes(d.month);
+                    return (
+                      <div
+                        key={d.month}
+                        className="flex-1 group relative flex flex-col items-center justify-end h-full"
+                      >
+                        <div
+                          className={cn(
+                            'w-full rounded-t-sm transition-all duration-300',
+                            isMilestone
+                              ? 'bg-foreground'
+                              : 'bg-foreground/15 group-hover:bg-foreground/30'
+                          )}
+                          style={{ height: `${Math.max(height, 2)}%` }}
+                        />
+                        {isMilestone && (
+                          <span className="absolute -top-5 left-1/2 -translate-x-1/2 font-mono text-[9px] text-muted-foreground whitespace-nowrap">
+                            M{d.month}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex justify-between font-mono text-[9px] text-muted-foreground/50">
+                  <span>M1</span>
+                  <span>M{months}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Results summary card */}
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border/60 bg-background p-6">
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  At month {months}
+                </p>
+                <p className="font-mono text-3xl font-semibold tabular-nums">
+                  ${finalMonth?.monthlyEarning.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  <span className="ml-1.5 text-sm font-normal text-muted-foreground">/mo</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  from {finalMonth?.totalActive} active referrals
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border/60 bg-background p-6">
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Cumulative earnings
+                </p>
+                <p className="font-mono text-3xl font-semibold tabular-nums">
+                  ${annualEarning.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  total over {months} months
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border/60 bg-muted/30 p-5">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Per referral</span>
+                    <span className="font-mono font-medium">
+                      ${perReferralMonthly.toFixed(2)}/mo
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Commission rate</span>
+                    <span className="font-mono font-medium">
+                      {(commissionRate * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Plan price</span>
+                    <span className="font-mono font-medium">
+                      ${planPrice}/mo
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="font-mono text-[10px] leading-relaxed text-muted-foreground/50 px-1">
+                Projections assume 0% churn. Actual results vary. For illustration only.
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 export function PageEarn() {
   const navigate = usePartnerStore((s) => s.navigate);
@@ -341,6 +545,9 @@ export function PageEarn() {
           </motion.div>
         </div>
       </section>
+
+      {/* ===== INTERACTIVE CALCULATOR ===== */}
+      <EarningsCalculator />
 
       {/* ===== PAYOUT PROCESS ===== */}
       <section className="border-t border-border/40">

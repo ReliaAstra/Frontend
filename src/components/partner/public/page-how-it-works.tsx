@@ -296,7 +296,7 @@ export function PageHowItWorks() {
                   key={item.label}
                   variants={fadeUp}
                   custom={i + 1}
-                  className="rounded-lg border border-border/60 bg-background p-6"
+                  className="rounded-lg border border-border/60 bg-background p-6 transition-all duration-200 hover:-translate-y-px hover:border-foreground/15"
                 >
                   <p className="font-mono text-lg font-semibold tracking-tight">{item.value}</p>
                   <p className="text-xs font-medium text-foreground mt-1">{item.label}</p>
@@ -333,7 +333,7 @@ export function PageHowItWorks() {
               {roles.map((role) => (
                 <div
                   key={role.name}
-                  className="rounded-lg border border-border/60 bg-background p-6 transition-colors hover:border-border"
+                  className="rounded-lg border border-border/60 bg-background p-6 transition-all duration-200 hover:border-border hover:-translate-y-px"
                 >
                   <h3 className="mb-1.5 text-sm font-semibold tracking-tight text-foreground">
                     {role.name}

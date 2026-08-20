@@ -20,6 +20,8 @@ import { PageSupport } from './page-support';
 import { PageForgotPassword } from './page-forgot-password';
 import { PagePrivacy } from './page-privacy';
 import { PageTerms } from './page-terms';
+import { ReferralBanner } from './referral-banner';
+import { ScrollToTop } from '../shared/scroll-to-top';
 
 const publicPages: PartnerPage[] = [
   'home',
@@ -105,6 +107,7 @@ export function PublicLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <ReferralBanner />
       <PartnerNav />
 
       <main className="flex-1">
@@ -123,6 +126,8 @@ export function PublicLayout() {
       </main>
 
       {!isFooterHidden && <PartnerFooter />}
+
+      <ScrollToTop />
     </div>
   );
 }

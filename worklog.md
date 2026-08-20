@@ -299,16 +299,19 @@ Stage Summary:
 - FAQ: RELIASTRA branding, 30% commission rate, RELIASTRA trademarked terms
 - Dashboard: no GO TO DASHBOARD button, USDT without MOST RECOMMENDED
 
+**Pushed to GitHub:**
+- Pushed to `partner-network` branch: https://github.com/ReliaAstra/Frontend/tree/partner-network
+- Remote `main` has separate history (PRs #3–#8) — no common ancestor, kept on separate branch per user decision
+- GitHub token configured for future pushes
+
 **Unresolved:**
-- GitHub push requires credentials (commit is local)
 - Dashboard API uses demo user lookup (first user in DB)
 - No real referral tracking (cookie attribution)
 - Resources page cards are non-functional placeholders
 - Privacy/Terms footer links navigate to home
 
 **Recommendations for next phase:**
-1. Configure GitHub credentials and push
-2. Implement real session-based auth (replace demo user lookup)
-3. Add referral cookie tracking on public pages
-4. Seed sample data for richer dashboard state
-5. Add loading skeletons to referrals/earnings/payouts pages
+1. Implement real session-based auth (replace demo user lookup)
+2. Add referral cookie tracking on public pages
+3. Seed sample data for richer dashboard state
+4. Add loading skeletons to referrals/earnings/payouts pages

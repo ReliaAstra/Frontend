@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+type PayoutMethod = 'crypto_usdc' | 'crypto_usdt' | 'bank';
 
 // --- Account tab ---
 function AccountTab() {
@@ -78,12 +81,118 @@ function AccountTab() {
       <p className="text-xs text-muted-foreground">
         Account details are managed through your RELIASTRA account. Contact support to make changes.
       </p>
+
+      <Separator />
+
+      {/* Customer Support */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-lg border border-border/60 p-4 md:p-5">
+        <div>
+          <p className="text-sm font-medium">Need help?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Our partner support team is here to assist you with any questions.
+          </p>
+        </div>
+        <a
+          href="mailto:support@reliastra.com?subject=Partner%20Support%20Request&body=Hi%20RELIASTRA%20Partner%20Support%2C%0A%0A"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-mono font-medium uppercase tracking-wider text-background transition-colors hover:bg-foreground/90 shrink-0"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Contact Support
+        </a>
+      </div>
     </div>
+  );
+}
+
+// --- Crypto option card ---
+function CryptoOptionCard({
+  name,
+  symbol,
+  network,
+  recommended,
+  selected,
+  onSelect,
+}: {
+  name: string;
+  symbol: string;
+  network: string;
+  recommended: boolean;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        'relative w-full text-left rounded-lg border-2 p-4 md:p-5 transition-all duration-200',
+        'hover:border-foreground/40 hover:shadow-sm',
+        selected
+          ? 'border-foreground/80 bg-muted/30'
+          : 'border-border/60 bg-background'
+      )}
+    >
+      {/* Most Recommended badge */}
+      {recommended && (
+        <div className="absolute -top-2.5 left-4">
+          <Badge className="bg-foreground text-background border-0 text-[9px] font-mono uppercase tracking-[0.15em] px-2 py-0.5">
+            Most Recommended
+          </Badge>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mt-1">
+        {/* Crypto icon */}
+        <div className={cn(
+          'flex items-center justify-center size-10 rounded-full border shrink-0',
+          selected ? 'border-foreground/40 bg-muted/50' : 'border-border/60'
+        )}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-foreground">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M12 6v12M8 10c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4M8 14c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold tracking-tight">{name}</p>
+          <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
+            {network}
+          </p>
+        </div>
+
+        {/* Selection indicator */}
+        <div className={cn(
+          'flex items-center justify-center size-5 rounded-full border-2 shrink-0 transition-colors',
+          selected
+            ? 'border-foreground bg-foreground'
+            : 'border-border'
+        )}>
+          {selected && (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12l5 5L20 7" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </button>
   );
 }
 
 // --- Payout information tab ---
 function PayoutInfoTab() {
+  const [selectedMethod, setSelectedMethod] = useState<PayoutMethod>('crypto_usdc');
+  const [walletAddress, setWalletAddress] = useState('');
+
+  const methods: { id: PayoutMethod; name: string; symbol: string; network: string; recommended: boolean }[] = [
+    { id: 'crypto_usdc', name: 'USD Coin (USDC)', symbol: 'USDC', network: 'Ethereum / Polygon / Solana', recommended: true },
+    { id: 'crypto_usdt', name: 'Tether (USDT)', symbol: 'USDT', network: 'Ethereum / Tron / BSC', recommended: true },
+    { id: 'bank', name: 'Bank Transfer', symbol: 'USD', network: 'ACH / Wire / SWIFT', recommended: false },
+  ];
+
+  const selectedMethodInfo = methods.find((m) => m.id === selectedMethod);
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
@@ -92,45 +201,134 @@ function PayoutInfoTab() {
 
       <Separator />
 
-      <div className="space-y-4 max-w-md">
-        <div className="space-y-2">
-          <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Name on account
-          </Label>
-          <Input placeholder="Full legal name" className="font-mono text-sm" />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Bank name
-          </Label>
-          <Input placeholder="Bank name" className="font-mono text-sm" />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Account number
-          </Label>
-          <Input placeholder="Account number" className="font-mono text-sm" />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Routing number
-          </Label>
-          <Input placeholder="Routing number" className="font-mono text-sm" />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            SWIFT / BIC (international)
-          </Label>
-          <Input placeholder="Optional" className="font-mono text-sm" />
+      {/* Payout method selection */}
+      <div className="space-y-3">
+        <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+          Payout method
+        </Label>
+        <div className="space-y-3 max-w-lg">
+          {methods.map((m) => (
+            <CryptoOptionCard
+              key={m.id}
+              name={m.name}
+              symbol={m.symbol}
+              network={m.network}
+              recommended={m.recommended}
+              selected={selectedMethod === m.id}
+              onSelect={() => setSelectedMethod(m.id)}
+            />
+          ))}
         </div>
       </div>
 
+      <Separator />
+
+      {/* Crypto wallet address fields */}
+      {(selectedMethod === 'crypto_usdc' || selectedMethod === 'crypto_usdt') && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 max-w-lg"
+        >
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Wallet address
+            </Label>
+            <Input
+              placeholder={selectedMethod === 'crypto_usdc' ? '0x... or your Solana address' : '0x... or your Tron address'}
+              value={walletAddress}
+              onChange={(e) => setWalletAddress(e.target.value)}
+              className="font-mono text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Enter your {selectedMethodInfo?.name} wallet address. Double-check before saving — crypto transactions are irreversible.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Network
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {selectedMethod === 'crypto_usdc' && (
+                <>
+                  {['Ethereum', 'Polygon', 'Solana'].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className="rounded-md border border-border/60 px-3 py-2 text-xs font-mono text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors"
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </>
+              )}
+              {selectedMethod === 'crypto_usdt' && (
+                <>
+                  {['Ethereum', 'Tron', 'BSC'].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className="rounded-md border border-border/60 px-3 py-2 text-xs font-mono text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors"
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Bank transfer fields */}
+      {selectedMethod === 'bank' && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 max-w-md"
+        >
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Name on account
+            </Label>
+            <Input placeholder="Full legal name" className="font-mono text-sm" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Bank name
+            </Label>
+            <Input placeholder="Bank name" className="font-mono text-sm" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Account number
+            </Label>
+            <Input placeholder="Account number" className="font-mono text-sm" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              Routing number
+            </Label>
+            <Input placeholder="Routing number" className="font-mono text-sm" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              SWIFT / BIC (international)
+            </Label>
+            <Input placeholder="Optional" className="font-mono text-sm" />
+          </div>
+        </motion.div>
+      )}
+
       <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-wide">
-        Payout information is not yet functional
+        Payout information is not yet saved to your account
       </Badge>
     </div>
   );

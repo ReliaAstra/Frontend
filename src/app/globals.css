@@ -119,4 +119,49 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.85 0 0 0 / 30%);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.85 0 0 0 / 50%);
+  }
+
+  /* Selection */
+  ::selection {
+    background: oklch(0.92 0.02 0 0);
+    color: oklch(0.15 0 0 0);
+  }
+
+  /* Focus visible - global */
+  :focus-visible {
+    outline: 2px solid oklch(0.85 0 0 0 / 60%);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Smooth rendering */
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

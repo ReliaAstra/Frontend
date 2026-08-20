@@ -173,4 +173,61 @@ Verification Results:
 3. Seed sample data (referrals, commissions, payouts) so dashboard shows real-looking state
 4. Add proper loading shimmer/skeleton to dashboard pages during initial fetch
 5. Consider adding a dark mode variant (currently light-only)
-6. Add accessibility audit: aria-live regions for dynamic content, focus trap in modals/sheets
+6. Add accessibility audit: aria-live regions for dynamic content, focus trap in modals/sheets---
+Task ID: 4
+Agent: Main
+Task: Fix GO TO DASHBOARD button, add crypto payout (USDC/USDT), add customer support, fix Forgot password
+
+Work Log:
+- Fixed GO TO DASHBOARD button: page.tsx had render-time `navigate('home')` fallback that caused race conditions. Moved redirect logic to useEffect, added proper null return for dashboard pages awaiting auth
+- Fixed Forgot password button: Changed from `navigate('login')` (no-op, same page) to `<a href="mailto:support@reliastra.com?subject=Password%20Reset%20Request...">`  
+- Added crypto payout (USDC/USDT) to Settings > Payout Info: Created CryptoOptionCard component with selection state, MOST RECOMMENDED badge, network-specific wallet address input (USDC: Ethereum/Polygon/Solana, USDT: Ethereum/Tron/BSC), radio-style selection with animated transitions
+- Added crypto recommendation banner to Payouts page: CryptoBanner component with USDC/USDT description, MOST RECOMMENDED badge, clickable link to Settings > Payout Info
+- Added customer support button (mailto:support@reliastra.com) to: Public nav (desktop + mobile), Dashboard sidebar, Dashboard More sheet (mobile), Settings > Account tab
+- Fixed CSS compilation error: Moved `text-rendering`/`-webkit-font-smoothing`/`-moz-osx-font-smoothing` properties from floating inside @layer base into a `body {}` selector
+- Fixed activation page React strict mode double-invocation: Added cancellation flag and cleanup, handled 401 status gracefully by falling back to /api/partners/me
+- Verified all changes via agent-browser: Homepage with Support nav link, Login with mailto Forgot Password link, Signup > Apply > Activation > Dashboard flow, Dashboard sidebar Support link, Settings Payout Info with USDC/USDT MOST RECOMMENDED cards and network selectors, Payouts page with crypto recommendation banner
+
+Stage Summary:
+- 6 files modified: page.tsx, page-login.tsx, page-settings.tsx, page-payouts.tsx, dashboard-layout.tsx, partner-nav.tsx, page-activation.tsx, globals.css
+- GO TO DASHBOARD button now works correctly (no more render-time state mutation)
+- Forgot password opens mailto:support@reliastra.com with pre-filled subject/body
+- Crypto payout (USDC/USDT) available in Settings > Payout Info with MOST RECOMMENDED badge
+- Crypto banner visible on Payouts page promoting USDC/USDT
+- Professional customer support button available in 5 locations (nav, sidebar, more sheet, settings, login)
+- CSS compilation error resolved
+- Activation page handles React strict mode double-invocation gracefully
+- Lint passes clean
+
+---
+## Current Project Status Assessment
+
+**Overall Health**: Stable. All user-requested fixes implemented and verified.
+
+**Completed in this round:**
+- Fixed GO TO DASHBOARD navigation (render-time state mutation → useEffect redirect)
+- Fixed Forgot password (now opens mailto to support@reliastra.com)
+- Added crypto payout options (USDC + USDT) with MOST RECOMMENDED badges
+- Added customer support button in 5 locations
+- Fixed CSS compilation error (properties moved into body selector)
+- Fixed activation page React strict mode issue
+
+**Verified via agent-browser:**
+- Homepage renders with Support link in nav
+- Login page shows Forgot password as a proper mailto link
+- Full signup → apply → activation → dashboard flow works
+- Dashboard sidebar has Support link
+- Settings > Payout Info shows USDC/USDT with MOST RECOMMENDED, network selectors
+- Payouts page shows crypto recommendation banner
+
+**Unresolved / Low Priority:**
+- Dashboard API uses demo user lookup (first user in DB) — needs proper token-based auth
+- No real referral tracking yet (needs cookie/localStorage attribution)
+- Resources page cards are non-functional placeholders
+- Privacy/Terms footer links navigate to home
+
+**Recommendations for next phase:**
+1. Implement real session-based auth (replace demo user lookup)
+2. Add referral cookie tracking on public pages
+3. Seed sample data for richer dashboard state
+4. Add loading shimmer/skeleton to dashboard pages

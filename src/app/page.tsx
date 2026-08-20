@@ -44,10 +44,17 @@ export default function Home() {
   }, [setUser, setAuthStatus]);
 
   // Redirect unauthenticated users away from dashboard pages
+  // Redirect to home if authenticated user tries a non-existent dashboard page
   useEffect(() => {
     if (!mounted) return;
-    if (dashboardPages.includes(currentPage) && authStatus === 'unauthenticated') {
+    const isDashboardPage = dashboardPages.includes(currentPage);
+    if (isDashboardPage && authStatus === 'unauthenticated') {
       navigate('login');
+      return;
+    }
+    // Fallback: redirect non-authenticated users from dashboard pages to home
+    if (isDashboardPage && authStatus !== 'unauthenticated' && authStatus !== 'authenticated') {
+      navigate('home');
     }
   }, [currentPage, authStatus, mounted, navigate]);
 
@@ -84,7 +91,11 @@ export default function Home() {
     return <DashboardLayout />;
   }
 
-  // Fallback: redirect to home
-  navigate('home');
-  return null;
+  // For dashboard pages that aren't yet authenticated, show nothing (useEffect handles redirect)
+  if (dashboardPages.includes(currentPage)) {
+    return null;
+  }
+
+  // Public pages fallback
+  return <PublicLayout />;
 }

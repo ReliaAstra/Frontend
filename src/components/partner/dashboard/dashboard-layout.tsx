@@ -13,6 +13,7 @@ import {
   Menu,
   ChevronRight,
   ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
@@ -166,6 +167,17 @@ function DesktopSidebar() {
         })}
       </nav>
 
+      {/* Support button */}
+      <div className="px-3">
+        <a
+          href="mailto:support@reliastra.com?subject=Partner%20Support%20Request&body=Hi%20RELIASTRA%20Partner%20Support%2C%0A%0A"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MessageSquare className="size-4 shrink-0" />
+          <span>Support</span>
+        </a>
+      </div>
+
       {/* Bottom section */}
       <div className="px-3 pb-4">
         <Separator className="mb-3" />
@@ -294,6 +306,15 @@ function MoreSheet({
             <span>Settings</span>
             <ChevronRight className="size-4 text-muted-foreground ml-auto" />
           </button>
+          <a
+            href="mailto:support@reliastra.com?subject=Partner%20Support%20Request&body=Hi%20RELIASTRA%20Partner%20Support%2C%0A%0A"
+            onClick={() => onOpenChange(false)}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm text-foreground hover:bg-muted/60 transition-colors text-left"
+          >
+            <MessageSquare className="size-4 text-muted-foreground" />
+            <span>Contact Support</span>
+            <ChevronRight className="size-4 text-muted-foreground ml-auto" />
+          </a>
           <Separator />
           <button
             onClick={handleSignOut}

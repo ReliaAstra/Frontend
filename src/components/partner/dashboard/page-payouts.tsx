@@ -3,13 +3,15 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Check, Loader2 } from 'lucide-react';
+import { Wallet, Check, Loader2, Info } from 'lucide-react';
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { StatusBadge } from '@/components/partner/shared/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import type { Payout } from '@/types/partner';
 
 // --- Loading skeleton ---
@@ -36,6 +38,45 @@ function PayoutsSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+// --- Crypto recommendation banner ---
+function CryptoBanner() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="border border-border/60 rounded-lg bg-background p-5 md:p-6"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex items-center justify-center size-8 rounded-full bg-muted/80 shrink-0 mt-0.5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-foreground">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M12 6v12M8 10c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4M8 14c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <p className="text-sm font-semibold">Crypto Payouts Available</p>
+            <Badge className="bg-foreground text-background border-0 text-[9px] font-mono uppercase tracking-[0.12em] px-2 py-0.5">
+              Most Recommended
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Receive payouts in <span className="font-medium text-foreground">USD Coin (USDC)</span> or <span className="font-medium text-foreground">Tether (USDT)</span> for faster, borderless withdrawals.
+            Set your preferred crypto wallet in{' '}
+            <button
+              onClick={() => usePartnerStore.getState().navigate('settings')}
+              className="font-medium text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors"
+            >
+              Settings → Payout Info
+            </button>.
+          </p>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -67,6 +108,9 @@ function PayoutsEmpty({ payable, onRequest }: { payable: number; onRequest: () =
           REQUEST PAYOUT
         </Button>
       </div>
+
+      <CryptoBanner />
+
       <div className="py-16 text-center">
         <h3 className="text-lg font-medium tracking-tight mb-2">
           No payouts yet
@@ -82,6 +126,8 @@ function PayoutsEmpty({ payable, onRequest }: { payable: number; onRequest: () =
 
 // --- Payout row ---
 function PayoutRow({ payout, index }: { payout: Payout; index: number }) {
+  const isCrypto = payout.method?.toLowerCase().includes('usdc') || payout.method?.toLowerCase().includes('usdt');
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -91,16 +137,33 @@ function PayoutRow({ payout, index }: { payout: Payout; index: number }) {
     >
       {/* Desktop row */}
       <div className="hidden md:flex items-center justify-between px-5 py-3.5">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm">
-            {payout.method || 'Payout'}
-          </p>
-          <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
-            {formatDate(payout.createdAt)}
-            {payout.paidAt && (
-              <span className="ml-2">Paid {formatDate(payout.paidAt)}</span>
-            )}
-          </p>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {isCrypto && (
+            <div className="flex items-center justify-center size-7 rounded-full bg-muted/80 shrink-0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-foreground">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M12 6v12M8 10c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4M8 14c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-sm">
+                {payout.method || 'Payout'}
+              </p>
+              {isCrypto && (
+                <Badge className="bg-foreground text-background border-0 text-[8px] font-mono uppercase tracking-[0.1em] px-1.5 py-0">
+                  Crypto
+                </Badge>
+              )}
+            </div>
+            <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
+              {formatDate(payout.createdAt)}
+              {payout.paidAt && (
+                <span className="ml-2">Paid {formatDate(payout.paidAt)}</span>
+              )}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-4 ml-4">
           <StatusBadge status={payout.status} />
@@ -112,9 +175,16 @@ function PayoutRow({ payout, index }: { payout: Payout; index: number }) {
       {/* Mobile card */}
       <div className="md:hidden px-5 py-4">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm">
-            {payout.method || 'Payout'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">
+              {payout.method || 'Payout'}
+            </span>
+            {isCrypto && (
+              <Badge className="bg-foreground text-background border-0 text-[8px] font-mono uppercase tracking-[0.1em] px-1.5 py-0">
+                Crypto
+              </Badge>
+            )}
+          </div>
           <StatusBadge status={payout.status} />
         </div>
         <div className="flex items-center justify-between">
@@ -249,6 +319,9 @@ export function PagePayouts() {
           </AnimatePresence>
         </Button>
       </motion.div>
+
+      {/* Crypto recommendation banner */}
+      <CryptoBanner />
 
       {/* Payout history */}
       <motion.div

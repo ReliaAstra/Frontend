@@ -75,6 +75,16 @@ export function PartnerNav() {
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-2 md:flex">
+          <a
+            href="mailto:support@reliastra.com?subject=Partner%20Support%20Request"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Support
+          </a>
+          <div className="h-4 w-px bg-border/60" />
           <Button
             variant="ghost"
             size="sm"
@@ -129,6 +139,15 @@ export function PartnerNav() {
                 </button>
               ))}
               <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
+                <a
+                  href="mailto:support@reliastra.com?subject=Partner%20Support%20Request"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Contact Support
+                </a>
                 <Button
                   variant="outline"
                   size="sm"

@@ -139,13 +139,12 @@ export function PageLogin() {
                 autoComplete="current-password"
               />
               <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => navigate('login')}
+                <a
+                  href="mailto:support@reliastra.com?subject=Password%20Reset%20Request&body=Hi%20RELIASTRA%20Support%2C%0A%0AI%20need%20help%20resetting%20my%20password.%20My%20email%20is%3A%0A%0AThank%20you."
                   className="text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
                 >
                   Forgot password?
-                </button>
+                </a>
               </div>
             </div>
 

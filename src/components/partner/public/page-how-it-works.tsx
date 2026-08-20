@@ -1,76 +1,134 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, UserPlus, Link2, BarChart3, CreditCard } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePartnerStore } from '@/stores/partner-store';
+import { cn } from '@/lib/utils';
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { delay: i * 0.07, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
   }),
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.14,
+      delayChildren: 0.15,
+    },
+  },
+};
+
+const staggerChild = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+  },
 };
 
 const steps = [
   {
     number: '01',
-    icon: UserPlus,
-    title: 'Apply to the program',
+    title: 'SIGN UP',
     description:
-      'Submit a short application with your professional background and intended referral approach. Most applications are reviewed within 48 hours.',
-    details: [
-      'Professional background and expertise',
-      'Intended referral channels',
-      'Company or individual profile',
-    ],
+      'Create your partner account. No fees, no contracts. Just a short registration to get started.',
   },
   {
     number: '02',
-    icon: Link2,
-    title: 'Receive your referral link',
+    title: 'GET YOUR LINK',
     description:
-      'Once approved, you get a unique referral link and access to the partner dashboard. Start sharing your link with potential customers.',
-    details: [
-      'Unique tracking URL',
-      'Partner dashboard access',
-      'Marketing resource kit',
-    ],
+      'Receive a unique referral link instantly. Share it with people who depend on reliable infrastructure.',
   },
   {
     number: '03',
-    icon: BarChart3,
-    title: 'Track your referrals',
+    title: 'SHARE IT',
     description:
-      'Monitor referrals in real time from your dashboard. See when prospects sign up, convert to paying customers, and generate commissions.',
-    details: [
-      'Real-time referral status',
-      'Conversion funnel visibility',
-      'Commission accumulation',
-    ],
+      'Send it via email, embed it in your content, or share it directly. No restrictions on how you distribute.',
   },
   {
     number: '04',
-    icon: CreditCard,
-    title: 'Get paid monthly',
+    title: 'EARN 30% EVERY MONTH',
     description:
-      'Commissions are calculated monthly based on active referral subscriptions. Payouts are processed automatically to your registered account.',
-    details: [
-      'Monthly commission calculation',
-      'Automated bank transfers',
-      'Transparent commission statements',
-    ],
+      'When someone subscribes through your link, you earn 30% of their monthly subscription — for as long as they stay.',
+    accent: true,
   },
 ];
+
+const roles = [
+  {
+    name: 'Consultants',
+    desc: 'You already advise on infrastructure.',
+  },
+  {
+    name: 'Agencies',
+    desc: 'Distribution is natural for your client engagements.',
+  },
+  {
+    name: 'MSPs',
+    desc: 'Your clients depend on your recommendations.',
+  },
+  {
+    name: 'Engineers',
+    desc: 'You run production. Your peers trust your judgment.',
+  },
+  {
+    name: 'Founders',
+    desc: 'You decide what tools your company uses.',
+  },
+  {
+    name: 'Creators',
+    desc: 'Your audience trusts your technical recommendations.',
+  },
+];
+
+function PulseLine() {
+  return (
+    <div className="relative flex w-10 shrink-0 items-center justify-center lg:w-14">
+      <div className="h-px w-full bg-border" />
+      <motion.div
+        className="absolute left-0 h-px w-4 bg-foreground/40"
+        animate={{ left: ['0%', 'calc(100% - 16px)'] }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatDelay: 1,
+          ease: 'easeInOut',
+        }}
+      />
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        className="absolute right-0 -translate-y-px text-muted-foreground/40"
+      >
+        <path
+          d="M2 6h6M6 2l4 4-4 4"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
 
 export function PageHowItWorks() {
   const navigate = usePartnerStore((s) => s.navigate);
 
   return (
     <div>
-      {/* Header */}
+      {/* ===== HEADER ===== */}
       <section className="border-b border-border/40">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
           <motion.div
@@ -83,137 +141,149 @@ export function PageHowItWorks() {
               custom={0}
               className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground"
             >
-              Process
+              PROCESS
             </motion.p>
             <motion.h1
               variants={fadeUp}
               custom={1}
               className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
             >
-              How it works
+              How it works.
             </motion.h1>
             <motion.p
               variants={fadeUp}
               custom={2}
               className="mt-4 text-base leading-relaxed text-muted-foreground"
             >
-              From application to your first payout. The entire process is
-              designed to be straightforward and transparent.
+              From referral to recurring revenue. The entire process is designed
+              to be straightforward and transparent.
             </motion.p>
           </motion.div>
         </div>
       </section>
 
-      {/* Steps timeline */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="relative">
-          {/* Vertical line - desktop only */}
-          <div className="absolute left-[27px] top-0 hidden h-full w-px bg-border/60 sm:block" />
-
-          <div className="space-y-8 sm:space-y-12">
+      {/* ===== 4-STEP VISUAL FLOW (HERO) ===== */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer}
+        >
+          {/* Desktop: horizontal row with animated connectors */}
+          <div className="hidden lg:grid lg:grid-cols-4 lg:gap-0">
             {steps.map((step, i) => (
-              <motion.div
-                key={step.number}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
-                className="relative sm:pl-16"
-              >
-                {/* Timeline dot - desktop */}
-                <div className="absolute left-5 top-1.5 hidden h-3 w-3 rounded-full border-2 border-foreground bg-background sm:block" />
-
+              <div key={step.number} className="flex items-stretch">
+                {/* Connector line with pulse */}
+                {i > 0 && <PulseLine />}
                 <motion.div
-                  variants={fadeUp}
-                  custom={i}
-                  className="rounded-lg border border-border/60 bg-background p-6 transition-colors hover:border-border sm:p-8"
+                  variants={staggerChild}
+                  className={cn(
+                    'flex-1 rounded-lg border bg-background p-8 xl:p-10 transition-colors duration-200',
+                    step.accent
+                      ? 'border-emerald-500/40 bg-emerald-50/20 hover:border-emerald-500/60'
+                      : 'border-border/60 hover:border-border'
+                  )}
                 >
-                  <div className="flex items-start gap-4 sm:items-center">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border/80 bg-background">
-                      <step.icon className="size-5 text-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-3">
-                        <span className="font-mono text-xs text-muted-foreground/60">
-                          {step.number}
-                        </span>
-                        <h3 className="text-sm font-semibold text-foreground sm:text-base">
-                          {step.title}
-                        </h3>
-                      </div>
+                  <span className="mb-5 block font-mono text-4xl font-extralight leading-none text-muted-foreground/30">
+                    {step.number}
+                  </span>
+                  <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {step.description}
+                  </p>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile / Tablet: vertical stack with down arrows */}
+          <div className="flex flex-col gap-3 lg:hidden">
+            {steps.map((step, i) => (
+              <div key={step.number}>
+                <motion.div
+                  variants={staggerChild}
+                  className={cn(
+                    'rounded-lg border bg-background p-6 sm:p-8 transition-colors duration-200',
+                    step.accent
+                      ? 'border-emerald-500/40 bg-emerald-50/20'
+                      : 'border-border/60'
+                  )}
+                >
+                  <div className="flex items-start gap-4 sm:items-start">
+                    <span className="shrink-0 font-mono text-4xl font-extralight leading-none text-muted-foreground/30">
+                      {step.number}
+                    </span>
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-foreground">
+                        {step.title}
+                      </h3>
                       <p className="text-sm leading-relaxed text-muted-foreground">
                         {step.description}
                       </p>
                     </div>
                   </div>
-
-                  <ul className="mt-4 ml-14 space-y-1.5 sm:ml-[4.5rem]">
-                    {step.details.map((detail) => (
-                      <li
-                        key={detail}
-                        className="flex items-center gap-2 text-sm text-muted-foreground"
-                      >
-                        <span className="h-px w-3 bg-border" />
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
                 </motion.div>
-              </motion.div>
+                {i < steps.length - 1 && (
+                  <div className="flex justify-center py-1">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="text-muted-foreground/30"
+                    >
+                      <path
+                        d="M8 2v12M4 10l4 4 4-4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Eligibility */}
+      {/* ===== ELIGIBILITY SECTION ===== */}
       <section className="border-t border-border/40 bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-60px' }}
-            className="grid gap-12 lg:grid-cols-2"
           >
-            <motion.div variants={fadeUp} custom={0}>
+            <motion.div variants={fadeUp} custom={0} className="mb-12 max-w-lg">
               <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Eligibility
               </p>
-              <h2 className="mb-4 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                Who should apply
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                Who should apply?
               </h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                The program is designed for professionals who regularly advise
-                organizations on infrastructure, operations, or technology
-                decisions.
-              </p>
             </motion.div>
 
-            <motion.div variants={fadeUp} custom={1} className="space-y-4">
-              {[
-                {
-                  title: 'Technology consultants',
-                  desc: 'Independent consultants who advise on SaaS, cloud, or DevOps tooling.',
-                },
-                {
-                  title: 'Agencies and integrators',
-                  desc: 'Digital agencies or system integrators who deploy solutions for clients.',
-                },
-                {
-                  title: 'Community leaders',
-                  desc: 'People who run communities, write content, or organize events in relevant technical domains.',
-                },
-                {
-                  title: 'Platform resellers',
-                  desc: 'Companies that bundle or resell complementary tools as part of a larger offering.',
-                },
-              ].map((item) => (
+            <motion.div
+              variants={fadeUp}
+              custom={1}
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {roles.map((role) => (
                 <div
-                  key={item.title}
-                  className="rounded-md border border-border/60 bg-background p-4"
+                  key={role.name}
+                  className="rounded-lg border border-border/60 bg-background p-6 transition-colors hover:border-border"
                 >
-                  <h4 className="mb-1 text-sm font-medium text-foreground">
-                    {item.title}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  <h3 className="mb-1.5 text-sm font-semibold tracking-tight text-foreground">
+                    {role.name}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {role.desc}
+                  </p>
                 </div>
               ))}
             </motion.div>
@@ -221,37 +291,37 @@ export function PageHowItWorks() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="border-t border-border/40">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+      {/* ===== DARK CTA SECTION ===== */}
+      <section className="border-t border-border/40 bg-neutral-950 text-neutral-50">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-60px' }}
-            className="mx-auto max-w-xl text-center"
+            className="mx-auto max-w-2xl text-center"
           >
             <motion.h2
               variants={fadeUp}
               custom={0}
-              className="mb-4 text-2xl font-semibold tracking-tight text-foreground"
+              className="mb-4 text-2xl font-semibold tracking-tight sm:text-3xl"
             >
-              Begin the process
+              Your network already has people who need RELIASTRA.
             </motion.h2>
             <motion.p
               variants={fadeUp}
               custom={1}
-              className="mb-8 text-sm text-muted-foreground"
+              className="mb-10 text-base leading-relaxed text-neutral-400"
             >
-              Complete the application and our team will review it within 48
-              business hours.
+              The process takes minutes. The earnings last as long as your
+              referrals stay subscribed.
             </motion.p>
             <motion.div variants={fadeUp} custom={2}>
               <Button
                 size="lg"
-                onClick={() => navigate('apply')}
-                className="gap-2 px-8"
+                onClick={() => navigate('signup')}
+                className="gap-2 bg-neutral-50 text-neutral-950 hover:bg-neutral-200 px-8"
               >
-                Apply to the program
+                BECOME A PARTNER
                 <ArrowRight className="size-4" />
               </Button>
             </motion.div>

@@ -18,26 +18,30 @@ export function PageActivation() {
   const [referralCode, setReferralCode] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
+
     const activate = async () => {
       setStage('activating');
       setStageIndex(0);
 
       // Simulate staged activation
-      const t1 = setTimeout(() => setStageIndex(1), 800);
-      const t2 = setTimeout(() => setStageIndex(2), 1600);
+      const t1 = setTimeout(() => { if (!cancelled) setStageIndex(1); }, 800);
+      const t2 = setTimeout(() => { if (!cancelled) setStageIndex(2); }, 1600);
 
       try {
         const res = await fetch('/api/partners/apply', { method: 'POST' });
+        if (cancelled) return;
         clearTimeout(t1);
         clearTimeout(t2);
 
         if (!res.ok) {
           const data = await res.json();
-          if (data.error === 'Already a partner') {
-            // Already a partner - go to dashboard
+          // Handle 409 (already a partner) or 401 (demo API double-call) gracefully
+          if (data.error === 'Already a partner' || res.status === 401) {
             setStage('ready');
             setStageIndex(2);
             const meRes = await fetch('/api/partners/me');
+            if (cancelled) return;
             if (meRes.ok) {
               const meData = await meRes.json();
               setReferralCode(meData.partner.referralCode);
@@ -50,15 +54,17 @@ export function PageActivation() {
         }
 
         const data = await res.json();
+        if (cancelled) return;
         setReferralCode(data.partner.referralCode);
         setStage('ready');
         setStageIndex(2);
       } catch {
-        setStage('error');
+        if (!cancelled) setStage('error');
       }
     };
 
     activate();
+    return () => { cancelled = true; };
   }, []);
 
   const referralLink = referralCode ? getReferralLink(referralCode) : '';

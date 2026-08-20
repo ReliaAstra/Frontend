@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePartnerStore } from '@/stores/partner-store';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -20,7 +20,6 @@ const fadeUp = {
 
 export function PageLogin() {
   const navigate = usePartnerStore((s) => s.navigate);
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,16 +54,20 @@ export function PageLogin() {
 
       // Redirect logic
       if (data.user.isPartner) {
+        toast.success('Welcome back');
         navigate('dashboard');
       } else {
+        toast.success('Signed in — activate your partner account');
         navigate('apply');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
       if (message.includes('reach') || message.includes('fetch')) {
         setFieldError("We couldn't reach RELIASTRA. Check your connection and try again.");
+        toast.error('Connection failed — check your network');
       } else {
         setFieldError("We couldn't sign you in. Check your email and password and try again.");
+        toast.error('Invalid credentials — try again');
       }
     } finally {
       setLoading(false);

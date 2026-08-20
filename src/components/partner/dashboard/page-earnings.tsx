@@ -43,20 +43,91 @@ function EarningsSkeleton() {
   );
 }
 
-// --- Empty state ---
+// --- Empty state with projected earnings ---
 function EarningsEmpty() {
+  const projections = [
+    { referrals: 1, monthly: 14.7, yearly: 176.4 },
+    { referrals: 5, monthly: 73.5, yearly: 882 },
+    { referrals: 10, monthly: 147, yearly: 1764 },
+    { referrals: 25, monthly: 367.5, yearly: 4410 },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl space-y-6"
+      className="max-w-4xl space-y-8"
     >
       <div>
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
           Earnings
         </h1>
       </div>
-      <div className="py-16 md:py-24 text-center">
+
+      {/* Projected earnings */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="border border-border/60 rounded-lg bg-background overflow-hidden"
+      >
+        <div className="px-5 py-3.5 border-b border-border/60">
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Projected earnings at $49/mo Pro plan
+          </p>
+        </div>
+        <div className="divide-y divide-border/30">
+          {projections.map((p, i) => {
+            const barWidth = Math.min((p.referrals / 25) * 100, 100);
+            return (
+              <motion.div
+                key={p.referrals}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 + i * 0.06 }}
+                className="px-5 py-4 flex items-center gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {p.referrals} {p.referrals === 1 ? 'referral' : 'referrals'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="h-2 bg-muted/60 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${barWidth}%` }}
+                      transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="h-full bg-foreground/80 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div className="w-28 text-right shrink-0">
+                  <p className="font-mono text-sm tabular-nums">
+                    {formatCurrency(p.monthly)}/mo
+                  </p>
+                  <p className="font-mono text-[10px] text-muted-foreground">
+                    {formatCurrency(p.yearly)}/yr
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+        <div className="px-5 py-3 border-t border-border/60 bg-muted/20">
+          <p className="text-[11px] text-muted-foreground">
+            Projections based on 30% commission of $49/mo subscription. Actual earnings depend on referral plan and retention.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="py-8 text-center"
+      >
         <h3 className="text-lg font-medium tracking-tight mb-2">
           No earnings yet
         </h3>
@@ -64,7 +135,7 @@ function EarningsEmpty() {
           When your referrals subscribe, your commissions will appear here.
           Share your referral link to get started.
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

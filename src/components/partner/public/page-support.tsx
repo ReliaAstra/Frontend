@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { usePartnerStore } from '@/stores/partner-store';
+import { toast } from 'sonner';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -69,12 +70,14 @@ export function PageSupport() {
       }
 
       setSubmitted(true);
+      toast.success('Support request submitted — we\'ll respond within 24 hours');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('reach') || msg.includes('fetch')) {
         setFieldError('Unable to reach RELIASTRA. Check your connection and try again.');
       } else {
         setFieldError(msg || 'Unable to submit your request. Please try again.');
+        toast.error('Failed to submit — please try again');
       }
     } finally {
       setLoading(false);

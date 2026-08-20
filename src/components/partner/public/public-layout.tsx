@@ -18,6 +18,8 @@ import { PageSignup } from './page-signup';
 import { PageActivation } from './page-activation';
 import { PageSupport } from './page-support';
 import { PageForgotPassword } from './page-forgot-password';
+import { PagePrivacy } from './page-privacy';
+import { PageTerms } from './page-terms';
 
 const publicPages: PartnerPage[] = [
   'home',
@@ -32,6 +34,8 @@ const publicPages: PartnerPage[] = [
   'activation',
   'support',
   'forgot-password',
+  'privacy',
+  'terms',
 ];
 
 const pageVariants = {
@@ -74,6 +78,10 @@ function PageContent({ page }: { page: PartnerPage }) {
       return <PageSupport />;
     case 'forgot-password':
       return <PageForgotPassword />;
+    case 'privacy':
+      return <PagePrivacy />;
+    case 'terms':
+      return <PageTerms />;
     default:
       return <PageHome />;
   }

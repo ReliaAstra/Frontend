@@ -18,6 +18,7 @@ import {
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
 import { maskEmail } from '@/lib/format';
+import { toast } from 'sonner';
 import type { PartnerPage } from '@/types/partner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,7 @@ function DesktopSidebar() {
       // continue regardless
     }
     reset();
+    toast.success('Signed out');
     navigate('home');
   }, [reset, navigate]);
 
@@ -283,6 +285,7 @@ function MoreSheet({
     }
     onOpenChange(false);
     reset();
+    toast.success('Signed out');
     navigate('home');
   }, [reset, navigate, onOpenChange]);
 
@@ -341,6 +344,7 @@ function TopBar({ onMoreOpen }: { onMoreOpen: () => void }) {
       // continue
     }
     reset();
+    toast.success('Signed out');
     navigate('home');
   }, [reset, navigate]);
 

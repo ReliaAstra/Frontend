@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Share2, Check, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ReferralLinkCardProps {
   link: string;
@@ -19,6 +20,7 @@ export function ReferralLinkCard({ link, size = 'default', showLabel = true, cla
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
+      toast.success('Referral link copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback
@@ -29,6 +31,7 @@ export function ReferralLinkCard({ link, size = 'default', showLabel = true, cla
       document.execCommand('copy');
       document.body.removeChild(ta);
       setCopied(true);
+      toast.success('Referral link copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -46,6 +49,7 @@ export function ReferralLinkCard({ link, size = 'default', showLabel = true, cla
       }
     } else {
       handleCopy();
+      toast.success('Link copied — share it with your network');
     }
   };
 

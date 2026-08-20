@@ -70,4 +70,6 @@ export type PartnerPage =
   | 'payouts'
   | 'settings'
   | 'support'
-  | 'forgot-password';
+  | 'forgot-password'
+  | 'privacy'
+  | 'terms';

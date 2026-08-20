@@ -28,8 +28,8 @@ const footerSections = [
   {
     heading: 'Legal',
     links: [
-      { label: 'Privacy', page: 'home' as PartnerPage },
-      { label: 'Terms', page: 'home' as PartnerPage },
+      { label: 'Privacy', page: 'privacy' as PartnerPage },
+      { label: 'Terms', page: 'terms' as PartnerPage },
     ],
   },
 ];

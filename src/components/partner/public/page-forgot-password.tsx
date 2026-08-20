@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePartnerStore } from '@/stores/partner-store';
+import { toast } from 'sonner';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -49,6 +50,7 @@ export function PageForgotPassword() {
       }
 
       setSubmitted(true);
+      toast.success('Reset link sent — check your inbox');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('reach') || msg.includes('fetch')) {

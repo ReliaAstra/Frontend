@@ -129,11 +129,71 @@ export function PageHome() {
             >
               Recurring commission
             </motion.p>
-            <motion.div variants={fadeUp} custom={1}>
-              <span className="text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight text-foreground">
+            {/* 30% number with pulsing ring and scale animation */}
+            <motion.div
+              variants={fadeUp}
+              custom={1}
+              className="relative inline-flex items-center justify-center"
+            >
+              {/* Pulsing ring (inner) */}
+              <motion.span
+                className="pointer-events-none absolute rounded-full border border-foreground/10"
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: [1, 1.15, 1], opacity: [0, 0.4, 0] }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  repeatDelay: 1.5,
+                  ease: 'easeInOut',
+                }}
+                style={{
+                  width: '220px',
+                  height: '220px',
+                }}
+              />
+              {/* Pulsing ring (outer) */}
+              <motion.span
+                className="pointer-events-none absolute rounded-full border border-foreground/5"
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: [1, 1.3, 1], opacity: [0, 0.2, 0] }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  repeatDelay: 1.5,
+                  ease: 'easeInOut',
+                  delay: 0.4,
+                }}
+                style={{
+                  width: '220px',
+                  height: '220px',
+                }}
+              />
+              <motion.span
+                className="text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight text-foreground"
+                initial={{ scale: 0.85, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.1, 0.25, 1],
+                }}
+              >
                 30
-              </span>
-              <span className="text-4xl sm:text-5xl font-bold text-muted-foreground">%</span>
+              </motion.span>
+              <motion.span
+                className="text-4xl sm:text-5xl font-bold text-muted-foreground"
+                initial={{ scale: 0.85, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.1, 0.25, 1],
+                }}
+              >
+                %
+              </motion.span>
             </motion.div>
             <motion.p
               variants={fadeUp}
@@ -143,22 +203,47 @@ export function PageHome() {
               Every month a referred customer remains subscribed.
             </motion.p>
 
-            <motion.div variants={fadeUp} custom={3} className="mt-8 inline-block">
-              <div className="rounded-lg border border-border/60 bg-background px-6 py-4 text-left">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="font-mono text-muted-foreground">Customer pays $49/mo</span>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground/50 shrink-0">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="font-mono font-semibold text-foreground">You earn $14.70/mo</span>
+            {/* Visual arithmetic flow with connecting line */}
+            <motion.div variants={fadeUp} custom={3} className="mt-10 inline-block">
+              <div className="rounded-lg border border-border/60 bg-background p-6 sm:p-8">
+                {/* Row 1: Customer pays → You earn */}
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-0 sm:justify-center">
+                  <div className="text-center sm:text-right">
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60 mb-1.5">
+                      Customer pays
+                    </p>
+                    <p className="font-mono text-lg font-semibold text-muted-foreground">
+                      $49/mo
+                    </p>
+                  </div>
+
+                  {/* Connecting arrow */}
+                  <div className="flex items-center justify-center px-5 py-1">
+                    <svg width="56" height="20" viewBox="0 0 56 20" fill="none" className="text-muted-foreground/30">
+                      <path d="M0 10h48M40 3l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+
+                  <div className="text-center sm:text-left">
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60 mb-1.5">
+                      You earn (30%)
+                    </p>
+                    <p className="font-mono text-lg font-bold text-foreground">
+                      $14.70/mo
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-2 flex items-center gap-3 text-sm">
-                  <span className="font-mono text-muted-foreground">Customer stays subscribed</span>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground/50 shrink-0">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="font-mono font-semibold text-foreground">You continue earning</span>
+
+                {/* Vertical connector */}
+                <div className="flex justify-center py-3">
+                  <div className="h-4 w-px bg-border" />
                 </div>
+
+                {/* Row 2: Recurring note */}
+                <p className="text-center text-sm text-muted-foreground">
+                  They stay subscribed.{' '}
+                  <span className="font-semibold text-foreground">You keep earning.</span>
+                </p>
               </div>
             </motion.div>
           </motion.div>

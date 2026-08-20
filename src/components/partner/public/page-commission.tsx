@@ -19,7 +19,7 @@ export function PageCommission() {
 
   return (
     <div>
-      {/* Header */}
+      {/* ===== HEADER ===== */}
       <section className="border-b border-border/40">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
           <motion.div
@@ -53,19 +53,17 @@ export function PageCommission() {
         </div>
       </section>
 
-      {/* Rate card */}
+      {/* ===== RATE CARD (prominent 30%) ===== */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
-          className="grid gap-6 lg:grid-cols-2"
         >
-          {/* Main rate */}
           <motion.div
             variants={fadeUp}
             custom={0}
-            className="rounded-lg border border-border/60 bg-background p-8"
+            className="rounded-lg border border-border/60 bg-background p-8 sm:p-12"
           >
             <div className="mb-6 flex items-center justify-between">
               <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -76,72 +74,116 @@ export function PageCommission() {
               </span>
             </div>
 
-            <div className="mb-6">
-              <span className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              className="mb-6"
+            >
+              <span className="text-7xl font-bold tracking-tight text-foreground sm:text-8xl lg:text-[8rem] lg:leading-none">
                 30
               </span>
-              <span className="text-2xl font-bold text-muted-foreground">%</span>
-            </div>
+              <span className="text-3xl font-bold text-muted-foreground sm:text-4xl lg:text-5xl">
+                %
+              </span>
+            </motion.div>
 
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
               You earn 30% of the monthly subscription fee for each customer you
               refer, for as long as their subscription remains active. This rate
               applies uniformly across all RELIASTRA subscription plans.
             </p>
           </motion.div>
-
-          {/* Key terms */}
-          <motion.div
-            variants={fadeUp}
-            custom={1}
-            className="rounded-lg border border-border/60 bg-background p-8"
-          >
-            <p className="mb-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Key terms
-            </p>
-
-            <div className="space-y-4">
-              {[
-                {
-                  term: 'Attribution window',
-                  definition:
-                    '90 days from the first click on your referral link. If the prospect signs up within this window, the referral is attributed to you.',
-                },
-                {
-                  term: 'Commission trigger',
-                  definition:
-                    'Commission begins accruing when the referred customer completes their first paid billing cycle.',
-                },
-                {
-                  term: 'Commission duration',
-                  definition:
-                    'Commissions continue for the lifetime of the customer\'s subscription, with no expiry.',
-                },
-                {
-                  term: 'Churn policy',
-                  definition:
-                    'If a referred customer cancels or fails to pay, commissions for that customer stop in the following month.',
-                },
-              ].map((item) => (
-                <div
-                  key={item.term}
-                  className="border-b border-border/40 pb-4 last:border-0 last:pb-0"
-                >
-                  <h4 className="mb-1 text-sm font-medium text-foreground">
-                    {item.term}
-                  </h4>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {item.definition}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
         </motion.div>
       </section>
 
-      {/* Calculation examples */}
-      <section className="border-t border-border/40 bg-muted/30">
+      {/* ===== VISUAL ARITHMETIC FLOW ===== */}
+      <section className="border-t border-border/40 bg-muted/20">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            <motion.div variants={fadeUp} custom={0} className="mb-10 max-w-lg">
+              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                How it works
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                The math is simple
+              </h2>
+            </motion.div>
+
+            <motion.div variants={fadeUp} custom={1}>
+              <div className="mx-auto max-w-2xl rounded-lg border border-border/60 bg-background p-8 sm:p-10">
+                {/* Row 1: Customer pays -> You earn */}
+                <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-center sm:gap-0">
+                  <div className="text-center sm:text-right">
+                    <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                      Customer pays
+                    </p>
+                    <p className="font-mono text-2xl font-bold text-foreground sm:text-3xl">
+                      $49/mo
+                    </p>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center justify-center px-6 py-2">
+                    <svg width="80" height="24" viewBox="0 0 80 24" fill="none" className="text-muted-foreground/40">
+                      <path d="M0 12h72M64 4l8 8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+
+                  <div className="text-center sm:text-left">
+                    <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                      You earn (30%)
+                    </p>
+                    <p className="font-mono text-2xl font-bold text-foreground sm:text-3xl">
+                      $14.70/mo
+                    </p>
+                  </div>
+                </div>
+
+                {/* Down arrow */}
+                <div className="flex justify-center py-5">
+                  <svg width="24" height="32" viewBox="0 0 24 32" fill="none" className="text-muted-foreground/30">
+                    <path d="M12 0v28M4 20l8 8 8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+
+                {/* Row 2: Customer stays subscribed */}
+                <div className="flex justify-center">
+                  <div className="rounded-md border border-border/60 bg-muted/30 px-6 py-3 text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      Customer stays subscribed
+                    </p>
+                  </div>
+                </div>
+
+                {/* Down arrow */}
+                <div className="flex justify-center py-5">
+                  <svg width="24" height="32" viewBox="0 0 24 32" fill="none" className="text-muted-foreground/30">
+                    <path d="M12 0v28M4 20l8 8 8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+
+                {/* Row 3: You continue earning */}
+                <div className="flex justify-center">
+                  <div className="rounded-md border border-emerald-500/30 bg-emerald-50/30 px-6 py-3 text-center">
+                    <p className="text-sm font-semibold text-foreground">
+                      You continue earning
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ===== CALCULATION EXAMPLES ===== */}
+      <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
             initial="hidden"
@@ -165,7 +207,6 @@ export function PageCommission() {
               custom={1}
               className="overflow-hidden rounded-lg border border-border/60 bg-background"
             >
-              {/* Table header */}
               <div className="grid grid-cols-4 gap-4 border-b border-border/60 bg-muted/30 px-6 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 <span>Customer plan</span>
                 <span className="text-right">Monthly fee</span>
@@ -173,7 +214,6 @@ export function PageCommission() {
                 <span className="text-right">Annual earn</span>
               </div>
 
-              {/* Table rows */}
               {[
                 {
                   plan: 'Starter',
@@ -222,7 +262,7 @@ export function PageCommission() {
         </div>
       </section>
 
-      {/* What doesn't count */}
+      {/* ===== EXCLUSIONS ===== */}
       <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
@@ -246,7 +286,7 @@ export function PageCommission() {
             >
               {[
                 'Self-referrals (signing up with your own link)',
-                'Customers already in a sales conversation with Reliastra',
+                'Customers already in a sales conversation with RELIASTRA',
                 'Free trial signups that do not convert to paid',
                 'Referrals outside the 90-day attribution window',
                 'Customers who receive a refund for their first month',
@@ -265,7 +305,7 @@ export function PageCommission() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ===== CTA ===== */}
       <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div

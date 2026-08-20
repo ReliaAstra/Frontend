@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, TrendingUp, Clock, Repeat, CreditCard } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePartnerStore } from '@/stores/partner-store';
+import { cn } from '@/lib/utils';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -14,31 +15,84 @@ const fadeUp = {
   }),
 };
 
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const staggerChild = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
+const steps = [
+  {
+    number: '1',
+    title: 'GET YOUR LINK',
+    description:
+      'Receive a unique referral link upon approval. No setup, no configuration.',
+  },
+  {
+    number: '2',
+    title: 'SHARE IT',
+    description:
+      'Send it to people who depend on reliable infrastructure. Email, social, or directly.',
+  },
+  {
+    number: '3',
+    title: 'THEY SUBSCRIBE',
+    description:
+      'When someone signs up through your link and starts paying, the connection is made.',
+  },
+  {
+    number: '4',
+    title: 'YOU EARN 30% EVERY MONTH',
+    description:
+      'You receive 30% of their subscription every month they remain a customer.',
+    accent: true,
+  },
+];
+
 const mechanics = [
   {
-    icon: Repeat,
     title: 'Monthly recurring commission',
     description:
       'You earn a commission every month for each active referral. The revenue compounds as your referral base grows.',
   },
   {
-    icon: TrendingUp,
     title: 'No earning cap',
     description:
       'There is no upper limit on how much you can earn. Your revenue is directly proportional to the number of active referrals you maintain.',
   },
   {
-    icon: Clock,
     title: 'Lifetime attribution',
     description:
       'Once a customer is attributed to your referral, you continue earning from them for as long as their subscription is active.',
   },
   {
-    icon: CreditCard,
     title: 'Monthly payouts',
     description:
       'Commissions are calculated at the end of each calendar month and paid out within the first week of the following month.',
   },
+];
+
+const projections = [
+  { month: '1', newRefs: '2', total: '2', earn: '$72' },
+  { month: '3', newRefs: '2', total: '6', earn: '$216' },
+  { month: '6', newRefs: '3', total: '15', earn: '$540' },
+  { month: '12', newRefs: '3', total: '33', earn: '$1,188' },
+  { month: '18', newRefs: '2', total: '45', earn: '$1,620' },
+  { month: '24', newRefs: '3', total: '63', earn: '$2,268' },
 ];
 
 export function PageEarn() {
@@ -46,7 +100,7 @@ export function PageEarn() {
 
   return (
     <div>
-      {/* Header */}
+      {/* ===== HEADER ===== */}
       <section className="border-b border-border/40">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
           <motion.div
@@ -81,36 +135,160 @@ export function PageEarn() {
         </div>
       </section>
 
-      {/* Mechanics grid */}
+      {/* ===== 4-STEP MECHANISM (HERO) ===== */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer}
+        >
+          {/* Desktop: horizontal row with connectors */}
+          <div className="hidden md:grid md:grid-cols-4 md:gap-0">
+            {steps.map((step, i) => (
+              <div key={step.number} className="flex items-stretch">
+                {/* Connector line */}
+                {i > 0 && (
+                  <div className="relative flex w-8 shrink-0 items-center justify-center">
+                    <div className="h-px w-full bg-border" />
+                  </div>
+                )}
+                <motion.div
+                  variants={staggerChild}
+                  className={cn(
+                    'flex-1 rounded-lg border bg-background p-6 transition-colors',
+                    step.accent
+                      ? 'border-emerald-500/40 bg-emerald-50/30'
+                      : 'border-border/60'
+                  )}
+                >
+                  <span className="mb-4 block font-mono text-[48px] font-extralight leading-none text-muted-foreground/30">
+                    {step.number}
+                  </span>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {step.description}
+                  </p>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile: vertical stack with arrows */}
+          <div className="flex flex-col gap-4 md:hidden">
+            {steps.map((step, i) => (
+              <div key={step.number}>
+                <motion.div
+                  variants={staggerChild}
+                  className={cn(
+                    'rounded-lg border bg-background p-6',
+                    step.accent
+                      ? 'border-emerald-500/40 bg-emerald-50/30'
+                      : 'border-border/60'
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <span className="shrink-0 font-mono text-[40px] font-extralight leading-none text-muted-foreground/30">
+                      {step.number}
+                    </span>
+                    <div>
+                      <h3 className="mb-1 text-xs font-semibold uppercase tracking-widest text-foreground">
+                        {step.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+                {i < steps.length - 1 && (
+                  <div className="flex justify-center py-1">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground/30">
+                      <path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ===== RECURRING COMMISSION CALLOUT ===== */}
+      <section className="border-t border-border/40 bg-muted/20">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            className="mx-auto max-w-xl text-center"
+          >
+            <motion.p
+              variants={fadeUp}
+              custom={0}
+              className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+            >
+              30% recurring commission
+            </motion.p>
+            <motion.p
+              variants={fadeUp}
+              custom={1}
+              className="mt-3 text-base text-muted-foreground"
+            >
+              Every month a referred customer remains subscribed.
+            </motion.p>
+            <motion.p
+              variants={fadeUp}
+              custom={2}
+              className="mt-4 font-mono text-xs leading-relaxed text-muted-foreground/60"
+            >
+              Based on $49/mo Pro plan. You would earn $14.70/mo per referral.
+            </motion.p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ===== MECHANICS DETAIL GRID (editorial with left border) ===== */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
-          className="grid gap-6 sm:grid-cols-2"
         >
-          {mechanics.map((item, i) => (
-            <motion.div
-              key={item.title}
-              variants={fadeUp}
-              custom={i}
-              className="rounded-lg border border-border/60 bg-background p-6 transition-colors hover:border-border"
-            >
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md border border-border/80 bg-background">
-                <item.icon className="size-5 text-foreground" />
+          <motion.div variants={fadeUp} custom={0} className="mb-10 max-w-lg">
+            <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Mechanics
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              How the commission works
+            </h2>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            custom={1}
+            className="grid gap-6 sm:grid-cols-2"
+          >
+            {mechanics.map((item) => (
+              <div
+                key={item.title}
+                className="border-l-2 border-border/60 bg-background px-6 py-5 transition-colors hover:border-foreground/30"
+              >
+                <h3 className="mb-2 text-sm font-semibold text-foreground">
+                  {item.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">
-                {item.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {item.description}
-              </p>
-            </motion.div>
-          ))}
+            ))}
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Earnings table */}
+      {/* ===== PROJECTION TABLE (compact) ===== */}
       <section className="border-t border-border/40 bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
@@ -118,7 +296,7 @@ export function PageEarn() {
             whileInView="visible"
             viewport={{ once: true, margin: '-60px' }}
           >
-            <motion.div variants={fadeUp} custom={0} className="mb-10 max-w-lg">
+            <motion.div variants={fadeUp} custom={0} className="mb-8 max-w-lg">
               <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Projection model
               </p>
@@ -129,26 +307,16 @@ export function PageEarn() {
 
             <motion.div variants={fadeUp} custom={1}>
               <div className="overflow-hidden rounded-lg border border-border/60 bg-background">
-                {/* Table header */}
-                <div className="grid grid-cols-4 gap-4 border-b border-border/60 bg-muted/30 px-6 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                <div className="grid grid-cols-4 gap-4 border-b border-border/60 bg-muted/30 px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                   <span>Month</span>
                   <span className="text-right">New refs</span>
                   <span className="text-right">Total active</span>
                   <span className="text-right">Monthly earn</span>
                 </div>
-
-                {/* Table rows */}
-                {[
-                  { month: '1', newRefs: '2', total: '2', earn: '$72' },
-                  { month: '3', newRefs: '2', total: '6', earn: '$216' },
-                  { month: '6', newRefs: '3', total: '15', earn: '$540' },
-                  { month: '12', newRefs: '3', total: '33', earn: '$1,188' },
-                  { month: '18', newRefs: '2', total: '45', earn: '$1,620' },
-                  { month: '24', newRefs: '3', total: '63', earn: '$2,268' },
-                ].map((row) => (
+                {projections.map((row) => (
                   <div
                     key={row.month}
-                    className="grid grid-cols-4 gap-4 border-b border-border/40 px-6 py-3.5 last:border-0"
+                    className="grid grid-cols-4 gap-4 border-b border-border/30 px-5 py-3 last:border-0"
                   >
                     <span className="font-mono text-sm text-foreground">
                       {row.month}
@@ -165,8 +333,7 @@ export function PageEarn() {
                   </div>
                 ))}
               </div>
-
-              <p className="mt-4 font-mono text-[11px] leading-relaxed text-muted-foreground/60">
+              <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground/60">
                 Assumes 30% commission on $120/mo average subscription. New referrals
                 added monthly. Churn not modeled. For illustration only.
               </p>
@@ -175,7 +342,7 @@ export function PageEarn() {
         </div>
       </section>
 
-      {/* Payout details */}
+      {/* ===== PAYOUT PROCESS ===== */}
       <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div
@@ -234,7 +401,7 @@ export function PageEarn() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ===== CTA ===== */}
       <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <motion.div

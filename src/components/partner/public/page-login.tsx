@@ -138,6 +138,15 @@ export function PageLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
               />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate('login')}
+                  className="text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">

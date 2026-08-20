@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePartnerStore } from '@/stores/partner-store';
 import type { PartnerPage } from '@/types/partner';
@@ -10,11 +11,11 @@ import { PageEarn } from './page-earn';
 import { PageHowItWorks } from './page-how-it-works';
 import { PageCommission } from './page-commission';
 import { PageFaq } from './page-faq';
+import { PageResources } from './page-resources';
 import { PageApply } from './page-apply';
 import { PageLogin } from './page-login';
 import { PageSignup } from './page-signup';
 import { PageActivation } from './page-activation';
-import { PageOnboarding } from './page-onboarding';
 
 const publicPages: PartnerPage[] = [
   'home',
@@ -22,11 +23,11 @@ const publicPages: PartnerPage[] = [
   'how-it-works',
   'commission',
   'faq',
+  'resources',
   'apply',
   'login',
   'signup',
   'activation',
-  'onboarding',
 ];
 
 const pageVariants = {
@@ -55,6 +56,8 @@ function PageContent({ page }: { page: PartnerPage }) {
       return <PageCommission />;
     case 'faq':
       return <PageFaq />;
+    case 'resources':
+      return <PageResources />;
     case 'apply':
       return <PageApply />;
     case 'login':
@@ -63,8 +66,6 @@ function PageContent({ page }: { page: PartnerPage }) {
       return <PageSignup />;
     case 'activation':
       return <PageActivation />;
-    case 'onboarding':
-      return <PageOnboarding />;
     default:
       return <PageHome />;
   }
@@ -74,13 +75,16 @@ export function PublicLayout() {
   const currentPage = usePartnerStore((s) => s.currentPage);
   const isPublicPage = publicPages.includes(currentPage);
 
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   if (!isPublicPage) {
-    // If user navigates to a dashboard page without auth, show a placeholder
-    // This is handled by page.tsx
     return null;
   }
 
-  const isAuthPage = currentPage === 'login' || currentPage === 'signup' || currentPage === 'activation' || currentPage === 'onboarding';
+  const isAuthPage = currentPage === 'login' || currentPage === 'signup' || currentPage === 'activation';
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

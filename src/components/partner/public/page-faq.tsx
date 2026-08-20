@@ -188,11 +188,13 @@ export function PageFaq() {
                       value={`${si}-${i}`}
                       className="border-border/60"
                     >
-                      <AccordionTrigger className="justify-start text-left text-sm font-medium text-foreground hover:no-underline">
+                      <AccordionTrigger className="justify-start text-left text-sm font-medium text-foreground hover:no-underline hover:bg-muted/20 transition-colors duration-150 rounded-md">
                         {item.q}
                       </AccordionTrigger>
                       <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                        {item.a}
+                        <div className="border-l-2 border-foreground/10 pl-4">
+                          {item.a}
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   ))}

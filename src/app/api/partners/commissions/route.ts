@@ -18,7 +18,7 @@ export async function GET() {
         .map((c) => ({
           id: c.id,
           referralId: c.referralId,
-          amount: c.amount,
+          amount: c.amount / 100,
           currency: c.currency,
           status: c.status as 'pending' | 'payable' | 'paid',
           period: c.period,

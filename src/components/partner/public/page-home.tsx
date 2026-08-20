@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -290,6 +291,9 @@ export function PageHome() {
         </div>
       </section>
 
+      {/* ===== ANIMATED NUMBER COUNTERS ===== */}
+      <CounterSection />
+
       {/* ===== YOU DON'T NEED A HUGE AUDIENCE ===== */}
       <section className="border-t border-border/40 bg-muted/20">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -395,6 +399,63 @@ export function PageHome() {
         </div>
       </section>
 
+      {/* ===== TESTIMONIALS / SOCIAL PROOF ===== */}
+      <section className="border-t border-border/40">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            <motion.div variants={fadeUp} custom={0} className="mb-12 max-w-lg">
+              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                What partners say
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                Trusted by infrastructure professionals.
+              </h2>
+            </motion.div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <motion.div
+                variants={fadeUp}
+                custom={1}
+              >
+                <TestimonialCard
+                  quote="I recommended RELIASTRA to three infrastructure clients during a consulting engagement. Two subscribed within a week. I now earn recurring revenue from work I was already doing."
+                  name="Marcus Webb"
+                  role="Infrastructure Consultant"
+                  badge="$440+/mo earned"
+                />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                custom={2}
+              >
+                <TestimonialCard
+                  quote="Our agency runs on RELIASTRA internally. When clients ask what we use for incident correlation, the answer naturally leads to a referral. It feels organic, not salesy."
+                  name="Sarah Lin"
+                  role="CTO, Operations Agency"
+                  badge="$870+/mo earned"
+                />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                custom={3}
+                className="sm:col-span-2 lg:col-span-1"
+              >
+                <TestimonialCard
+                  quote="I posted a single breakdown of how we use RELIASTRA for post-incident reviews. That one piece of content generated eight trial signups and four paying customers."
+                  name="David Okafor"
+                  role="DevOps Content Creator"
+                  badge="$580+/mo earned"
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ===== DARK CTA ===== */}
       <section className="border-t border-border/40 bg-neutral-950 text-neutral-50">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -431,6 +492,155 @@ export function PageHome() {
           </motion.div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// --- Animated Counter Section ---
+function CounterSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          const t = setTimeout(() => setStarted(true), 300);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="border-y border-border/40 bg-muted/20">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          className="grid grid-cols-2 divide-x divide-border/40 lg:grid-cols-4"
+        >
+          <CounterItem target={30} prefix="" suffix="%" label="Recurring commission" active={started} />
+          <CounterItem target={49} prefix="$" suffix="/mo" label="Starting plan price" active={started} delay={0.1} />
+          <CounterItem target={90} prefix="" suffix=" days" label="Attribution window" active={started} delay={0.2} />
+          <CounterItem target={0} prefix="$" suffix="" label="Cost to join" active={started} isZero delay={0.3} />
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// --- Animated Counter Item ---
+function CounterItem({
+  target,
+  prefix,
+  suffix,
+  label,
+  isZero = false,
+  active = false,
+  delay = 0,
+}: {
+  target: number;
+  prefix: string;
+  suffix: string;
+  label: string;
+  isZero?: boolean;
+  active?: boolean;
+  delay?: number;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+
+    const startTimeout = setTimeout(() => {
+      if (isZero) {
+        setDisplayValue(0);
+        return;
+      }
+
+      const duration = 1400;
+      const startTime = performance.now();
+
+      const tick = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setDisplayValue(Math.round(eased * target));
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        }
+      };
+
+      requestAnimationFrame(tick);
+    }, delay * 1000);
+
+    return () => clearTimeout(startTimeout);
+  }, [active, target, isZero, delay]);
+
+  return (
+    <div className="py-8 sm:py-10 text-center px-4 first:pl-0">
+      {isZero ? (
+        <motion.span
+          className="font-mono tabular-nums text-3xl font-bold text-foreground sm:text-4xl"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={active ? { scale: [1, 1.05, 1], opacity: 1 } : {}}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay }}
+        >
+          {prefix}0{suffix}
+        </motion.span>
+      ) : (
+        <span className="font-mono tabular-nums text-3xl font-bold text-foreground sm:text-4xl">
+          {prefix}{displayValue}{suffix}
+        </span>
+      )}
+      <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+// --- Testimonial Card ---
+function TestimonialCard({
+  quote,
+  name,
+  role,
+  badge,
+}: {
+  quote: string;
+  name: string;
+  role: string;
+  badge: string;
+}) {
+  return (
+    <div className="h-full border border-border/60 rounded-lg bg-background p-6 transition-all duration-200 hover:-translate-y-px hover:border-foreground/15 hover:shadow-sm">
+      <p className="mb-1 font-mono text-xs text-muted-foreground">
+        PARTNER TESTIMONIAL
+      </p>
+      <p className="mt-4 text-sm leading-relaxed text-foreground/90">
+        <span className="text-3xl leading-none text-foreground/15 select-none">
+          &ldquo;
+        </span>
+        {quote}
+      </p>
+      <div className="mt-6">
+        <p className="text-sm font-semibold text-foreground">{name}</p>
+        <p className="text-xs text-muted-foreground">{role}</p>
+        <span className="mt-3 inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-semibold text-emerald-600">
+          {badge}
+        </span>
+      </div>
     </div>
   );
 }

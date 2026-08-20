@@ -123,19 +123,37 @@ function RecentReferrals({ referrals }: { referrals: Referral[] }) {
 // --- Loading skeleton ---
 function OverviewSkeleton() {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-8 max-w-4xl"
+    >
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-80" />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+          <Skeleton key={i} className="h-24 rounded-lg border border-border/60" />
         ))}
       </div>
-      <Skeleton className="h-32 rounded-lg" />
-      <Skeleton className="h-48 rounded-lg" />
-    </div>
+      <Skeleton className="h-[104px] rounded-lg border border-border/60" />
+      <Skeleton className="h-12 rounded-lg border border-border/40 bg-muted/20" />
+      <div className="border border-border/60 rounded-lg bg-background overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-border/60">
+          <Skeleton className="h-3 w-28" />
+        </div>
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="px-5 py-3.5 border-b border-border/30 last:border-b-0">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 

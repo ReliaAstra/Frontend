@@ -16,12 +16,17 @@ import type { Referral } from '@/types/partner';
 // --- Loading skeleton ---
 function ReferralsSkeleton() {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6 max-w-4xl"
+    >
       <div className="flex items-center gap-3">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-5 w-16 rounded-full" />
       </div>
-      <div className="border border-border/60 rounded-lg overflow-hidden">
+      <div className="border border-border/60 rounded-lg bg-background overflow-hidden">
         <div className="px-5 py-3.5 border-b border-border/60">
           <Skeleton className="h-3 w-24" />
         </div>
@@ -38,7 +43,7 @@ function ReferralsSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

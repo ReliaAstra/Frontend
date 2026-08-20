@@ -236,7 +236,7 @@ export function PageCommission() {
               ].map((row) => (
                 <div
                   key={row.plan}
-                  className="grid grid-cols-4 gap-4 border-b border-border/40 px-6 py-3.5 last:border-0"
+                  className="grid grid-cols-4 gap-4 border-b border-border/30 px-6 py-3.5 last:border-0 hover:bg-muted/30 transition-colors duration-150"
                 >
                   <span className="text-sm font-medium text-foreground">
                     {row.plan}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,14 @@ export function PartnerNav() {
   const navigate = usePartnerStore((s) => s.navigate);
   const currentPage = usePartnerStore((s) => s.currentPage);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleNav = (page: PartnerPage) => {
     navigate(page);
@@ -29,7 +37,14 @@ export function PartnerNav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header
+      className={cn(
+        'sticky top-0 z-50 w-full transition-colors duration-300',
+        scrolled
+          ? 'border-b border-border/40 bg-background/80 backdrop-blur-md'
+          : 'bg-background'
+      )}
+    >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <button

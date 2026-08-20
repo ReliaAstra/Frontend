@@ -198,9 +198,13 @@ export function PageHowItWorks() {
                       : 'border-border/60 hover:border-border'
                   )}
                 >
-                  <span className="mb-5 block font-mono text-4xl font-extralight leading-none text-muted-foreground/30">
+                  <motion.span
+                    className="mb-5 block font-mono text-4xl font-extralight leading-none text-muted-foreground/30"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  >
                     {step.number}
-                  </span>
+                  </motion.span>
                   <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-foreground">
                     {step.title}
                   </h3>
@@ -226,9 +230,13 @@ export function PageHowItWorks() {
                   )}
                 >
                   <div className="flex items-start gap-4 sm:items-start">
-                    <span className="shrink-0 font-mono text-4xl font-extralight leading-none text-muted-foreground/30">
+                    <motion.span
+                      className="shrink-0 font-mono text-4xl font-extralight leading-none text-muted-foreground/30"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    >
                       {step.number}
-                    </span>
+                    </motion.span>
                     <div>
                       <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-foreground">
                         {step.title}

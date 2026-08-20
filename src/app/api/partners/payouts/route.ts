@@ -17,7 +17,7 @@ export async function GET() {
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .map((p) => ({
           id: p.id,
-          amount: p.amount,
+          amount: p.amount / 100,
           currency: p.currency,
           status: p.status as 'pending' | 'processing' | 'completed' | 'failed',
           method: p.method,
@@ -45,6 +45,7 @@ export async function POST() {
       data: {
         partnerId: user.partner.id,
         amount: 7200,
+        // Note: amount stored in cents, frontend expects dollars — divide by 100 in response
         currency: 'USD',
         status: 'pending',
         method: 'bank_transfer',
@@ -54,7 +55,7 @@ export async function POST() {
     return NextResponse.json({
       payout: {
         id: payout.id,
-        amount: payout.amount,
+        amount: payout.amount / 100,
         currency: payout.currency,
         status: payout.status,
         method: payout.method,

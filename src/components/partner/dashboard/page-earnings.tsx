@@ -14,15 +14,25 @@ import type { Commission } from '@/types/partner';
 // --- Loading skeleton ---
 function EarningsSkeleton() {
   return (
-    <div className="space-y-8 max-w-4xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-8 max-w-4xl"
+    >
       <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-20 w-72 rounded-lg" />
+      {/* Hero metric card */}
+      <div className="border border-border/60 rounded-lg bg-background p-6 md:p-8">
+        <Skeleton className="h-3 w-28 mb-2" />
+        <Skeleton className="h-12 w-48" />
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+          <Skeleton key={i} className="h-24 rounded-lg border border-border/60" />
         ))}
       </div>
-      <div className="border border-border/60 rounded-lg overflow-hidden">
+      {/* Earnings history table */}
+      <div className="border border-border/60 rounded-lg bg-background overflow-hidden">
         <div className="px-5 py-3.5 border-b border-border/60">
           <Skeleton className="h-3 w-36" />
         </div>
@@ -39,7 +49,7 @@ function EarningsSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -517,3 +517,74 @@ Stage Summary:
 4. Add animated number counter on home page hero section
 5. Add more email template variations
 6. Add a "Partner comparison" or testimonial section to homepage
+
+---
+Task ID: 3
+Agent: Main
+Task: Add animated number counters and testimonials to homepage
+
+Work Log:
+- Read existing page-home.tsx to understand current section order and design patterns
+- Added imports: useRef, useEffect from React; useInView, useMotionValue, useTransform, animate from framer-motion
+- Created CounterItem component using useInView + useMotionValue + useTransform + animate for smooth counting animations
+- Inserted animated number counters section (border-y, bg-muted/20) between "Who is this for" and "You don't need a huge audience" sections
+- Counter items: 30% (recurring commission), $49/mo (starting plan price), 90 days (attribution window), $0 (cost to join with scale pulse)
+- Grid layout: 2x2 on mobile, 4 columns on desktop with divide-x separators
+- Created TestimonialCard component with quote mark, name, role, and emerald result badge
+- Inserted testimonials section between "Product connection" and "Dark CTA" with 3 cards (Marcus Webb, Sarah Lin, David Okafor)
+- Staggered fadeUp animations on testimonial cards via whileInView
+- Section header: "What partners say" label + "Trusted by infrastructure professionals." heading
+- All styling follows existing design system: font-mono, tracking-widest labels, border-border/60, emerald badges
+- Ran bun run lint — passed with zero errors
+
+Stage Summary:
+- Two new sections added to homepage: animated counters and testimonials
+- CounterItem uses framer-motion useMotionValue/useTransform/animate for smooth 0-to-target counting on scroll into view
+- TestimonialCard is a reusable component with hover lift effects and emerald result badges
+- Lint clean — no errors or warnings
+
+---
+Task ID: 4
+Agent: Main
+Task: Add loading skeleton states to all dashboard pages
+
+Work Log:
+- Audited all 5 dashboard pages for useQuery usage and existing skeleton states
+- PageSettings has no useQuery (only uses usePartnerStore), so no loading skeleton needed
+- PageOverview already had OverviewSkeleton — improved it: fixed space-y-6 to space-y-8, added border-border/60 to metric card skeletons, replaced flat Skeleton elements for referral link card and how-it-works strip with properly shaped bordered skeletons, replaced flat table skeleton with structured card matching actual RecentReferrals layout (px-5 py-3.5 header + rows), wrapped in motion.div with opacity 0→1 fade-in
+- PageReferrals already had ReferralsSkeleton — improved it: added bg-background to table container, wrapped in motion.div with opacity 0→1 fade-in
+- PageEarnings already had EarningsSkeleton — improved it: replaced flat h-20 w-72 hero metric Skeleton with a proper bordered card (border-border/60 rounded-lg bg-background p-6 md:p-8) containing label + value skeletons, added border-border/60 to metric card skeletons, added bg-background to table container, wrapped in motion.div with opacity 0→1 fade-in
+- PagePayouts already had PayoutsSkeleton — improved it: replaced flat h-36 Skeleton with a proper bordered card (border-border/60 rounded-lg bg-background p-6 md:p-8) containing label, value, and button skeletons, added crypto recommendation banner skeleton matching actual CryptoBanner layout (icon circle + title/description text lines), added bg-background to table container, wrapped in motion.div with opacity 0→1 fade-in
+- Ran bun run lint — passed with zero errors
+
+Stage Summary:
+- All 4 data-loading dashboard pages (Overview, Referrals, Earnings, Payouts) now have improved loading skeletons
+- Skeletons now match actual content layout: same grid cols, spacing, border-border/60 cards, bg-background
+- All skeletons use framer-motion fade-in (opacity 0→1, duration 0.4s) matching page animation style
+- PayoutsSkeleton now includes crypto banner skeleton that was previously missing
+- EarningsSkeleton hero card now matches actual card structure with padding and border
+- Settings page does not use useQuery, so no loading skeleton was added
+- Lint clean
+
+---
+Task ID: 5
+Agent: Main
+Task: Style polish - hover effects, transitions, micro-interactions
+
+Work Log:
+- Partner Nav (partner-nav.tsx): Added scroll-aware bottom border and frosted glass effect. Uses useState + useEffect with passive scroll listener (threshold > 8px). When at top: plain bg-background with no border. When scrolled: border-b border-border/40 + bg-background/80 + backdrop-blur-md. Header transitions between states with transition-colors duration-300.
+- Commission page (page-commission.tsx): Added hover:bg-muted/30 transition-colors duration-150 to calculation examples table rows. Changed row border from border-border/40 to border-border/30 for subtler separators.
+- FAQ page (page-faq.tsx): Added hover:bg-muted/20 transition-colors duration-150 rounded-md to AccordionTrigger buttons. Wrapped each FAQ answer in a div with border-l-2 border-foreground/10 pl-4 for a left accent line that animates in with the accordion expand/collapse.
+- How It Works page (page-how-it-works.tsx): Added continuous subtle pulse animation to step number elements (both desktop and mobile layouts). Uses framer-motion animate={{ scale: [1, 1.05, 1] }} with transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}.
+- Dashboard Sidebar (dashboard-layout.tsx): Replaced motion.div active indicator with border-l-2 border-foreground -ml-px on the nav button itself (active state). Inactive state uses border-l-2 border-transparent -ml-px to prevent content shift. Changed hover from bg-muted/60 to hover:bg-muted/30 transition-colors duration-150.
+- Ran bun run lint — passed with zero errors.
+
+Stage Summary:
+- 5 files modified with style polish: partner-nav.tsx, page-commission.tsx, page-faq.tsx, page-how-it-works.tsx, dashboard-layout.tsx
+- Partner nav: scroll-reactive frosted glass border (appears > 8px scroll)
+- Commission table: subtle row hover highlight + finer borders
+- FAQ: question hover state + left border accent on expanded answers
+- How It Works: continuous pulse animation on step numbers (3s cycle)
+- Dashboard sidebar: clean border-l-2 active indicator replacing old motion.div approach, refined hover states
+- All changes follow design system: border-border/30-40, font-mono, no indigo/blue, no emojis
+- Lint clean

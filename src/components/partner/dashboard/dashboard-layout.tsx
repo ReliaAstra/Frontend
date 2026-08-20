@@ -146,22 +146,14 @@ function DesktopSidebar() {
               key={item.page}
               onClick={() => navigate(item.page)}
               className={cn(
-                'relative w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left',
-                'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-left transition-colors duration-150',
+                'hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 isActive
-                  ? 'bg-muted/80 text-foreground font-medium'
-                  : 'text-muted-foreground'
+                  ? 'border-l-2 border-foreground -ml-px bg-muted/80 text-foreground font-medium'
+                  : 'border-l-2 border-transparent -ml-px text-muted-foreground'
               )}
               aria-current={isActive ? 'page' : undefined}
             >
-              {/* Active indicator */}
-              {isActive && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-foreground rounded-r-full"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
               <Icon className="size-4 shrink-0" />
               <span>{item.label}</span>
             </button>

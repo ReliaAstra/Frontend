@@ -17,10 +17,32 @@ import type { Payout } from '@/types/partner';
 // --- Loading skeleton ---
 function PayoutsSkeleton() {
   return (
-    <div className="space-y-8 max-w-4xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-8 max-w-4xl"
+    >
       <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-36 rounded-lg" />
-      <div className="border border-border/60 rounded-lg overflow-hidden">
+      {/* Available to withdraw card */}
+      <div className="border border-border/60 rounded-lg bg-background p-6 md:p-8">
+        <Skeleton className="h-3 w-44 mb-2" />
+        <Skeleton className="h-12 w-48 mb-6" />
+        <Skeleton className="h-10 w-[200px] rounded-md" />
+      </div>
+      {/* Crypto recommendation banner */}
+      <div className="border border-border/60 rounded-lg bg-background p-5 md:p-6">
+        <div className="flex items-start gap-3">
+          <Skeleton className="size-8 rounded-full shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-full max-w-sm" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+        </div>
+      </div>
+      {/* Payout history table */}
+      <div className="border border-border/60 rounded-lg bg-background overflow-hidden">
         <div className="px-5 py-3.5 border-b border-border/60">
           <Skeleton className="h-3 w-36" />
         </div>
@@ -37,7 +59,7 @@ function PayoutsSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

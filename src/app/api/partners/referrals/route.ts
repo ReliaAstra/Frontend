@@ -19,7 +19,7 @@ export async function GET() {
         referredName: r.referredName,
         plan: r.plan,
         status: r.status as 'pending' | 'active' | 'cancelled',
-        monthlyEarned: r.plan === 'Pro' ? 1470 : r.plan === 'Team' ? 870 : 0,
+        monthlyEarned: r.plan === 'Pro' ? 14.70 : r.plan === 'Team' ? 8.70 : r.plan === 'Enterprise' ? 49.00 : 0,
         createdAt: r.createdAt.toISOString(),
       }))
     );

@@ -1,138 +1,75 @@
-// ── Partner Program ───────────────────────────────────────────────
-
-export interface CommissionRate {
+export interface PartnerUser {
   id: string;
-  partner_program_id: string;
-  action_type: 'refer' | 'deploy' | 'create' | 'introduce';
-  rate: number; // e.g. 20 means 20%
-  description: string;
-  created_at: string;
+  email: string;
+  name: string | null;
+  isPartner: boolean;
+  partner?: Partner;
 }
 
-export interface PartnerProgram {
+export interface Partner {
   id: string;
-  name: string;
-  description: string;
-  status: string;
-  commission_rates: CommissionRate[];
-  created_at: string;
-  updated_at: string;
+  referralCode: string;
+  status: 'active' | 'suspended';
+  createdAt: string;
 }
 
-// ── Partner Application ────────────────────────────────────────────
-
-export interface PartnerApplicationCreate {
-  partner_type: string;
-  earning_methods: string[];
-  audience_description: string;
-  agreement_accepted: boolean;
-}
-
-// ── Partner Profile ───────────────────────────────────────────────
-
-export interface PartnerProfile {
+export interface Referral {
   id: string;
-  user_id: string;
-  partner_type: string;
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
-  earning_methods: string[];
-  commission_rate: number;
-  total_earned: number; // minor units (cents)
-  total_paid: number;
-  total_pending: number;
-  referral_count: number;
-  created_at: string;
-  updated_at: string;
+  referredEmail: string | null;
+  referredName: string | null;
+  plan: string | null;
+  status: 'pending' | 'active' | 'cancelled';
+  monthlyEarned: number;
+  createdAt: string;
 }
 
-// ── Partner Dashboard ─────────────────────────────────────────────
-
-export interface CommissionItem {
+export interface Commission {
   id: string;
-  partner_id: string;
-  type: string;
-  amount: number; // minor units
-  status: 'pending' | 'paid' | 'cancelled';
-  description: string;
-  created_at: string;
-  paid_at: string | null;
-}
-
-export interface MonthlyEarning {
-  month: string;
+  referralId: string | null;
   amount: number;
-  count: number;
+  currency: string;
+  status: 'pending' | 'payable' | 'paid';
+  period: string | null;
+  createdAt: string;
+}
+
+export interface Payout {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  method: string | null;
+  createdAt: string;
+  paidAt: string | null;
 }
 
 export interface PartnerDashboardData {
-  total_earned: number;
-  total_pending: number;
-  total_paid: number;
-  referral_count: number;
-  active_referral_links: number;
-  recent_commissions: CommissionItem[];
-  monthly_earnings: MonthlyEarning[];
+  totalEarned: number;
+  thisMonth: number;
+  activeCustomers: number;
+  payable: number;
+  referralLink: string;
+  referrals: Referral[];
+  recentCommissions: Commission[];
 }
 
-// ── Referral Links ────────────────────────────────────────────────
-
-export interface ReferralLink {
-  id: string;
-  partner_id: string;
-  code: string;
-  url: string;
-  name: string;
-  clicks: number;
-  conversions: number;
-  is_active: boolean;
-  created_at: string;
-}
-
-export interface ReferralLinkCreate {
-  name: string;
-}
-
-// ── Referred Customers ────────────────────────────────────────────
-
-export interface ReferredCustomer {
-  id: string;
-  email: string;
-  organization: string;
-  status: string;
-  referral_link_id: string;
-  created_at: string;
-}
-
-// ── Settlements ───────────────────────────────────────────────────
-
-export interface Settlement {
-  id: string;
-  partner_id: string;
-  amount: number;
-  status: string;
-  period_start: string;
-  period_end: string;
-  paid_at: string | null;
-  created_at: string;
-}
-
-// ── Analytics ─────────────────────────────────────────────────────
-
-export interface PartnerAnalytics {
-  total_clicks: number;
-  total_conversions: number;
-  conversion_rate: number;
-  top_referral_links: ReferralLink[];
-  earnings_by_type: Record<string, number>;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────
-
-/** Format minor-unit values (cents) to display currency. */
-export function formatMinor(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount / 100);
-}
+export type PartnerPage =
+  | 'home'
+  | 'earn'
+  | 'how-it-works'
+  | 'commission'
+  | 'faq'
+  | 'resources'
+  | 'apply'
+  | 'login'
+  | 'signup'
+  | 'activation'
+  | 'dashboard'
+  | 'referrals'
+  | 'earnings'
+  | 'payouts'
+  | 'settings'
+  | 'support'
+  | 'forgot-password'
+  | 'privacy'
+  | 'terms';

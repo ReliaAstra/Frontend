@@ -68,4 +68,6 @@ export type PartnerPage =
   | 'referrals'
   | 'earnings'
   | 'payouts'
-  | 'settings';
+  | 'settings'
+  | 'support'
+  | 'forgot-password';

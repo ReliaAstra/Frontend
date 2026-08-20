@@ -92,15 +92,15 @@ function AccountTab() {
             Our partner support team is here to assist you with any questions.
           </p>
         </div>
-        <a
-          href="mailto:support@reliastra.com?subject=Partner%20Support%20Request&body=Hi%20RELIASTRA%20Partner%20Support%2C%0A%0A"
+        <button
+          onClick={() => usePartnerStore.getState().navigate('support')}
           className="inline-flex items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-mono font-medium uppercase tracking-wider text-background transition-colors hover:bg-foreground/90 shrink-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           Contact Support
-        </a>
+        </button>
       </div>
     </div>
   );
@@ -187,7 +187,7 @@ function PayoutInfoTab() {
 
   const methods: { id: PayoutMethod; name: string; symbol: string; network: string; recommended: boolean }[] = [
     { id: 'crypto_usdc', name: 'USD Coin (USDC)', symbol: 'USDC', network: 'Ethereum / Polygon / Solana', recommended: true },
-    { id: 'crypto_usdt', name: 'Tether (USDT)', symbol: 'USDT', network: 'Ethereum / Tron / BSC', recommended: true },
+    { id: 'crypto_usdt', name: 'Tether (USDT)', symbol: 'USDT', network: 'Ethereum / Tron / BSC', recommended: false },
     { id: 'bank', name: 'Bank Transfer', symbol: 'USD', network: 'ACH / Wire / SWIFT', recommended: false },
   ];
 

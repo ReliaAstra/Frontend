@@ -5,13 +5,12 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
-import { formatCurrency, maskEmail, formatDate } from '@/lib/format';
+import { formatCurrency, maskEmail } from '@/lib/format';
 import { MetricCard } from '@/components/partner/shared/metric-card';
 import { ReferralLinkCard } from '@/components/partner/shared/referral-link-card';
 import { StatusBadge } from '@/components/partner/shared/status-badge';
 import { EmptyState } from '@/components/partner/shared/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import type { Referral } from '@/types/partner';
 
 // --- How it works strip ---
@@ -143,7 +142,6 @@ function OverviewSkeleton() {
 // --- Main page ---
 export function PageOverview() {
   const dashboardData = usePartnerStore((s) => s.dashboardData);
-  const navigate = usePartnerStore((s) => s.navigate);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['partner-dashboard'],
@@ -175,7 +173,7 @@ export function PageOverview() {
   }
 
   if (isEmpty) {
-    return <EmptyState referralLink={d.referralLink} onGoToDashboard={() => navigate('dashboard')} />;
+    return <EmptyState referralLink={d.referralLink} />;
   }
 
   return (

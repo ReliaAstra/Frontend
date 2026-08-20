@@ -22,8 +22,8 @@ const faqSections = [
     heading: 'Program basics',
     items: [
       {
-        q: 'What is the Reliastra Partner Network?',
-        a: 'The Partner Network is a commission-based referral program. Approved partners earn a recurring commission by referring new customers to Reliastra through unique tracking links.',
+        q: 'What is the RELIASTRA Partner Network?',
+        a: 'The Partner Network is a commission-based referral program. Approved partners earn a recurring commission by referring new customers to RELIASTRA through unique tracking links.',
       },
       {
         q: 'Who is eligible to apply?',
@@ -44,7 +44,7 @@ const faqSections = [
     items: [
       {
         q: 'What is the commission rate?',
-        a: 'The commission rate is a flat 20% of the referred customer\'s monthly subscription fee. This applies to all subscription plans with no tier variations.',
+        a: 'The commission rate is a flat 30% of the referred customer\'s monthly subscription fee. This applies to all subscription plans with no tier variations.',
       },
       {
         q: 'Is there an earning cap?',
@@ -60,7 +60,7 @@ const faqSections = [
       },
       {
         q: 'What payment methods are supported?',
-        a: 'Commissions are paid via bank transfer (ACH or international wire). You configure your payment details in the partner dashboard.',
+        a: 'Commissions are paid via bank transfer (ACH or international wire) or cryptocurrency (USDC/USDT). You configure your payment details in the partner dashboard.',
       },
     ],
   },
@@ -81,7 +81,7 @@ const faqSections = [
       },
       {
         q: 'Can I use the referral link in paid advertising?',
-        a: 'Yes, paid channels are permitted as long as you do not bid on Reliastra trademarked terms or misrepresent your relationship with the company.',
+        a: 'Yes, paid channels are permitted as long as you do not bid on RELIASTRA trademarked terms or misrepresent your relationship with the company.',
       },
     ],
   },

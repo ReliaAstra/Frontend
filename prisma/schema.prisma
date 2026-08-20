@@ -58,6 +58,17 @@ model Commission {
   partner  Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 }
 
+model SupportTicket {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Payout {
   id          String   @id @default(cuid())
   partnerId   String

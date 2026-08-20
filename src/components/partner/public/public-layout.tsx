@@ -16,6 +16,8 @@ import { PageApply } from './page-apply';
 import { PageLogin } from './page-login';
 import { PageSignup } from './page-signup';
 import { PageActivation } from './page-activation';
+import { PageSupport } from './page-support';
+import { PageForgotPassword } from './page-forgot-password';
 
 const publicPages: PartnerPage[] = [
   'home',
@@ -28,6 +30,8 @@ const publicPages: PartnerPage[] = [
   'login',
   'signup',
   'activation',
+  'support',
+  'forgot-password',
 ];
 
 const pageVariants = {
@@ -66,6 +70,10 @@ function PageContent({ page }: { page: PartnerPage }) {
       return <PageSignup />;
     case 'activation':
       return <PageActivation />;
+    case 'support':
+      return <PageSupport />;
+    case 'forgot-password':
+      return <PageForgotPassword />;
     default:
       return <PageHome />;
   }
@@ -84,7 +92,8 @@ export function PublicLayout() {
     return null;
   }
 
-  const isAuthPage = currentPage === 'login' || currentPage === 'signup' || currentPage === 'activation';
+  const isCenteredPage = currentPage === 'login' || currentPage === 'signup' || currentPage === 'activation' || currentPage === 'forgot-password';
+  const isFooterHidden = currentPage === 'support' || isCenteredPage;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -98,14 +107,14 @@ export function PublicLayout() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className={isAuthPage ? 'flex flex-col py-12 sm:py-16' : ''}
+            className={isCenteredPage || currentPage === 'support' ? 'flex flex-col py-12 sm:py-16' : ''}
           >
             <PageContent page={currentPage} />
           </motion.div>
         </AnimatePresence>
       </main>
 
-      <PartnerFooter />
+      {!isFooterHidden && <PartnerFooter />}
     </div>
   );
 }

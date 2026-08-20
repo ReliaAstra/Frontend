@@ -583,13 +583,13 @@ export const MOCK_APPLICATIONS: Record<string, any[]> = {
 export const MOCK_BILLING_PLAN = {
   org_id: MOCK_ORG.id,
   plan: "professional" as const,
-  max_dependencies: 50,
+  max_dependencies: 100,
   min_check_interval_seconds: 15,
   subscription_status: "active",
   current_period_end: iso(new Date(now.getTime() + 30 * 86400000)),
   is_founding_customer: false,
   founding_discount_pct: 0,
-  price_usd: 49,
+  price_usd: 99,
   discounted_price_usd: null,
 };
 
@@ -597,9 +597,9 @@ export const MOCK_PRICING_PLANS = {
   plans: [
     { plan: "free", display_name: "Free", description: "For personal projects", tag: null, price_usd: 0, max_dependencies: 3, min_check_interval_seconds: 60, data_retention_days: 1, features: {} },
     { plan: "starter", display_name: "Starter", description: "For small teams", tag: null, price_usd: 19, max_dependencies: 10, min_check_interval_seconds: 60, data_retention_days: 7, features: {} },
-    { plan: "standard", display_name: "Standard", description: "For growing products", tag: "Popular", price_usd: 29, max_dependencies: 20, min_check_interval_seconds: 60, data_retention_days: 30, features: {} },
-    { plan: "professional", display_name: "Professional", description: "For scale-ups", tag: null, price_usd: 49, max_dependencies: 50, min_check_interval_seconds: 15, data_retention_days: 90, features: {} },
-    { plan: "agency", display_name: "Agency", description: "For agencies & MSPs", tag: null, price_usd: 99, max_dependencies: 200, min_check_interval_seconds: 15, data_retention_days: 365, features: {} },
+    { plan: "standard", display_name: "Standard", description: "For growing products", tag: "Popular", price_usd: 49, max_dependencies: 30, min_check_interval_seconds: 60, data_retention_days: 30, features: {} },
+    { plan: "professional", display_name: "Professional", description: "Operate dependency intelligence at team scale", tag: null, price_usd: 99, max_dependencies: 100, min_check_interval_seconds: 15, data_retention_days: 90, features: {} },
+    { plan: "agency", display_name: "Agency", description: "Prove reliability across your client portfolio", tag: "Built for Agencies", price_usd: 199, max_dependencies: 500, min_check_interval_seconds: 15, data_retention_days: 90, features: {} },
   ],
 };
 

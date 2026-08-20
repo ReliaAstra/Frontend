@@ -70,11 +70,16 @@ const PROFESSIONAL = {
   positioning: "Operate dependency intelligence at team scale.",
   dependencies: "100 monitored dependencies",
   features: [
-    "90-day retention",
-    "All notification channels",
-    "Custom-branded evidence",
-    "Faster check intervals",
+    "90-day evidence retention",
+    "Advanced incident correlation",
+    "Automated dependency attribution",
+    "Custom-branded evidence reports",
+    "Exportable PDF/JSON evidence",
     "API access",
+    "Faster check intervals",
+    "All notification channels",
+    "Historical dependency analysis",
+    "Team collaboration",
   ],
 };
 
@@ -83,12 +88,15 @@ const AGENCY = {
   name: "Agency",
   price: "$199",
   period: "/mo",
-  positioning: "Manage reliability across your entire client portfolio.",
+  positioning: "Prove reliability across your client portfolio.",
   dependencies: "500 monitored dependencies",
   features: [
-    "Client groups & isolation",
-    "Agency branding",
-    "Client-facing reports",
+    "Client workspaces",
+    "Client isolation",
+    "White-label branding",
+    "Client-facing evidence reports",
+    "Shared dependency intelligence",
+    "Agency API",
     "Everything in Professional",
   ],
 };
@@ -223,6 +231,9 @@ export function PricingSection() {
             >
               Learn more
             </a>
+            <p className="mt-3 text-center text-[11px] leading-relaxed text-[#71717A]">
+              Engineering organizations operate on this — not just monitor with it.
+            </p>
           </motion.div>
 
           {/* Agency */}
@@ -271,6 +282,9 @@ export function PricingSection() {
               <a href="/contact" className="font-medium text-[#0891B2] underline-offset-2 hover:underline">
                 Contact us
               </a>
+            </p>
+            <p className="mt-2 text-center text-[11px] leading-relaxed text-[#52525B]">
+              Sell infrastructure intelligence — not just uptime.
             </p>
           </motion.div>
         </div>

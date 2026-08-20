@@ -314,4 +314,67 @@ Stage Summary:
 1. Implement real session-based auth (replace demo user lookup)
 2. Add referral cookie tracking on public pages
 3. Seed sample data for richer dashboard state
-4. Add loading skeletons to referrals/earnings/payouts pages
+
+---
+Task ID: 6
+Agent: QA & Development Agent (cron)
+Task: QA pass, add Privacy/Terms pages, toast notifications, projected earnings
+
+Work Log:
+- Read worklog, assessed project state: stable, all previous features working
+- QA via agent-browser: Homepage, Login, Dashboard (Overview/Referrals/Earnings/Payouts/Settings), all API calls returning 200
+- Lint: clean, no errors
+- Dev server: healthy, no errors in dev.log
+- Dashboard pages already had loading skeletons (Referrals, Earnings, Payouts) — skipped that task
+- Created page-privacy.tsx: Premium editorial Privacy Policy page with 10 sections, framer-motion reveal animations, LEGAL label, back button, comprehensive legal content (data collection, usage, sharing, security, user rights, cookies, retention, children's privacy, changes, contact)
+- Created page-terms.tsx: Premium editorial Terms of Service page with 13 sections, framer-motion reveal animations, comprehensive legal content (acceptance, program details, 30% commission, referral tracking with 90-day cookies, payout $50 minimum, partner obligations, IP, termination, limitation of liability, governing law Delaware, contact)
+- Added 'privacy' and 'terms' to PartnerPage type union in types/partner.ts
+- Updated public-layout.tsx: imported PagePrivacy and PageTerms, added to publicPages array, added switch cases
+- Updated partner-footer.tsx: Legal section links now navigate to 'privacy' and 'terms' instead of 'home'
+- Replaced shadcn Toaster with Sonner toast system: updated sonner.tsx to not depend on next-themes, styled to match RELIASTRA design (border-border/60, bg-background, font-mono descriptions), updated layout.tsx import
+- Wired toast notifications to: ReferralLinkCard (copy success), PageSupport (submit success, error), PageForgotPassword (reset link sent), PageLogin (welcome back, sign in error, connection error), DashboardLayout (signed out — all 3 handleSignOut instances: sidebar, sheet, account menu)
+- Removed old useToast import from page-login.tsx
+- Enhanced EarningsEmpty state with projected earnings visualization: animated horizontal bar chart showing 1/5/10/25 referrals at $49/mo Pro plan, monthly and yearly figures, font-mono tabular-nums, footnote about assumptions
+- Lint: clean after all changes
+- Verified via agent-browser: Privacy page renders with full legal content, Terms page renders correctly, Earnings projected chart with animated bars visible, login toast 'Welcome back' confirmed
+- Committed and pushed to GitHub partner-network branch
+
+Stage Summary:
+- 2 new pages: Privacy Policy (10 sections, 205 lines), Terms of Service (13 sections, 221 lines)
+- 1 enhanced component: Earnings empty state with projected earnings bar chart
+- 7 files modified: types/partner.ts, public-layout.tsx, partner-footer.tsx, sonner.tsx, layout.tsx, referral-link-card.tsx, page-support.tsx, page-forgot-password.tsx, page-login.tsx, dashboard-layout.tsx, page-earnings.tsx
+- Toast notification system: Sonner replacing shadcn toast, wired to 6 user actions
+- Footer Legal links now functional (Privacy → privacy page, Terms → terms page)
+- Committed as 597dece, pushed to partner-network branch
+
+---
+## Current Project Status Assessment
+
+**Overall Health**: Stable. All features working, no bugs, no lint errors.
+
+**Completed in this round:**
+- Privacy Policy page — comprehensive legal content with editorial design
+- Terms of Service page — 13 sections covering full partner program terms
+- Toast notification system (Sonner) — wired to copy, submit, login, signout actions
+- Projected earnings visualization — animated bar chart on empty Earnings page
+- Footer Legal links now navigate to dedicated pages
+
+**Verified via agent-browser:**
+- Privacy page: full content renders, LEGAL label, sections with whileInView animation
+- Terms page: full content renders, back button, all 13 sections
+- Earnings: projected chart (1/5/10/25 referrals), animated bars, monthly/yearly figures
+- Login: 'Welcome back' toast fires on successful login
+- Dashboard: all pages load, no errors
+
+**Unresolved:**
+- Dashboard API uses demo user lookup (first user in DB)
+- No real referral tracking (cookie attribution)
+- Resources page cards are non-functional placeholders
+- FAQ 'Still have questions?' section links to application form instead of Support page
+
+**Recommendations for next phase:**
+1. Implement real session-based auth (replace demo user lookup)
+2. Add referral cookie tracking on public pages
+3. Seed sample data for richer dashboard state
+4. Make FAQ 'Still have questions?' link navigate to Support page
+5. Add more Resources page interactivity

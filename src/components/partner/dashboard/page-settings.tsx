@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePartnerStore } from '@/stores/partner-store';
+import { toast } from 'sonner';
 import { maskEmail } from '@/lib/format';
 import { ReferralLinkCard } from '@/components/partner/shared/referral-link-card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -338,6 +339,38 @@ function PayoutInfoTab() {
 function PartnerLinkTab() {
   const dashboardData = usePartnerStore((s) => s.dashboardData);
   const user = usePartnerStore((s) => s.user);
+  const referralLink = dashboardData?.referralLink || '';
+
+  const shareChannels = [
+    {
+      name: 'Email',
+      description: 'Send directly to a contact',
+      action: () => {
+        const subject = encodeURIComponent('Check out RELIASTRA');
+        const body = encodeURIComponent(`I thought you'd find this useful — it's a platform for critical infrastructure intelligence.\n\n${referralLink}`);
+        window.open(`mailto:?subject=${subject}&body=${body}`);
+        toast.success('Email client opened');
+      },
+    },
+    {
+      name: 'Twitter / X',
+      description: 'Post to your followers',
+      action: () => {
+        const text = encodeURIComponent(`If you depend on critical infrastructure, check out @reliastra. Full incident timelines, cross-system correlation, actionable evidence.\n\n${referralLink}`);
+        window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+        toast.success('Opening Twitter');
+      },
+    },
+    {
+      name: 'LinkedIn',
+      description: 'Share with your network',
+      action: () => {
+        const text = encodeURIComponent(`RELIASTRA — infrastructure intelligence for critical operations. Track, correlate, and prove what happened.\n\n${referralLink}`);
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}&summary=${text}`, '_blank');
+        toast.success('Opening LinkedIn');
+      },
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -345,12 +378,7 @@ function PartnerLinkTab() {
         Your unique referral link. Share it with potential customers to earn 30% recurring commission.
       </p>
 
-      <Separator />
-
-      <ReferralLinkCard
-        link={dashboardData?.referralLink || ''}
-        size="large"
-      />
+      <ReferralLinkCard link={referralLink} size="large" />
 
       {user?.partner?.referralCode && (
         <div className="space-y-2">
@@ -362,6 +390,44 @@ function PartnerLinkTab() {
           </p>
         </div>
       )}
+
+      <Separator />
+
+      {/* Share channels */}
+      <div className="space-y-4">
+        <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+          Share via
+        </Label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {shareChannels.map((channel) => (
+            <button
+              key={channel.name}
+              onClick={channel.action}
+              className="rounded-lg border border-border/60 bg-background p-4 text-left transition-colors hover:border-border hover:bg-muted/30"
+            >
+              <p className="text-sm font-medium">{channel.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{channel.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tracking info */}
+      <Separator />
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center">
+          <p className="font-mono text-2xl font-semibold tracking-tight">30%</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">Commission</p>
+        </div>
+        <div className="text-center">
+          <p className="font-mono text-2xl font-semibold tracking-tight">90d</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">Cookie window</p>
+        </div>
+        <div className="text-center">
+          <p className="font-mono text-2xl font-semibold tracking-tight">∞</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">No cap</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -158,6 +158,19 @@ export function PageHowItWorks() {
               From referral to recurring revenue. The entire process is designed
               to be straightforward and transparent.
             </motion.p>
+            <motion.div variants={fadeUp} custom={3} className="mt-8 flex flex-wrap gap-6">
+              {[
+                { value: '30%', label: 'Recurring commission' },
+                { value: '90d', label: 'Attribution window' },
+                { value: '$49/mo', label: 'Starting plan' },
+                { value: '$0', label: 'To join' },
+              ].map((m) => (
+                <div key={m.label} className="flex items-baseline gap-1.5">
+                  <span className="font-mono text-xl font-semibold tracking-tight">{m.value}</span>
+                  <span className="text-[11px] text-muted-foreground">{m.label}</span>
+                </div>
+              ))}
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -249,6 +262,50 @@ export function PageHowItWorks() {
             ))}
           </div>
         </motion.div>
+      </section>
+
+      {/* ===== TRACKING DETAILS ===== */}
+      <section className="border-t border-border/40">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            <motion.div variants={fadeUp} custom={0} className="mb-12 max-w-lg">
+              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                Tracking
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                How attribution works
+              </h2>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                We use industry-standard cookie-based tracking with a generous
+                attribution window to ensure you get credit for your referrals.
+              </p>
+            </motion.div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'Cookie duration', value: '90 days', desc: 'From first click to signup' },
+                { label: 'Attribution', value: 'Last-click', desc: 'Most recent partner gets credit' },
+                { label: 'Commission lock', value: 'Instant', desc: 'Credited when subscription starts' },
+                { label: 'Fraud protection', value: 'Active', desc: 'Self-referrals are filtered out' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  variants={fadeUp}
+                  custom={i + 1}
+                  className="rounded-lg border border-border/60 bg-background p-6"
+                >
+                  <p className="font-mono text-lg font-semibold tracking-tight">{item.value}</p>
+                  <p className="text-xs font-medium text-foreground mt-1">{item.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ===== ELIGIBILITY SECTION ===== */}

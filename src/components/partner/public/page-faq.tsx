@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { usePartnerStore } from '@/stores/partner-store';
 import {
   Accordion,
   AccordionContent,
@@ -82,6 +83,44 @@ const faqSections = [
       {
         q: 'Can I use the referral link in paid advertising?',
         a: 'Yes, paid channels are permitted as long as you do not bid on RELIASTRA trademarked terms or misrepresent your relationship with the company.',
+      },
+    ],
+  },
+  {
+    heading: 'Payments & taxes',
+    items: [
+      {
+        q: 'Is there a minimum payout amount?',
+        a: 'Yes. Your payable balance must reach $50 USD before a payout can be requested. Balances below this threshold carry forward to the following month.',
+      },
+      {
+        q: 'How long does it take to receive a payout?',
+        a: 'Payouts are processed within 30 days following the end of each calendar month. Bank transfers may take an additional 3-5 business days. Crypto payouts (USDC/USDT) are typically faster.',
+      },
+      {
+        q: 'Do I need to pay taxes on my commissions?',
+        a: 'Yes. Partners are responsible for their own tax obligations. RELIASTRA does not withhold taxes. Depending on your jurisdiction, you may need to provide tax identification information.',
+      },
+      {
+        q: 'What happens to my commissions if I leave the program?',
+        a: 'Pending commissions that have reached the Payable or Paid state at the time of termination will be processed normally. Pending commissions that have not yet been verified will be forfeited.',
+      },
+    ],
+  },
+  {
+    heading: 'Security & account',
+    items: [
+      {
+        q: 'Is my referral link secure?',
+        a: 'Yes. Each link contains a unique, non-sequential referral code that cannot be guessed. Tracking is handled server-side with industry-standard cookie attribution.',
+      },
+      {
+        q: 'Can I have multiple partner accounts?',
+        a: 'No. Each individual or entity may hold only one partner account. Duplicate accounts will be merged or terminated at RELIASTRA\'s discretion.',
+      },
+      {
+        q: 'How do I reset my password?',
+        a: 'Click "Forgot password?" on the sign-in page and enter your email. You will receive a reset link within a few minutes. If you don\'t see it, check your spam folder.',
       },
     ],
   },
@@ -185,9 +224,17 @@ export function PageFaq() {
               custom={1}
               className="text-sm text-muted-foreground"
             >
-              If your question is not covered here, reach out to our partner team
-              directly through the application form.
+              If your question is not covered here, reach out to our partner
+              team directly.
             </motion.p>
+            <motion.div variants={fadeUp} custom={2} className="mt-6">
+              <button
+                onClick={() => usePartnerStore.getState().navigate('support')}
+                className="inline-flex items-center justify-center min-w-[180px] border border-border bg-background text-foreground px-6 py-2.5 text-xs font-medium uppercase tracking-widest rounded-md hover:bg-muted/80 transition-colors"
+              >
+                CONTACT SUPPORT
+              </button>
+            </motion.div>
           </motion.div>
         </div>
       </section>

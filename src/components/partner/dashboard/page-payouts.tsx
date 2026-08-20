@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Check, Loader2, Info } from 'lucide-react';
+import { Wallet, Check, Loader2 } from 'lucide-react';
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -11,7 +11,14 @@ import { StatusBadge } from '@/components/partner/shared/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { Payout } from '@/types/partner';
 
 // --- Loading skeleton ---
@@ -103,7 +110,84 @@ function CryptoBanner() {
 }
 
 // --- Empty state ---
-function PayoutsEmpty({ payable, onRequest }: { payable: number; onRequest: () => void }) {
+function PayoutConfirmDialog({
+  open,
+  onOpenChange,
+  payable,
+  onConfirm,
+  isProcessing,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  payable: number;
+  onConfirm: () => void;
+  isProcessing: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="border-border/60 sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Request Payout</DialogTitle>
+          <DialogDescription>
+            You are about to request a payout. This will create a pending
+            payout request for the available balance.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col items-center py-4">
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">
+            AVAILABLE BALANCE
+          </p>
+          <p className="text-3xl font-semibold tracking-tight tabular-nums">
+            {formatCurrency(payable)}
+          </p>
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Payout will be processed within 5-7 business days. You will receive
+          USDC to your configured wallet address.
+        </p>
+
+        <DialogFooter className="pt-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isProcessing}
+          >
+            Cancel
+          </Button>
+          <Button onClick={onConfirm} disabled={isProcessing}>
+            <AnimatePresence mode="wait">
+              {isProcessing ? (
+                <motion.span
+                  key="loading"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  className="flex items-center gap-2"
+                >
+                  <Loader2 className="size-4 animate-spin" />
+                  Processing
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="confirm"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                >
+                  Confirm Payout
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PayoutsEmpty({ payable, onOpenDialog }: { payable: number; onOpenDialog: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -123,7 +207,7 @@ function PayoutsEmpty({ payable, onRequest }: { payable: number; onRequest: () =
           {formatCurrency(payable)}
         </p>
         <Button
-          onClick={onRequest}
+          onClick={onOpenDialog}
           disabled={payable <= 0}
           className="min-w-[200px]"
         >
@@ -227,6 +311,7 @@ export function PagePayouts() {
   const queryClient = useQueryClient();
   const dashboardData = usePartnerStore((s) => s.dashboardData);
   const [payoutState, setPayoutState] = useState<'idle' | 'processing' | 'requested'>('idle');
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data: payouts, isLoading, isError } = useQuery<Payout[]>({
     queryKey: ['partner-payouts'],
@@ -252,6 +337,11 @@ export function PagePayouts() {
     }
   }, [payoutState, queryClient]);
 
+  const handleConfirmPayout = useCallback(async () => {
+    setConfirmOpen(false);
+    await handleRequestPayout();
+  }, [handleRequestPayout]);
+
   if (isLoading) {
     return <PayoutsSkeleton />;
   }
@@ -267,7 +357,18 @@ export function PagePayouts() {
   }
 
   if (list.length === 0) {
-    return <PayoutsEmpty payable={payable} onRequest={handleRequestPayout} />;
+    return (
+      <>
+        <PayoutsEmpty payable={payable} onOpenDialog={() => setConfirmOpen(true)} />
+        <PayoutConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          payable={payable}
+          onConfirm={handleConfirmPayout}
+          isProcessing={payoutState === 'processing'}
+        />
+      </>
+    );
   }
 
   return (
@@ -297,7 +398,7 @@ export function PagePayouts() {
           {formatCurrency(payable)}
         </p>
         <Button
-          onClick={handleRequestPayout}
+          onClick={() => setConfirmOpen(true)}
           disabled={payoutState !== 'idle' || payable <= 0}
           className="min-w-[200px]"
         >
@@ -361,6 +462,14 @@ export function PagePayouts() {
           <PayoutRow key={p.id} payout={p} index={i} />
         ))}
       </motion.div>
+
+      <PayoutConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        payable={payable}
+        onConfirm={handleConfirmPayout}
+        isProcessing={payoutState === 'processing'}
+      />
     </div>
   );
 }

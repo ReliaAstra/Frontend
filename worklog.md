@@ -671,3 +671,273 @@ Stage Summary:
 4. Add a partner leaderboard or ranking section
 5. Add referral performance chart (monthly trend line) to Earnings page
 6. Make Resources page email templates customizable
+
+---
+Task ID: 3-a
+Agent: frontend-styling-expert
+Task: Add monthly earnings trend bar chart to Earnings page
+
+Work Log:
+- Read page-earnings.tsx to understand component structure and data flow
+- Read Commission type from types/partner.ts to confirm `period` field is `string | null`
+- Added `monthlyData` useMemo that groups commissions by `period`, sums amounts, sorts chronologically, and takes last 12 entries
+- Added `maxMonthly` computed value for bar height normalization (floored at 1 to avoid division by zero)
+- Inserted chart section between summary cards and earnings history with proper staggered animation timing
+- Chart uses pure div bars with framer-motion height animation (initial 0 to actual %)
+- Bars styled with `bg-foreground/80`, `hover:bg-foreground` for dark mode compatibility
+- Section label uses `font-mono text-xs uppercase tracking-widest text-muted-foreground`
+- Container uses `border border-border/60 rounded-lg bg-background p-5 md:p-6`
+- Month labels below bars use short name format (Jan, Feb, etc.) parsed from period string
+- Dollar amount labels above each bar with `tabular-nums` and `font-mono`
+- Falls back to simple text message when no commissions have a `period` field
+- Adjusted earnings history section animation delay from 0.3 to 0.5 to accommodate new section
+- Removed unused `shortLabel` variable from bar rendering map
+- Ran `bun run lint` — passed with zero errors
+
+Stage Summary:
+- Monthly earnings trend bar chart added between summary cards and earnings history
+- Pure CSS/framer-motion implementation (no chart library)
+- Dark mode compatible via design system tokens
+- Staggered entrance animation on bars and labels
+- Graceful fallback when no period data exists
+- Lint clean---
+Task ID: 3-b
+Agent: full-stack-developer
+Task: Add payout request confirmation modal
+
+Work Log:
+- Read existing page-payouts.tsx and dialog.tsx to understand component APIs and design patterns
+- Added Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle imports from @/components/ui/dialog
+- Created PayoutConfirmDialog component with: title "Request Payout", description text, centered available balance with hero metric styling (text-3xl font-semibold tracking-tight tabular-nums), "AVAILABLE BALANCE" label (font-mono text-xs uppercase tracking-widest text-muted-foreground), processing note, Cancel (outline) and Confirm Payout (default) buttons
+- Applied border-border/60 to dialog content per design system
+- Added AnimatePresence with Loader2 spinner on confirm button during processing state
+- Added confirmOpen state to PagePayouts component
+- Wired both empty-state and main-view REQUEST PAYOUT buttons to open the dialog instead of calling handleRequestPayout directly
+- Created handleConfirmPayout callback that closes dialog then triggers handleRequestPayout
+- Moved handleConfirmPayout before early returns to satisfy react-hooks/rules-of-hooks
+- Cleaned up unused imports (Info, Separator)
+- Lint passes cleanly
+
+Stage Summary:
+- Payout confirmation modal fully implemented with design system compliance
+- Dialog opens on REQUEST PAYOUT click, shows balance, and requires explicit confirmation
+- Loading state with spinner on confirm button during API call
+- Both empty-state and populated-state payout views use the dialog
+- No lint errors
+
+---
+Task ID: 3-c
+Agent: full-stack-developer
+Task: Add activity feed to Dashboard Overview
+
+Work Log:
+- Read worklog.md to understand project context and design system
+- Read page-overview.tsx to understand current dashboard layout and data flow
+- Read partner.ts types (Referral, Commission) and format.ts utilities (maskEmail, formatDate, formatCurrency)
+- Read page-earnings.tsx to understand partnerApi.getCommissions usage pattern
+- Added imports: useMemo, Users, DollarSign (lucide-react), formatDate, Commission type
+- Created ActivityItem discriminated union type for referral/commission events
+- Built ActivityFeed component with timeline layout (border-l connecting line, ml-3.5 pl-4 offset)
+- Each item has: size-7 bg-muted/80 icon circle, text-sm description, text-[11px] font-mono date, and right-aligned amount for commissions
+- Added useQuery for commissions data (partnerApi.getCommissions)
+- Built useMemo to merge referrals and commissions into sorted timeline (newest first, limit 8)
+- Inserted activity feed section between "How it works" strip and "Recent referrals" table
+- Conditional rendering: only shows when commissions data is available; ActivityFeed returns null for empty items
+- Added framer-motion staggered fade-in animation (0.05s delay per item)
+- Fixed React Compiler lint error by changing useMemo dependency from d?.referrals to d
+- Verified with bun run lint - 0 errors
+
+Stage Summary:
+- Activity feed successfully added to Dashboard Overview between "How it works" and "Recent referrals"
+- Timeline merges referral and commission events, sorted by date descending, limited to 8 items
+- Uses design system conventions: border-border/60 cards, font-mono labels, tabular-nums, text-muted-foreground
+- Proper loading state handling - section only renders when both data sources are available
+- Staggered framer-motion animation for polished appearance
+
+---
+Task ID: 7-a
+Agent: full-stack-developer
+Task: Add conversion stats bar to Referrals page
+
+Work Log:
+- Read existing page-referrals.tsx to understand structure
+- Added horizontal stats bar between heading (line 127) and table container (line 129)
+- Stats bar shows 3 metrics: TOTAL (list.length), ACTIVE (status === 'active' count), CONVERSION (activeCount/total * 100, toFixed(0)%)
+- Applied specified styling: border-border/60 rounded-lg bg-background container with divide-x dividers
+- Numbers use text-lg md:text-xl font-semibold tabular-nums; labels use text-[10px] font-mono uppercase tracking-widest text-muted-foreground
+- Conversion rate number uses text-emerald-600 dark:text-emerald-400
+- Wrapped in motion.div with matching table animation (opacity 0->1, y 12->0, duration 0.4, delay 0.05)
+- Ran bun run lint — no errors
+
+Stage Summary:
+- Conversion funnel stats bar successfully added to Referrals page
+- Displays total referrals, active count, and conversion percentage in a clean horizontal bar with dividers
+- Lint passes cleanly
+
+---
+Task ID: 3-a
+Agent: frontend-styling-expert
+Task: Add monthly earnings trend bar chart to Earnings page
+
+Work Log:
+- Added monthlyData useMemo that groups commissions by period, sums amounts, sorts chronologically, takes last 12
+- Built bar chart section with border-border/60 rounded-lg container
+- Bars use bg-foreground/80 with hover:bg-foreground, framer-motion height animation
+- Month labels below bars (Jan, Feb...), dollar amounts above
+- Fallback text when no period data available
+- Adjusted earnings history animation delay to 0.5
+
+Stage Summary:
+- Monthly earnings trend chart renders between summary cards and history table
+- Shows 5 months of data (Apr-Jul 2026) with animated bars
+- Lint clean
+
+---
+Task ID: 3-b
+Agent: full-stack-developer
+Task: Add payout request confirmation modal
+
+Work Log:
+- Created PayoutConfirmDialog component with Dialog from shadcn/ui
+- Shows available balance, processing note (5-7 business days, USDC)
+- Cancel (outline) and Confirm Payout (default) buttons
+- Loader2 spinner on confirm button during processing
+- Wired both empty and populated payout views to open dialog first
+
+Stage Summary:
+- Payout request now shows confirmation dialog before creating request
+- Dialog follows design system (border-border/60, font-mono labels, tabular-nums)
+- Lint clean
+
+---
+Task ID: 3-c
+Agent: full-stack-developer
+Task: Add activity feed to Dashboard Overview
+
+Work Log:
+- Created ActivityItem type (discriminated union for referral/commission events)
+- Built ActivityFeed component with timeline layout (icon circles, border-l connector)
+- Fetches commissions via useQuery (shares cache with earnings page)
+- Merges referrals + commissions, sorts by date descending, limits to 8
+- Staggered framer-motion animation per item
+- Placed between How It Works strip and Recent Referrals table
+
+Stage Summary:
+- Activity feed shows 8 most recent events (referrals + commissions) on overview
+- Timeline design with icon circles and connecting border line
+- Only renders when both data sources are available
+- Lint clean
+
+---
+Task ID: 7-a
+Agent: full-stack-developer
+Task: Add conversion stats bar to Referrals page
+
+Work Log:
+- Added horizontal stats bar between heading and table
+- Shows TOTAL, ACTIVE, CONVERSION metrics with dividers
+- Conversion rate highlighted in emerald-600/dark:emerald-400
+- Uses same animation style as table (motion.div opacity+y)
+
+Stage Summary:
+- Conversion stats bar shows 12 total, 9 active, 75% conversion rate
+- Lint clean
+
+---
+Task ID: 10
+Agent: Main (Cron QA & Development Cycle)
+Task: QA assessment + dark mode + 6 new features + style polish
+
+Work Log:
+- Full QA via agent-browser: Homepage, Login, Dashboard (Overview/Referrals/Earnings/Payouts/Settings), Resources, Privacy, Earn calculator, dark mode toggle
+- Lint: clean (0 errors), dev server: healthy (all 200s), no console errors
+
+- **Feature 1: Dark Mode**
+  - Added ThemeProvider (next-themes) to layout.tsx
+  - Created ThemeToggle component with sun/moon animated icons
+  - Added toggle to: public nav (desktop + mobile), dashboard top bar
+  - Fixed 20+ hardcoded color instances for dark mode:
+    - StatusBadge: 8 status variants with dark:bg and dark:text and dark:border
+    - Error messages: 5 pages (login, signup, forgot-password, apply, support)
+    - Dashboard: sign-out hover (dark:hover:bg-red-950/30, dark:text-red-400)
+    - Signup referral badge: dark:bg-emerald-950/30, dark:text-emerald-300
+  - globals.css: dark scrollbar thumbs, dark ::selection
+  - Search button (Cmd+K) in nav with ⌘K keyboard hint
+
+- **Feature 2: Earnings Trend Chart** (via subagent)
+  - Bar chart on Earnings page grouping commissions by month
+  - Animated bars with framer-motion, month labels, dollar amounts
+
+- **Feature 3: Payout Request Modal** (via subagent)
+  - Confirmation dialog before payout creation
+  - Shows available balance, processing note, Cancel/Confirm buttons
+  - Loading state with spinner on confirm
+
+- **Feature 4: Activity Feed** (via subagent)
+  - Timeline on Dashboard Overview with referrals + commissions merged
+  - 8 most recent events, icon circles, connecting border line
+
+- **Feature 5: Referral Conversion Stats** (via subagent)
+  - Stats bar on Referrals page: Total/Active/Conversion rate
+  - Emerald highlighted conversion percentage
+
+- **Feature 6: Command Palette (Cmd+K)**
+  - Global keyboard shortcut (Cmd/Ctrl+K) on both public and dashboard
+  - Search/filter pages, keyboard navigation (↑↓), Enter to select
+  - Different items for public (13 pages) vs dashboard (8 items)
+  - Grouped by category (Navigation, Account, Actions, Legal)
+  - Animated open/close with backdrop blur
+  - Search button with ⌘K hint in public nav
+
+- **Style Polish**
+  - MetricCard: added hover:border-border hover:bg-muted/20 transition
+  - ReferralLinkCard: added hover shadow effect and icon color transition
+  - All changes follow design system: font-mono, tabular-nums, border-border/60
+
+Stage Summary:
+- 6 major features added: dark mode, earnings chart, payout modal, activity feed, conversion stats, command palette
+- 3 style polish improvements: metric card hover, referral link hover, nav search button
+- 10+ files modified for dark mode compatibility
+- All features verified via agent-browser (dark mode toggle, chart months, modal dialog, activity feed, search palette)
+- Lint: clean (0 errors, 0 warnings)
+- Dev server: healthy, all 200 responses, no errors
+
+---
+## Current Project Status Assessment
+
+**Overall Health**: Stable and polished. All features working, dark mode fully functional, no bugs, no lint errors.
+
+**Completed in this round:**
+- Dark mode: full support via next-themes, toggle in nav + dashboard, 20+ dark color fixes
+- Earnings chart: monthly bar chart with animated bars on Earnings page
+- Payout modal: confirmation dialog before payout requests
+- Activity feed: timeline of recent referrals + commissions on Dashboard Overview
+- Conversion stats: Total/Active/Conversion metrics on Referrals page
+- Command palette: Cmd+K global search for quick navigation
+- Style polish: metric card hover, referral link hover shadow, search button in nav
+
+**Verified via agent-browser:**
+- Homepage dark mode: toggle works, nav shows search button with ⌘K, all sections render
+- Dashboard dark mode: theme toggle in top bar, all pages render correctly
+- Earnings chart: 5 months (Apr-Jul), animated bars, month labels below, amounts above
+- Payout modal: REQUEST PAYOUT opens dialog with balance, Cancel/Confirm buttons
+- Activity feed: 8 items mixing referrals and commissions with timeline design
+- Command palette: Cmd+K opens, search filters, keyboard navigation works
+- Referrals page: conversion stats bar shows 12 total / 9 active / 75% conversion
+- Lint: clean (0 errors, 0 warnings)
+- Dev log: all 200s, no errors
+
+**Unresolved:**
+- Dashboard API uses demo user lookup (first user in DB) — needs proper token-based auth
+- Notification preferences not persisted (client state only)
+- Login form doesn't validate password (API always authenticates)
+
+**Recommendations for next phase:**
+1. Implement real session-based auth (replace demo user lookup with proper token validation)
+2. Add password hashing and validation on login
+3. Persist notification preferences in backend (new Prisma model + API)
+4. Add a partner leaderboard or ranking section to public pages
+5. Add referral performance sparkline/mini charts in the overview metric cards
+6. Implement email notification system for commission events
+7. Add multi-language support (i18n)
+8. Add partner tier system (Bronze/Silver/Gold based on referral count)

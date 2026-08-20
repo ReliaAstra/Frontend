@@ -126,6 +126,35 @@ export function PageReferrals() {
         </span>
       </motion.div>
 
+      {/* Conversion funnel stats bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="border border-border/60 rounded-lg bg-background px-5 py-4 flex items-center justify-around divide-x divide-border/40"
+      >
+        {(() => {
+          const activeCount = list.filter((r) => r.status === 'active').length;
+          const conversionRate = list.length > 0 ? (activeCount / list.length * 100).toFixed(0) : '0';
+          return (
+            <>
+              <div className="flex flex-col items-center text-center flex-1">
+                <span className="text-lg md:text-xl font-semibold tabular-nums">{list.length}</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">TOTAL</span>
+              </div>
+              <div className="flex flex-col items-center text-center flex-1">
+                <span className="text-lg md:text-xl font-semibold tabular-nums">{activeCount}</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">ACTIVE</span>
+              </div>
+              <div className="flex flex-col items-center text-center flex-1">
+                <span className="text-lg md:text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{conversionRate}%</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">CONVERSION</span>
+              </div>
+            </>
+          );
+        })()}
+      </motion.div>
+
       {/* Table container */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

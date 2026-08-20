@@ -211,6 +211,21 @@ export function PageEarnings() {
 
   const list = commissions || [];
 
+  // Group commissions by period for the bar chart
+  const monthlyData = useMemo(() => {
+    const periodMap = new Map<string, number>();
+    for (const c of list) {
+      if (c.period) {
+        periodMap.set(c.period, (periodMap.get(c.period) || 0) + c.amount);
+      }
+    }
+    const entries = Array.from(periodMap.entries());
+    entries.sort((a, b) => a[0].localeCompare(b[0]));
+    return entries.slice(-12) as [string, number][];
+  }, [list]);
+
+  const maxMonthly = Math.max(...monthlyData.map(([, v]) => v), 1);
+
   // Calculate summary from commissions
   const summary = useMemo(() => {
     const now = new Date();
@@ -310,11 +325,86 @@ export function PageEarnings() {
         />
       </div>
 
+      {/* Monthly earnings trend */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.28 }}
+        className="border border-border/60 rounded-lg bg-background p-5 md:p-6"
+      >
+        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-5">
+          Monthly earnings trend
+        </p>
+        {monthlyData.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No period data available to display the chart.
+          </p>
+        ) : (
+          <div className="relative">
+            {/* Y-axis labels + bars container */}
+            <div className="flex items-end gap-0">
+              {/* Amount labels above bars */}
+              <div className="flex-1 flex items-end justify-around" style={{ height: 160 }}>
+                {monthlyData.map(([period, amount], i) => {
+                  const heightPercent = (amount / maxMonthly) * 100;
+                  return (
+                    <div key={period} className="flex flex-col items-center flex-1 max-w-[60px]">
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.35 + i * 0.05, duration: 0.3 }}
+                        className="font-mono text-[10px] tabular-nums text-muted-foreground mb-1.5 whitespace-nowrap"
+                      >
+                        {formatCurrency(amount)}
+                      </motion.span>
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${heightPercent}%` }}
+                        transition={{
+                          duration: 0.6,
+                          delay: 0.35 + i * 0.05,
+                          ease: [0.25, 0.1, 0.25, 1],
+                        }}
+                        className="w-full max-w-[32px] bg-foreground/80 rounded-t-sm hover:bg-foreground transition-colors cursor-default"
+                        style={{ minHeight: 2 }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {/* Month labels below bars */}
+            <div className="flex justify-around mt-2 border-t border-border/40 pt-2">
+              {monthlyData.map(([period], i) => {
+                const shortLabel = period.slice(5);
+                const monthNames = [
+                  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                ];
+                const monthIndex = parseInt(shortLabel, 10) - 1;
+                const label = monthNames[monthIndex] ?? shortLabel;
+                return (
+                  <motion.span
+                    key={period}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 + i * 0.04, duration: 0.3 }}
+                    className="font-mono text-[10px] text-muted-foreground flex-1 text-center"
+                  >
+                    {label}
+                  </motion.span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </motion.div>
+
       {/* Earnings history */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
         className="border border-border/60 rounded-lg bg-background overflow-hidden"
       >
         <div className="px-5 py-3.5 border-b border-border/60">

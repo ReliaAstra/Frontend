@@ -159,10 +159,10 @@ export function PageSignup() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-50/40 px-3 py-2"
+                className="mt-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/30 px-3 py-2"
               >
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                <span className="text-xs text-emerald-800">
+                <span className="text-xs text-emerald-800 dark:text-emerald-300">
                   Referred by <span className="font-mono font-medium">{referralCode}</span>
                 </span>
               </motion.div>
@@ -174,7 +174,7 @@ export function PageSignup() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="mb-4 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-400"
             >
               {fieldError}
             </motion.div>

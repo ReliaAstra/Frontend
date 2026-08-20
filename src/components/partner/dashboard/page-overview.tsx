@@ -1,17 +1,18 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Users, DollarSign } from 'lucide-react';
 import { usePartnerStore } from '@/stores/partner-store';
 import { partnerApi } from '@/lib/partner-api';
-import { formatCurrency, maskEmail } from '@/lib/format';
+import { formatCurrency, maskEmail, formatDate } from '@/lib/format';
 import { MetricCard } from '@/components/partner/shared/metric-card';
 import { ReferralLinkCard } from '@/components/partner/shared/referral-link-card';
 import { StatusBadge } from '@/components/partner/shared/status-badge';
 import { EmptyState } from '@/components/partner/shared/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Referral } from '@/types/partner';
+import type { Referral, Commission } from '@/types/partner';
 
 // --- How it works strip ---
 function HowItWorks() {
@@ -38,6 +39,96 @@ function HowItWorks() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// --- Activity feed ---
+type ActivityItem =
+  | { type: 'referral'; referral: Referral; date: string }
+  | { type: 'commission'; commission: Commission; date: string };
+
+function ActivityFeed({ items }: { items: ActivityItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="border border-border/60 rounded-lg bg-background overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-border/60">
+        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+          Recent activity
+        </p>
+      </div>
+      <div className="px-5 py-4">
+        {items.map((item, i) => {
+          const isLast = i === items.length - 1;
+          return (
+            <div
+              key={
+                item.type === 'referral'
+                  ? `ref-${item.referral.id}`
+                  : `com-${item.commission.id}`
+              }
+              className={`${!isLast ? 'border-l border-border/40' : 'border-l border-transparent'} ml-3.5 pl-4 pb-5 last:pb-0`}
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.05 * i }}
+                className="flex items-start gap-3 -ml-[30px]"
+              >
+                {/* Icon circle */}
+                <div className="size-7 rounded-full bg-muted/80 flex items-center justify-center shrink-0">
+                  {item.type === 'referral' ? (
+                    <Users className="size-3.5 text-muted-foreground" />
+                  ) : (
+                    <DollarSign className="size-3.5 text-muted-foreground" />
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0 pt-0.5">
+                  {item.type === 'referral' ? (
+                    <>
+                      <p className="text-sm">
+                        New referral{' '}
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {item.referral.referredEmail
+                            ? maskEmail(item.referral.referredEmail)
+                            : ''}
+                        </span>
+                        {item.referral.plan && (
+                          <span className="text-muted-foreground">
+                            {' '}&middot; {item.referral.plan}
+                          </span>
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm">
+                      Commission earned
+                      {item.commission.period && (
+                        <span className="text-muted-foreground">
+                          {' '}&middot; {item.commission.period}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
+                    {formatDate(item.date)}
+                  </p>
+                </div>
+
+                {/* Right side amount for commissions */}
+                {item.type === 'commission' && (
+                  <span className="font-mono text-sm tabular-nums shrink-0 pt-0.5">
+                    {formatCurrency(item.commission.amount)}
+                  </span>
+                )}
+              </motion.div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -167,8 +258,34 @@ export function PageOverview() {
     staleTime: 30_000,
   });
 
+  const { data: commissionsData } = useQuery<Commission[]>({
+    queryKey: ['partner-commissions'],
+    queryFn: partnerApi.getCommissions,
+    staleTime: 30_000,
+  });
+
   // Use query data if available, fall back to store
   const d = data || dashboardData;
+
+  // Build merged activity timeline
+  const activityItems = useMemo<ActivityItem[]>(() => {
+    const items: ActivityItem[] = [];
+
+    if (d?.referrals) {
+      for (const ref of d.referrals) {
+        items.push({ type: 'referral', referral: ref, date: ref.createdAt });
+      }
+    }
+
+    if (commissionsData) {
+      for (const com of commissionsData) {
+        items.push({ type: 'commission', commission: com, date: com.createdAt });
+      }
+    }
+
+    items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return items.slice(0, 8);
+  }, [d, commissionsData]);
 
   // Check if truly empty (no referrals and zero earnings)
   const isEmpty =
@@ -255,12 +372,23 @@ export function PageOverview() {
         </div>
       </motion.div>
 
+      {/* Recent activity feed */}
+      {commissionsData !== undefined && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+        >
+          <ActivityFeed items={activityItems} />
+        </motion.div>
+      )}
+
       {/* Recent referrals */}
       {d.referrals && d.referrals.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.35 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
         >
           <RecentReferrals referrals={d.referrals} />
         </motion.div>

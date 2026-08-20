@@ -22,6 +22,7 @@ import { PagePrivacy } from './page-privacy';
 import { PageTerms } from './page-terms';
 import { ReferralBanner } from './referral-banner';
 import { ScrollToTop } from '../shared/scroll-to-top';
+import { CommandPalette } from '../shared/command-palette';
 
 const publicPages: PartnerPage[] = [
   'home',
@@ -128,6 +129,7 @@ export function PublicLayout() {
       {!isFooterHidden && <PartnerFooter />}
 
       <ScrollToTop />
+      <CommandPalette />
     </div>
   );
 }

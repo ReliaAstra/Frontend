@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { usePartnerStore } from '@/stores/partner-store';
 import type { PartnerPage } from '@/types/partner';
 import { ReliastraLogo } from '../shared/reliastra-logo';
+import { ThemeToggle } from '../shared/theme-toggle';
 
 const navLinks: { label: string; page: PartnerPage }[] = [
   { label: 'Overview', page: 'home' },
@@ -89,7 +90,20 @@ export function PartnerNav() {
         </div>
 
         {/* Desktop actions */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-1 md:flex">
+          <ThemeToggle className="mr-1" />
+          <button
+            onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true })); }}
+            className="flex items-center gap-2 rounded-md border border-border/40 bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-border/60 transition-all"
+            aria-label="Search"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span className="hidden lg:inline">Search</span>
+            <kbd className="hidden lg:inline-flex rounded border border-border/40 bg-background px-1 py-0.5 text-[9px] font-mono text-muted-foreground/50">⌘K</kbd>
+          </button>
           <button
             onClick={() => handleNav('support')}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -153,7 +167,8 @@ export function PartnerNav() {
                   {link.label}
                 </button>
               ))}
-              <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
+              <div className="mt-3 flex items-center gap-2 border-t border-border/60 pt-3">
+                <ThemeToggle />
                 <button
                   onClick={() => handleNav('support')}
                   className="flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"

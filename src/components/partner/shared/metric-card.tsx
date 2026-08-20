@@ -18,7 +18,7 @@ export function MetricCard({ label, value, sublabel, className, delay = 0 }: Met
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
-        'border border-border/60 rounded-lg p-5 md:p-6 bg-background',
+        'border border-border/60 rounded-lg p-5 md:p-6 bg-background transition-colors duration-200 hover:border-border hover:bg-muted/20',
         className
       )}
     >

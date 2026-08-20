@@ -45,6 +45,8 @@ import { PageReferrals } from './page-referrals';
 import { PageEarnings } from './page-earnings';
 import { PagePayouts } from './page-payouts';
 import { PageSettings } from './page-settings';
+import { ThemeToggle } from '../shared/theme-toggle';
+import { CommandPalette } from '../shared/command-palette';
 
 // --- Query client (created once) ---
 const queryClient = new QueryClient({
@@ -312,7 +314,7 @@ function MoreSheet({
           <Separator />
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-left"
           >
             <LogOut className="size-4" />
             <span>Sign out</span>
@@ -360,7 +362,8 @@ function TopBar({ onMoreOpen }: { onMoreOpen: () => void }) {
       <div className="hidden md:block" />
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Badge
           variant="outline"
           className="hidden sm:inline-flex text-[10px] font-mono uppercase tracking-[0.15em] px-2 py-0.5"
@@ -418,7 +421,7 @@ function TopBar({ onMoreOpen }: { onMoreOpen: () => void }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="text-xs font-mono uppercase tracking-wide text-red-600 focus:text-red-600"
+              className="text-xs font-mono uppercase tracking-wide text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
             >
               <LogOut className="size-4 mr-2" />
               Sign out
@@ -584,6 +587,7 @@ export function DashboardLayout() {
 
         {/* Mobile more sheet */}
         <MoreSheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen} />
+        <CommandPalette />
       </div>
     </QueryClientProvider>
   );

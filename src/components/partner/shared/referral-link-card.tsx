@@ -73,10 +73,10 @@ export function ReferralLinkCard({ link, size = 'default', showLabel = true, cla
         </p>
       )}
       <div
-        className={`relative border border-border/80 bg-muted/30 rounded-lg ${sizeClasses[size]} group transition-colors hover:border-border`}
+        className={`relative border border-border/80 bg-muted/30 rounded-lg ${sizeClasses[size]} group transition-all duration-200 hover:border-border hover:shadow-[0_0_0_1px_var(--border),0_4px_12px_-2px_var(--border)/20]`}
       >
         <div className="flex items-center gap-3 mb-4">
-          <Link2 className="size-4 text-muted-foreground shrink-0" />
+          <Link2 className="size-4 text-muted-foreground shrink-0 transition-colors group-hover:text-foreground" />
           <p
             className={`${linkSizeClasses[size]} font-mono text-foreground/90 truncate select-all`}
           >
